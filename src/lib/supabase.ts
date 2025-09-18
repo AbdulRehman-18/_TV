@@ -11,3 +11,9 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Storage bucket for announcement images
 export const ANNOUNCEMENTS_BUCKET = 'announcements';
+
+// Storage bucket for event images
+export const EVENTS_BUCKET = 'events';
+
+// Storage bucket for media files
+export const MEDIA_BUCKET = 'media';

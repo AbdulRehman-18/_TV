@@ -12,7 +12,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/display" element={<Display />} />
         <Route 
-          path="/admin" 
+          path="/admin/*" 
           element={
             <ProtectedRoute>
               <Admin />
