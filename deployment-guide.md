@@ -84,6 +84,30 @@ This guide walks you through deploying the Smart Corridor Display application to
 2. Wait for deployment to complete
 3. Test your live application
 
+### 2.5 Ensure SPA routing (avoids 404 on refresh)
+
+Single Page Apps (like this React + Vite app) need a fallback so deep links such as `/admin` or `/display` load `index.html` and let the client router take over. If you visit `/admin` and see a 404 from Vercel, add a rewrite.
+
+Two options:
+
+1) Commit a `vercel.json` file (already included):
+
+```
+{
+   "routes": [
+      { "handle": "filesystem" },
+      { "src": "/(.*)", "dest": "/index.html" }
+   ]
+}
+```
+
+2) Or configure in the Vercel Dashboard:
+
+- Go to Project → Settings → Functions → Rewrites
+- Add: Source: `/(.*)` Destination: `/index.html`
+
+Redeploy after adding the rewrite. Then `/admin` and other routes will work on direct navigation and refresh.
+
 ## Step 3: Post-Deployment Configuration
 
 ### 3.1 Configure Supabase URL Settings
@@ -207,3 +231,63 @@ This guide walks you through deploying the Smart Corridor Display application to
 - [ ] Monitoring and analytics set up
 
 Your Smart Corridor Display is now live and ready for production use! 🎉
+
+## Local development: expose dev server to your LAN
+
+If you want to run the Vite dev server on your development machine and access it from other devices on the same network (for example a TV or phone), follow these steps.
+
+1) Start Vite bound to all interfaces
+
+- You can run the provided script which starts Vite listening on 0.0.0.0:
+
+   npm run dev:lan
+
+- Or run directly with the host flag:
+
+   npm run dev -- --host
+
+The project `vite.config.ts` already sets `server.host = true` so `vite` will listen on 0.0.0.0. The default port is 5173.
+
+2) Allow the port through Windows Firewall (PowerShell)
+
+- Open PowerShell as Administrator and run (replace 5173 with your port if different):
+
+   New-NetFirewallRule -DisplayName "Vite Dev Server 5173" -Direction Inbound -LocalPort 5173 -Protocol TCP -Action Allow
+
+- To remove the rule later:
+
+   Remove-NetFirewallRule -DisplayName "Vite Dev Server 5173"
+
+If you prefer a GUI, open "Windows Defender Firewall with Advanced Security" and create an inbound rule allowing TCP on the dev port.
+
+3) Find your machine's local IP
+
+- In PowerShell:
+
+   ipconfig
+
+- Look for the IPv4 Address on the active adapter (e.g., 192.168.1.42).
+
+4) Access from another device
+
+- On the device (TV/phone) open a browser and visit:
+
+   http://<YOUR_MACHINE_IP>:5173
+
+For example: http://192.168.1.42:5173
+
+5) Alternatives if you can't change firewall / network settings
+
+- Use ngrok (tunnel) to expose a secure public URL without firewall changes:
+
+   - Install ngrok and run: ngrok http 5173
+   - Visit the generated https URL from any device.
+
+- Use localtunnel: npx localtunnel --port 5173
+
+Notes and gotchas
+
+- Some corporate or school networks block device-to-device traffic on Wi-Fi. If devices are on different subnets (guest vs LAN), they may not see each other.
+- If you run into CORS or host header issues, the `--host` flag and `server.host = true` in Vite solve the common cases for local dev.
+
+If you'd like, I can also add an npm script to run ngrok automatically or a short troubleshooting checklist for TVs (captive portals, captive DNS, etc.).

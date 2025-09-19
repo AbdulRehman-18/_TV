@@ -39,6 +39,16 @@ export function MediaCard({
       if (error) throw error;
 
       onToggleActive(media.id, checked);
+
+      try {
+        const bc = new BroadcastChannel('tv-updates');
+        const msg = { channel: 'media', action: 'update', payload: { id: media.id, is_active: checked } };
+        console.debug('[MediaCard] broadcasting', msg);
+        bc.postMessage(msg);
+        bc.close();
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error('Error toggling media status:', error);
     }
@@ -64,6 +74,16 @@ export function MediaCard({
       if (dbError) throw dbError;
 
       onDelete(media.id);
+
+      try {
+        const bc = new BroadcastChannel('tv-updates');
+        const msg = { channel: 'media', action: 'delete', payload: { id: media.id } };
+        console.debug('[MediaCard] broadcasting', msg);
+        bc.postMessage(msg);
+        bc.close();
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error('Error deleting media:', error);
     }

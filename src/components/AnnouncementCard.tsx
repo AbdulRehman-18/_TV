@@ -1,4 +1,3 @@
-import React from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,6 +39,16 @@ export function AnnouncementCard({
       if (error) throw error;
       
       onToggleActive(announcement.id, checked);
+
+      try {
+        const bc = new BroadcastChannel('tv-updates');
+        const msg = { channel: 'announcements', action: 'update', payload: { id: announcement.id, is_active: checked } };
+        console.debug('[AnnouncementCard] broadcasting', msg);
+        bc.postMessage(msg);
+        bc.close();
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error('Error toggling announcement status:', error);
     }
@@ -55,6 +64,16 @@ export function AnnouncementCard({
       if (error) throw error;
       
       onDelete(announcement.id);
+
+      try {
+        const bc = new BroadcastChannel('tv-updates');
+        const msg = { channel: 'announcements', action: 'delete', payload: { id: announcement.id } };
+        console.debug('[AnnouncementCard] broadcasting', msg);
+        bc.postMessage(msg);
+        bc.close();
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error('Error deleting announcement:', error);
     }

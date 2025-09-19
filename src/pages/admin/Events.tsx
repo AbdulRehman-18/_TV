@@ -59,6 +59,15 @@ export function Events() {
 
   const handleDelete = (id: string) => {
     setEvents(prev => prev.filter(e => e.id !== id));
+
+    // Notify other tabs/windows that an event was deleted
+    try {
+      const bc = new BroadcastChannel('tv-updates');
+      bc.postMessage({ channel: 'events', action: 'delete', payload: { id } });
+      bc.close();
+    } catch {
+      // ignore
+    }
   };
 
   const handleToggleActive = (id: string, isActive: boolean) => {

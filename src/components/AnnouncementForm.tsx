@@ -92,6 +92,17 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
       }
 
       onSubmit(result.data);
+
+      // Notify other tabs/windows (same origin) that announcements changed.
+      try {
+        const bc = new BroadcastChannel('tv-updates');
+        const msg = { channel: 'announcements', action: announcement ? 'update' : 'create', payload: result.data };
+        console.debug('[AnnouncementForm] broadcasting', msg);
+        bc.postMessage(msg);
+        bc.close();
+      } catch {
+        // BroadcastChannel may not be available in some environments; ignore silently
+      }
     } catch (error) {
       console.error('Error saving announcement:', error);
       alert('Error saving announcement. Please try again.');

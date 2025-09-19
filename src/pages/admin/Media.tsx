@@ -59,6 +59,15 @@ export function Media() {
 
   const handleDelete = (id: string) => {
     setMedia(prev => prev.filter(m => m.id !== id));
+
+    // Notify other tabs/windows that a media item was deleted
+    try {
+      const bc = new BroadcastChannel('tv-updates');
+      bc.postMessage({ channel: 'media', action: 'delete', payload: { id } });
+      bc.close();
+    } catch {
+      // ignore
+    }
   };
 
   const handleToggleActive = (id: string, isActive: boolean) => {

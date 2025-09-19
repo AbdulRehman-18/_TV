@@ -106,6 +106,17 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
       }
 
       onSubmit(result.data);
+
+      // Notify other tabs/windows (same origin) that events changed.
+      try {
+        const bc = new BroadcastChannel('tv-updates');
+        const msg = { channel: 'events', action: event ? 'update' : 'create', payload: result.data };
+        console.debug('[EventForm] broadcasting', msg);
+        bc.postMessage(msg);
+        bc.close();
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error('Error saving event:', error);
       alert('Error saving event. Please try again.');

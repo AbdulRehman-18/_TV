@@ -234,3 +234,11 @@ Make sure to set these in your deployment environment:
 ## License
 
 MIT License - feel free to use this project for your needs.
+
+## Admin Access and SPA Routing
+
+- The app redirects `/` to the TV display at `/display`.
+- To access the admin area: go to `/login`, sign in, then navigate to `/admin`.
+- Admin routes are protected; unauthenticated users visiting `/admin` will be redirected to `/login`.
+
+Deployment note (Vercel): This repo includes a `vercel.json` that rewrites all routes to `index.html` so deep links like `/admin` and `/display` work on refresh and direct navigation. If you still see a 404 on `/admin`, ensure the rewrite is active in your Vercel project settings and redeploy.
