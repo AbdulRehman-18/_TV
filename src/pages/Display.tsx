@@ -87,6 +87,41 @@ export function Display() {
     };
   }, []);
 
+  // Listen for remote reload requests from the Admin via Supabase Realtime Broadcast
+  useEffect(() => {
+    const controlChannel = supabase
+      .channel('display-control')
+      .on('broadcast', { event: 'reload' }, (payload) => {
+        type ControlPayload = { hard?: boolean; reason?: string };
+        const raw = (payload && typeof payload === 'object' && 'payload' in payload)
+          ? (payload as { payload?: unknown }).payload
+          : undefined;
+        const msg: ControlPayload | undefined = (raw && typeof raw === 'object')
+          ? (raw as ControlPayload)
+          : undefined;
+        const hard = msg?.hard;
+        const reason = msg?.reason;
+        if (hard) {
+          // Hard reload if explicitly requested
+          window.location.reload();
+        } else {
+          // Soft reload: refetch data without page refresh
+          reloadAllRef.current?.(reason || 'remote-broadcast');
+        }
+      })
+      .subscribe((status) => {
+        console.debug('[Display] control channel status:', status);
+      });
+
+    return () => {
+      try {
+        controlChannel.unsubscribe();
+      } catch {
+        // ignore
+      }
+    };
+  }, []);
+
   // BroadcastChannel fallback: listen for changes from admin UI in other tabs
   useEffect(() => {
     let bc: BroadcastChannel | null = null;
