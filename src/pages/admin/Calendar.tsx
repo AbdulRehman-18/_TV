@@ -1,9 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Event, Announcement } from '@/types';
-import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin, Megaphone } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Clock, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 interface CalendarEvent {
   id: string;
@@ -132,176 +131,159 @@ export function CalendarView() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">Loading calendar...</div>
+        <div className="text-gray-400">Loading calendar...</div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Calendar View</h1>
-          <p className="text-gray-600">View all events and announcements in calendar format</p>
+          <h1 className="text-3xl font-light text-gray-900">Calendar</h1>
+          <p className="text-gray-500 mt-1">Events and announcements overview</p>
         </div>
-        <Button onClick={goToToday} variant="outline">
+        <Button onClick={goToToday} variant="ghost" className="text-gray-600 hover:text-gray-900">
           Today
         </Button>
       </div>
 
       {/* Calendar Navigation */}
-      <Card>
-        <CardHeader className="pb-4">
-          <div className="flex items-center justify-between">
-            <CardTitle className="text-xl">
-              {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
-            </CardTitle>
-            <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigateMonth('prev')}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigateMonth('next')}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </Button>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-medium text-gray-900">
+            {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+          </h2>
+          <div className="flex items-center space-x-1">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigateMonth('prev')}
+              className="h-8 w-8 p-0 hover:bg-gray-100"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => navigateMonth('next')}
+              className="h-8 w-8 p-0 hover:bg-gray-100"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Calendar Grid */}
+        <div className="grid grid-cols-7 gap-px bg-gray-100 rounded-lg overflow-hidden">
+          {/* Day headers */}
+          {dayNames.map(day => (
+            <div key={day} className="bg-gray-50 p-4 text-center text-sm font-medium text-gray-600">
+              {day}
             </div>
-          </div>
-        </CardHeader>
+          ))}
 
-        <CardContent>
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {/* Day headers */}
-            {dayNames.map(day => (
-              <div key={day} className="p-3 text-center font-medium text-gray-700 bg-gray-50 rounded">
-                {day}
-              </div>
-            ))}
+          {/* Calendar days */}
+          {days.map((date, index) => {
+            if (!date) {
+              return <div key={index} className="bg-white p-4"></div>;
+            }
 
-            {/* Calendar days */}
-            {days.map((date, index) => {
-              if (!date) {
-                return <div key={index} className="p-3 bg-gray-50 rounded"></div>;
-              }
+            const dayEvents = getEventsForDate(date);
+            const isToday = date.toDateString() === new Date().toDateString();
+            const isCurrentMonth = date.getMonth() === currentDate.getMonth();
 
-              const dayEvents = getEventsForDate(date);
-              const isToday = date.toDateString() === new Date().toDateString();
-              const isCurrentMonth = date.getMonth() === currentDate.getMonth();
-
-              return (
-                <div
-                  key={index}
-                  className={`min-h-[120px] p-2 border rounded-lg ${
-                    isToday
-                      ? 'bg-blue-50 border-blue-200'
-                      : isCurrentMonth
-                      ? 'bg-white border-gray-200'
-                      : 'bg-gray-50 border-gray-100'
-                  }`}
-                >
-                  <div className={`text-sm font-medium mb-2 ${
-                    isToday
-                      ? 'text-blue-600'
-                      : isCurrentMonth
-                      ? 'text-gray-900'
-                      : 'text-gray-400'
-                  }`}>
-                    {date.getDate()}
-                  </div>
-
-                  {/* Events for this day */}
-                  <div className="space-y-1">
-                    {dayEvents.slice(0, 3).map(event => (
-                      <div
-                        key={event.id}
-                        className={`text-xs p-1 rounded truncate ${
-                          event.type === 'event'
-                            ? 'bg-green-100 text-green-800'
-                            : 'bg-blue-100 text-blue-800'
-                        }`}
-                        title={event.title}
-                      >
-                        {event.type === 'event' ? '📅' : '📢'} {event.title}
-                      </div>
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <div className="text-xs text-gray-500 px-1">
-                        +{dayEvents.length - 3} more
-                      </div>
-                    )}
-                  </div>
+            return (
+              <div
+                key={index}
+                className={`bg-white p-4 min-h-[120px] hover:bg-gray-50 transition-colors ${
+                  isToday ? 'bg-blue-50/50' : ''
+                }`}
+              >
+                <div className={`text-sm font-medium mb-3 ${
+                  isToday
+                    ? 'text-blue-600'
+                    : isCurrentMonth
+                    ? 'text-gray-900'
+                    : 'text-gray-400'
+                }`}>
+                  {date.getDate()}
                 </div>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
 
-      {/* Upcoming Events Summary */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <Clock className="w-5 h-5" />
-            <span>Upcoming Events & Announcements</span>
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {events
-              .filter(event => event.date >= new Date())
-              .sort((a, b) => a.date.getTime() - b.date.getTime())
-              .slice(0, 10)
-              .map(event => (
-                <div key={event.id} className="flex items-start space-x-3 p-3 border rounded-lg">
-                  <div className={`p-2 rounded-full ${
-                    event.type === 'event' ? 'bg-green-100' : 'bg-blue-100'
-                  }`}>
-                    {event.type === 'event' ? (
-                      <Calendar className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <Megaphone className="w-4 h-4 text-blue-600" />
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{event.title}</h4>
-                    <div className="flex items-center space-x-4 text-sm text-gray-600 mt-1">
-                      <span className="flex items-center space-x-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{event.date.toLocaleDateString()}</span>
-                      </span>
-                      {event.type === 'event' && (event.data as Event).location && (
-                        <span className="flex items-center space-x-1">
-                          <MapPin className="w-3 h-3" />
-                          <span>{(event.data as Event).location}</span>
-                        </span>
-                      )}
-                      <span className={`px-2 py-1 rounded-full text-xs ${
-                        event.type === 'event'
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-blue-100 text-blue-800'
-                      }`}>
-                        {event.type === 'event' ? 'Event' : 'Announcement'}
+                {/* Events for this day */}
+                <div className="space-y-2">
+                  {dayEvents.slice(0, 3).map(event => (
+                    <div
+                      key={event.id}
+                      className="flex items-center space-x-1"
+                      title={event.title}
+                    >
+                      <div className={`w-2 h-2 rounded-full ${
+                        event.type === 'event' ? 'bg-emerald-400' : 'bg-blue-400'
+                      }`}></div>
+                      <span className="text-xs text-gray-600 truncate flex-1">
+                        {event.title}
                       </span>
                     </div>
+                  ))}
+                  {dayEvents.length > 3 && (
+                    <div className="text-xs text-gray-400 px-1">
+                      +{dayEvents.length - 3}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Upcoming Events Summary */}
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
+        <h3 className="text-lg font-medium text-gray-900 mb-6 flex items-center space-x-2">
+          <Clock className="w-5 h-5 text-gray-400" />
+          <span>Upcoming</span>
+        </h3>
+        <div className="space-y-4">
+          {events
+            .filter(event => event.date >= new Date())
+            .sort((a, b) => a.date.getTime() - b.date.getTime())
+            .slice(0, 10)
+            .map(event => (
+              <div key={event.id} className="flex items-start space-x-4 p-4 hover:bg-gray-50 rounded-xl transition-colors">
+                <div className={`w-3 h-3 rounded-full mt-2 flex-shrink-0 ${
+                  event.type === 'event' ? 'bg-emerald-400' : 'bg-blue-400'
+                }`}></div>
+                <div className="flex-1 min-w-0">
+                  <h4 className="font-medium text-gray-900 truncate">{event.title}</h4>
+                  <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
+                    <span>{event.date.toLocaleDateString()}</span>
+                    {event.type === 'event' && (event.data as Event).location && (
+                      <span className="flex items-center space-x-1">
+                        <MapPin className="w-3 h-3" />
+                        <span className="truncate">{(event.data as Event).location}</span>
+                      </span>
+                    )}
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      event.type === 'event'
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'bg-blue-100 text-blue-700'
+                    }`}>
+                      {event.type}
+                    </span>
                   </div>
                 </div>
-              ))}
-            {events.filter(event => event.date >= new Date()).length === 0 && (
-              <div className="text-center py-8 text-gray-500">
-                No upcoming events or announcements
               </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
+            ))}
+          {events.filter(event => event.date >= new Date()).length === 0 && (
+            <div className="text-center py-12 text-gray-400">
+              <Calendar className="w-8 h-8 mx-auto mb-3 opacity-50" />
+              <p>No upcoming events</p>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }

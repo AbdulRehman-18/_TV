@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Announcement, Event, Media } from '@/types';
 
@@ -8,6 +8,24 @@ export function Display() {
   const [media, setMedia] = useState<Media[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  // simple throttle using ref to avoid over-fetching
+  const lastReloadRef = useRef(0);
+  const reloadAllRef = useRef<null | ((reason?: string) => Promise<void>)>(null);
+  if (!reloadAllRef.current) {
+    reloadAllRef.current = async (reason?: string) => {
+      const now = Date.now();
+      if (now - lastReloadRef.current < 1500) {
+        return; // throttle
+      }
+      lastReloadRef.current = now;
+      try {
+        console.debug('[Display] reloadAll triggered', reason || '');
+        await Promise.all([loadAnnouncements(), loadEvents(), loadMedia()]);
+      } catch {
+        // errors are logged inside loaders
+      }
+    };
+  }
 
   useEffect(() => {
     loadAnnouncements();
@@ -66,6 +84,64 @@ export function Display() {
       announcementsSubscription.unsubscribe();
       eventsSubscription.unsubscribe();
       mediaSubscription.unsubscribe();
+    };
+  }, []);
+
+  // BroadcastChannel fallback: listen for changes from admin UI in other tabs
+  useEffect(() => {
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel('tv-updates');
+      console.debug('[Display] BroadcastChannel listener attached');
+      bc.onmessage = (ev) => {
+        const msg = ev.data;
+        if (!msg || !msg.channel) return;
+
+        console.debug('[Display] Received bc message:', msg);
+        if (msg.channel === 'announcements') {
+          console.debug('[Display] Reloading announcements via bc');
+          loadAnnouncements();
+        } else if (msg.channel === 'events') {
+          console.debug('[Display] Reloading events via bc');
+          loadEvents();
+        } else if (msg.channel === 'media') {
+          console.debug('[Display] Reloading media via bc');
+          loadMedia();
+        }
+      };
+    } catch {
+      // BroadcastChannel not available; ignore
+    }
+
+    return () => {
+      try {
+        bc?.close();
+      } catch {
+        // ignore
+      }
+    };
+  }, []);
+
+  // Network resilience: poll periodically and refetch on focus/visibility/online
+  useEffect(() => {
+    // Polling every 20s as a watchdog for cross-device updates
+  const interval = setInterval(() => reloadAllRef.current?.('poll'), 20000);
+
+  const onFocus = () => reloadAllRef.current?.('window-focus');
+    const onVisible = () => {
+  if (document.visibilityState === 'visible') reloadAllRef.current?.('visibility');
+    };
+  const onOnline = () => reloadAllRef.current?.('online');
+
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    window.addEventListener('online', onOnline);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+      window.removeEventListener('online', onOnline);
     };
   }, []);
 

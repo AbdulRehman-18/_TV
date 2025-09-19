@@ -105,6 +105,17 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
       }
 
       onSubmit(result.data);
+
+      // Notify other tabs/windows (same origin) that media changed.
+      try {
+        const bc = new BroadcastChannel('tv-updates');
+        const msg = { channel: 'media', action: media ? 'update' : 'create', payload: result.data };
+        console.debug('[MediaForm] broadcasting', msg);
+        bc.postMessage(msg);
+        bc.close();
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error('Error saving media:', error);
       alert('Error saving media. Please try again.');

@@ -39,6 +39,16 @@ export function EventCard({
       if (error) throw error;
 
       onToggleActive(event.id, checked);
+
+      try {
+        const bc = new BroadcastChannel('tv-updates');
+        const msg = { channel: 'events', action: 'update', payload: { id: event.id, is_active: checked } };
+        console.debug('[EventCard] broadcasting', msg);
+        bc.postMessage(msg);
+        bc.close();
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error('Error toggling event status:', error);
     }
@@ -54,6 +64,16 @@ export function EventCard({
       if (error) throw error;
 
       onDelete(event.id);
+
+      try {
+        const bc = new BroadcastChannel('tv-updates');
+        const msg = { channel: 'events', action: 'delete', payload: { id: event.id } };
+        console.debug('[EventCard] broadcasting', msg);
+        bc.postMessage(msg);
+        bc.close();
+      } catch {
+        // ignore
+      }
     } catch (error) {
       console.error('Error deleting event:', error);
     }
