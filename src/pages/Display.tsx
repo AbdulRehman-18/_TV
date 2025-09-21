@@ -447,15 +447,37 @@ export function Display() {
           ) : (
             // Media
             (currentItem as Media & { type: 'media' }).file_type === 'image' ? (
-              <div className="min-h-screen flex items-center justify-center bg-black">
-                <img
-                  src={(currentItem as Media & { type: 'media' }).file_url}
-                  alt={(currentItem as Media & { type: 'media' }).title}
-                  className="max-w-full max-h-screen object-contain"
-                />
+              <div className="min-h-screen flex items-center justify-center bg-black px-6 md:px-10">
+                <div className="relative max-w-[92vw] max-h-[88vh] w-full h-full flex items-center justify-center">
+                  <div className="absolute inset-6 -z-10 rounded-3xl bg-gradient-to-tr from-white/10 to-white/0 blur-2xl" />
+                  <div className="relative rounded-3xl overflow-hidden soft-shadow" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.45)' }}>
+                    <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.12)' }} />
+                    <img
+                      src={(currentItem as Media & { type: 'media' }).file_url}
+                      alt={(currentItem as Media & { type: 'media' }).title}
+                      className="object-contain max-h-[88vh] max-w-[92vw] bg-neutral-900"
+                    />
+                    {((currentItem as Media & { type: 'media' }).title || (currentItem as Media & { type: 'media' }).description) && (
+                      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                        <div className="glass elevate soft-shadow rounded-xl px-4 py-3 md:px-5 md:py-4 bg-black/40">
+                          {(currentItem as Media & { type: 'media' }).title && (
+                            <div className="text-base md:text-lg font-medium">
+                              {(currentItem as Media & { type: 'media' }).title}
+                            </div>
+                          )}
+                          {(currentItem as Media & { type: 'media' }).description && (
+                            <div className="text-xs md:text-sm text-white/70 mt-0.5">
+                              {(currentItem as Media & { type: 'media' }).description}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
             ) : (
-              <div className="min-h-screen bg-black">
+              <div className="min-h-screen relative bg-black">
                 <video
                   src={(currentItem as Media & { type: 'media' }).file_url}
                   className="w-full h-screen object-cover"
@@ -464,6 +486,23 @@ export function Display() {
                   loop
                   playsInline
                 />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                {((currentItem as Media & { type: 'media' }).title || (currentItem as Media & { type: 'media' }).description) && (
+                  <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+                    <div className="glass elevate soft-shadow rounded-2xl px-5 py-4 md:px-6 md:py-5 bg-black/40 max-w-4xl">
+                      {(currentItem as Media & { type: 'media' }).title && (
+                        <div className="text-lg md:text-2xl font-medium">
+                          {(currentItem as Media & { type: 'media' }).title}
+                        </div>
+                      )}
+                      {(currentItem as Media & { type: 'media' }).description && (
+                        <div className="text-sm md:text-base text-white/75 mt-1">
+                          {(currentItem as Media & { type: 'media' }).description}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             )
           )}
