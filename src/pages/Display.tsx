@@ -1,6 +1,9 @@
 import { useState, useEffect, useRef } from 'react';
+import type { CSSProperties } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Announcement, Event, Media } from '@/types';
+import { AnimatePresence, motion } from 'framer-motion';
+import { Calendar, Clock, MapPin } from 'lucide-react';
 
 export function Display() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
@@ -254,20 +257,25 @@ export function Display() {
   const activeMedia = media.filter(m => m.is_active);
   
   // Combine announcements, events, and media into a single array for slideshow
-  const allItems: (Announcement & { type: 'announcement' } | Event & { type: 'event' } | Media & { type: 'media' })[] = [
+  type SlideItem = (Announcement & { type: 'announcement' }) | (Event & { type: 'event' }) | (Media & { type: 'media' });
+  const allItems: SlideItem[] = [
     ...activeAnnouncements.map(item => ({ ...item, type: 'announcement' as const })),
     ...activeEvents.map(item => ({ ...item, type: 'event' as const })),
     ...activeMedia.map(item => ({ ...item, type: 'media' as const }))
   ];
   
-  const currentItem = allItems[currentIndex];
+  const currentItem: SlideItem = allItems[currentIndex];
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-white mb-4"></div>
-          <p className="text-white text-xl">Loading content...</p>
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-slate-900 via-black to-black text-white flex items-center justify-center">
+        {/* Aurora background */}
+        <div className="pointer-events-none absolute -top-20 -left-20 w-[55vw] h-[55vw] rounded-full aurora-blob bg-gradient-to-br from-indigo-500/60 via-fuchsia-500/50 to-rose-500/50" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 w-[50vw] h-[50vw] rounded-full aurora-blob bg-gradient-to-tr from-blue-500/50 via-emerald-500/40 to-cyan-500/40" />
+
+        <div className="glass elevate px-10 py-8 text-center soft-shadow">
+          <div className="mx-auto mb-5 h-16 w-16 rounded-full border-4 border-white/20 border-t-white/80 animate-spin" />
+          <p className="text-xl tracking-wide text-white/90">Loading content…</p>
         </div>
       </div>
     );
@@ -275,228 +283,254 @@ export function Display() {
 
   if (allItems.length === 0) {
     return (
-      <div className="min-h-screen bg-gray-900 flex items-center justify-center text-center px-8">
-        <div>
-          <h1 className="text-6xl font-bold text-white mb-4">
-            Smart Corridor Display
-          </h1>
-          <p className="text-2xl text-gray-300">
-            No active content to display
-          </p>
+      <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-slate-900 via-black to-black text-white flex items-center justify-center px-8">
+        {/* Aurora background */}
+        <div className="pointer-events-none absolute -top-20 -left-20 w-[55vw] h-[55vw] rounded-full aurora-blob bg-gradient-to-br from-indigo-500/60 via-fuchsia-500/50 to-rose-500/50" />
+        <div className="pointer-events-none absolute -bottom-24 -right-24 w-[50vw] h-[50vw] rounded-full aurora-blob bg-gradient-to-tr from-blue-500/50 via-emerald-500/40 to-cyan-500/40" />
+
+        <div className="glass elevate max-w-4xl w-full mx-auto px-10 py-12 text-center soft-shadow">
+          <h1 className="text-5xl md:text-6xl font-semibold tracking-tight mb-5">Smart Corridor Display</h1>
+          <p className="text-2xl text-white/70">No active content to display</p>
         </div>
       </div>
     );
   }
 
+  const slideDurationMs = 12000;
+  const progressStyle: CSSProperties & Record<'--duration', string> = { ['--duration']: `${slideDurationMs}ms` };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white overflow-hidden">
-      {currentItem.type === 'announcement' ? (
-        // Announcement display
-        (currentItem as Announcement & { type: 'announcement' }).image_url ? (
-          // Image-based announcement
-          <div className="relative min-h-screen">
-            <img
-              src={(currentItem as Announcement & { type: 'announcement' }).image_url!}
-              alt={(currentItem as Announcement & { type: 'announcement' }).title}
-              className="w-full h-screen object-cover"
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-end">
-              <div className="w-full p-12 lg:p-16">
-                <div className="bg-black bg-opacity-75 rounded-lg p-8 lg:p-12">
-                  <div className="flex items-center mb-4">
-                    <div className="bg-blue-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      ANNOUNCEMENT
+    <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-slate-900 via-black to-black text-white">
+      {/* Ambient background */}
+      <div className="pointer-events-none absolute -top-24 -left-24 w-[60vw] h-[60vw] rounded-full aurora-blob bg-gradient-to-br from-indigo-500/60 via-fuchsia-500/50 to-rose-500/50" />
+      <div className="pointer-events-none absolute -bottom-28 -right-28 w-[55vw] h-[55vw] rounded-full aurora-blob bg-gradient-to-tr from-blue-500/50 via-emerald-500/40 to-cyan-500/40" />
+
+      {/* Content */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={`${currentItem.type}-${currentItem.id}`}
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.5, ease: 'easeOut' }}
+          className="relative min-h-screen"
+        >
+          {currentItem.type === 'announcement' ? (
+            (currentItem as Announcement & { type: 'announcement' }).image_url ? (
+              <div className="relative min-h-screen">
+                <img
+                  src={(currentItem as Announcement & { type: 'announcement' }).image_url!}
+                  alt={(currentItem as Announcement & { type: 'announcement' }).title}
+                  className="w-full h-screen object-cover edge-fade"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-8 md:p-12 lg:p-16">
+                  <div className="glass elevate soft-shadow p-6 md:p-8 rounded-2xl max-w-5xl">
+                    <div className="mb-4">
+                      <span className="px-3 py-1 rounded-full text-xs tracking-wider bg-white/10 text-white/80">ANNOUNCEMENT</span>
                     </div>
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight mb-4">
+                      {(currentItem as Announcement & { type: 'announcement' }).title}
+                    </h1>
+                    <p className="text-lg md:text-xl lg:text-2xl text-white/80 leading-relaxed">
+                      {(currentItem as Announcement & { type: 'announcement' }).body}
+                    </p>
                   </div>
-                  <h1 className="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
+                </div>
+              </div>
+            ) : (
+              <div className="min-h-screen flex items-center justify-center px-6 md:px-10">
+                <div className="glass elevate soft-shadow text-center max-w-5xl w-full p-8 md:p-12">
+                  <div className="mb-6">
+                    <span className="px-4 py-2 rounded-full text-sm tracking-wider bg-white/10 text-white/80">ANNOUNCEMENT</span>
+                  </div>
+                  <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold leading-tight mb-6">
                     {(currentItem as Announcement & { type: 'announcement' }).title}
                   </h1>
-                  <p className="text-xl lg:text-2xl text-gray-200 leading-relaxed">
+                  <p className="text-2xl md:text-3xl text-white/70 leading-relaxed font-light">
                     {(currentItem as Announcement & { type: 'announcement' }).body}
                   </p>
                 </div>
               </div>
-            </div>
-          </div>
-        ) : (
-          // Text-only announcement
-          <div className="min-h-screen flex items-center justify-center px-8 lg:px-16">
-            <div className="text-center max-w-5xl">
-              <div className="flex items-center justify-center mb-8">
-                <div className="bg-blue-600 text-white px-4 py-2 rounded-full text-lg font-medium">
-                  ANNOUNCEMENT
-                </div>
-              </div>
-              <h1 className="text-5xl lg:text-8xl font-bold mb-8 lg:mb-12 leading-tight">
-                {(currentItem as Announcement & { type: 'announcement' }).title}
-              </h1>
-              <p className="text-2xl lg:text-4xl text-gray-300 leading-relaxed font-light">
-                {(currentItem as Announcement & { type: 'announcement' }).body}
-              </p>
-            </div>
-          </div>
-        )
-      ) : currentItem.type === 'event' ? (
-        // Event display
-        (currentItem as Event & { type: 'event' }).image_url ? (
-          // Image-based event
-          <div className="relative min-h-screen">
-            <img
-              src={(currentItem as Event & { type: 'event' }).image_url!}
-              alt={(currentItem as Event & { type: 'event' }).title}
-              className="w-full h-screen object-cover"
-            />
-            <div className="absolute inset-0 bg-black bg-opacity-50 flex items-end">
-              <div className="w-full p-12 lg:p-16">
-                <div className="bg-black bg-opacity-75 rounded-lg p-8 lg:p-12">
-                  <div className="flex items-center mb-4">
-                    <div className="bg-green-600 text-white px-3 py-1 rounded-full text-sm font-medium">
-                      EVENT
+            )
+          ) : currentItem.type === 'event' ? (
+            (currentItem as Event & { type: 'event' }).image_url ? (
+              <div className="relative min-h-screen">
+                <img
+                  src={(currentItem as Event & { type: 'event' }).image_url!}
+                  alt={(currentItem as Event & { type: 'event' }).title}
+                  className="w-full h-screen object-cover edge-fade"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+                <div className="absolute inset-x-0 bottom-0 p-8 md:p-12 lg:p-16">
+                  <div className="glass elevate soft-shadow p-6 md:p-8 rounded-2xl max-w-6xl">
+                    <div className="mb-4">
+                      <span className="px-3 py-1 rounded-full text-xs tracking-wider bg-emerald-400/15 text-emerald-200/90">EVENT</span>
                     </div>
-                  </div>
-                  <h1 className="text-4xl lg:text-6xl font-bold mb-6 leading-tight">
-                    {(currentItem as Event & { type: 'event' }).title}
-                  </h1>
-                  <p className="text-xl lg:text-2xl text-gray-200 leading-relaxed mb-6">
-                    {(currentItem as Event & { type: 'event' }).description}
-                  </p>
-                  
-                  {/* Event details */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-gray-200">
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                        📅
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Date</div>
-                        <div className="text-lg">{new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleDateString()}</div>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center space-x-2">
-                      <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                        🕒
-                      </div>
-                      <div>
-                        <div className="text-sm font-medium">Time</div>
-                        <div className="text-lg">
-                          {new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                          {(currentItem as Event & { type: 'event' }).end_date && ` - ${new Date((currentItem as Event & { type: 'event' }).end_date!).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {(currentItem as Event & { type: 'event' }).location && (
-                      <div className="flex items-center space-x-2">
-                        <div className="w-8 h-8 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
-                          📍
+                    <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold leading-tight mb-4">
+                      {(currentItem as Event & { type: 'event' }).title}
+                    </h1>
+                    <p className="text-lg md:text-xl lg:text-2xl text-white/80 leading-relaxed mb-6">
+                      {(currentItem as Event & { type: 'event' }).description}
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-white/85">
+                      <div className="glass border-white/10 bg-white/5 rounded-xl p-4 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                          <Calendar className="w-5 h-5" />
                         </div>
                         <div>
-                          <div className="text-sm font-medium">Location</div>
-                          <div className="text-lg">{(currentItem as Event & { type: 'event' }).location}</div>
+                          <div className="text-xs text-white/60">Date</div>
+                          <div className="text-lg font-medium">{new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleDateString()}</div>
+                        </div>
+                      </div>
+                      <div className="glass border-white/10 bg-white/5 rounded-xl p-4 flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                          <Clock className="w-5 h-5" />
+                        </div>
+                        <div>
+                          <div className="text-xs text-white/60">Time</div>
+                          <div className="text-lg font-medium">
+                            {new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                            {(currentItem as Event & { type: 'event' }).end_date && ` - ${new Date((currentItem as Event & { type: 'event' }).end_date!).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+                          </div>
+                        </div>
+                      </div>
+                      {(currentItem as Event & { type: 'event' }).location && (
+                        <div className="glass border-white/10 bg-white/5 rounded-xl p-4 flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center">
+                            <MapPin className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <div className="text-xs text-white/60">Location</div>
+                            <div className="text-lg font-medium">{(currentItem as Event & { type: 'event' }).location}</div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="min-h-screen flex items-center justify-center px-6 md:px-10">
+                <div className="glass elevate soft-shadow text-center max-w-6xl w-full p-8 md:p-12">
+                  <div className="mb-6">
+                    <span className="px-4 py-2 rounded-full text-sm tracking-wider bg-emerald-400/15 text-emerald-200/90">EVENT</span>
+                  </div>
+                  <h1 className="text-5xl md:text-6xl lg:text-7xl font-semibold leading-tight mb-6">
+                    {(currentItem as Event & { type: 'event' }).title}
+                  </h1>
+                  <p className="text-2xl md:text-3xl text-white/70 leading-relaxed font-light mb-10">
+                    {(currentItem as Event & { type: 'event' }).description}
+                  </p>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
+                    <div className="glass bg-white/5 rounded-xl p-6 text-left">
+                      <div className="flex items-center gap-3 mb-2"><Calendar className="w-5 h-5 text-white/80" /><span className="text-white/70">Date</span></div>
+                      <div className="text-xl font-medium">{new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleDateString()}</div>
+                    </div>
+                    <div className="glass bg-white/5 rounded-xl p-6 text-left">
+                      <div className="flex items-center gap-3 mb-2"><Clock className="w-5 h-5 text-white/80" /><span className="text-white/70">Time</span></div>
+                      <div className="text-xl font-medium">
+                        {new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+                        {(currentItem as Event & { type: 'event' }).end_date && ` - ${new Date((currentItem as Event & { type: 'event' }).end_date!).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+                      </div>
+                    </div>
+                    {(currentItem as Event & { type: 'event' }).location && (
+                      <div className="glass bg-white/5 rounded-xl p-6 text-left">
+                        <div className="flex items-center gap-3 mb-2"><MapPin className="w-5 h-5 text-white/80" /><span className="text-white/70">Location</span></div>
+                        <div className="text-xl font-medium">{(currentItem as Event & { type: 'event' }).location}</div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            )
+          ) : (
+            // Media
+            (currentItem as Media & { type: 'media' }).file_type === 'image' ? (
+              <div className="min-h-screen flex items-center justify-center bg-black px-6 md:px-10">
+                <div className="relative max-w-[92vw] max-h-[88vh] w-full h-full flex items-center justify-center">
+                  <div className="absolute inset-6 -z-10 rounded-3xl bg-gradient-to-tr from-white/10 to-white/0 blur-2xl" />
+                  <div className="relative rounded-3xl overflow-hidden soft-shadow" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.45)' }}>
+                    <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.12)' }} />
+                    <img
+                      src={(currentItem as Media & { type: 'media' }).file_url}
+                      alt={(currentItem as Media & { type: 'media' }).title}
+                      className="object-contain max-h-[88vh] max-w-[92vw] bg-neutral-900"
+                    />
+                    {((currentItem as Media & { type: 'media' }).title || (currentItem as Media & { type: 'media' }).description) && (
+                      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                        <div className="glass elevate soft-shadow rounded-xl px-4 py-3 md:px-5 md:py-4 bg-black/40">
+                          {(currentItem as Media & { type: 'media' }).title && (
+                            <div className="text-base md:text-lg font-medium">
+                              {(currentItem as Media & { type: 'media' }).title}
+                            </div>
+                          )}
+                          {(currentItem as Media & { type: 'media' }).description && (
+                            <div className="text-xs md:text-sm text-white/70 mt-0.5">
+                              {(currentItem as Media & { type: 'media' }).description}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
                 </div>
               </div>
-            </div>
-          </div>
-        ) : (
-          // Text-only event
-          <div className="min-h-screen flex items-center justify-center px-8 lg:px-16">
-            <div className="text-center max-w-5xl">
-              <div className="flex items-center justify-center mb-8">
-                <div className="bg-green-600 text-white px-4 py-2 rounded-full text-lg font-medium">
-                  EVENT
-                </div>
-              </div>
-              <h1 className="text-5xl lg:text-8xl font-bold mb-8 lg:mb-12 leading-tight">
-                {(currentItem as Event & { type: 'event' }).title}
-              </h1>
-              <p className="text-2xl lg:text-4xl text-gray-300 leading-relaxed font-light mb-12">
-                {(currentItem as Event & { type: 'event' }).description}
-              </p>
-              
-              {/* Event details for text-only */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
-                <div className="bg-white bg-opacity-10 rounded-lg p-6">
-                  <div className="text-4xl mb-4">📅</div>
-                  <div className="text-lg font-medium mb-2">Date</div>
-                  <div className="text-xl">{new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleDateString()}</div>
-                </div>
-                
-                <div className="bg-white bg-opacity-10 rounded-lg p-6">
-                  <div className="text-4xl mb-4">🕒</div>
-                  <div className="text-lg font-medium mb-2">Time</div>
-                  <div className="text-xl">
-                    {new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                    {(currentItem as Event & { type: 'event' }).end_date && ` - ${new Date((currentItem as Event & { type: 'event' }).end_date!).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
-                  </div>
-                </div>
-                
-                {(currentItem as Event & { type: 'event' }).location && (
-                  <div className="bg-white bg-opacity-10 rounded-lg p-6">
-                    <div className="text-4xl mb-4">📍</div>
-                    <div className="text-lg font-medium mb-2">Location</div>
-                    <div className="text-xl">{(currentItem as Event & { type: 'event' }).location}</div>
+            ) : (
+              <div className="min-h-screen relative bg-black">
+                <video
+                  src={(currentItem as Media & { type: 'media' }).file_url}
+                  className="w-full h-screen object-cover"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                />
+                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+                {((currentItem as Media & { type: 'media' }).title || (currentItem as Media & { type: 'media' }).description) && (
+                  <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+                    <div className="glass elevate soft-shadow rounded-2xl px-5 py-4 md:px-6 md:py-5 bg-black/40 max-w-4xl">
+                      {(currentItem as Media & { type: 'media' }).title && (
+                        <div className="text-lg md:text-2xl font-medium">
+                          {(currentItem as Media & { type: 'media' }).title}
+                        </div>
+                      )}
+                      {(currentItem as Media & { type: 'media' }).description && (
+                        <div className="text-sm md:text-base text-white/75 mt-1">
+                          {(currentItem as Media & { type: 'media' }).description}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
+            )
+          )}
+
+          {/* Slideshow indicators */}
+          {allItems.length > 1 && (
+            <div className="absolute bottom-7 left-1/2 -translate-x-1/2 flex gap-2">
+              {allItems.map((_, index) => (
+                <div
+                  key={index}
+                  className={`h-1.5 w-6 rounded-full transition-all duration-300 ${
+                    index === currentIndex ? 'bg-white' : 'bg-white/40'
+                  }`}
+                />
+              ))}
             </div>
-          </div>
-        )
-      ) : (
-        // Media display
-        (currentItem as Media & { type: 'media' }).file_type === 'image' ? (
-          // Image media display - clean display without overlay, maintains aspect ratio
-          <div className="min-h-screen flex items-center justify-center bg-black">
-            <img
-              src={(currentItem as Media & { type: 'media' }).file_url}
-              alt={(currentItem as Media & { type: 'media' }).title}
-              className="max-w-full max-h-full object-contain"
-            />
-          </div>
-        ) : (
-          // Video media display - clean display without overlay
-          <div className="min-h-screen bg-black">
-            <video
-              src={(currentItem as Media & { type: 'media' }).file_url}
-              className="w-full h-screen object-cover"
-              autoPlay
-              muted
-              loop
-              playsInline
-            />
-          </div>
-        )
-      )}
+          )}
 
-      {/* Slideshow indicators */}
-      {allItems.length > 1 && (
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex space-x-3">
-          {allItems.map((_, index) => (
+          {/* Auto-advance progress bar */}
+          <div className="absolute bottom-0 left-0 w-full h-1.5 bg-white/10 overflow-hidden">
             <div
-              key={index}
-              className={`h-3 w-3 rounded-full transition-all duration-300 ${
-                index === currentIndex 
-                  ? 'bg-white scale-125' 
-                  : 'bg-white bg-opacity-50'
-              }`}
+              key={currentIndex}
+              className="h-full bg-white/90 animate-progress"
+              style={progressStyle}
             />
-          ))}
-        </div>
-      )}
-
-      {/* Auto-advance progress bar */}
-      <div className="absolute bottom-0 left-0 w-full h-1 bg-white bg-opacity-20">
-        <div 
-          className="h-full bg-white transition-all duration-300 ease-linear"
-          style={{
-            width: `${((currentIndex + 1) / allItems.length) * 100}%`
-          }}
-        />
-      </div>
+          </div>
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

@@ -1,3 +1,56 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer utilities {
+	.glass {
+		-webkit-backdrop-filter: blur(24px);
+		backdrop-filter: blur(24px);
+		background: rgba(255, 255, 255, 0.1);
+		border: 1px solid rgba(255, 255, 255, 0.15);
+		border-radius: 1rem; /* ~rounded-2xl */
+		box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+	}
+
+	.soft-shadow {
+		box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+	}
+
+	.elevate {
+		box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.1);
+	}
+
+	.edge-fade {
+		mask-image: linear-gradient(to bottom, transparent, black 10%, black 90%, transparent);
+	}
+
+	.accent-gradient {
+		background: linear-gradient(90deg, rgba(99,102,241,0.9), rgba(236,72,153,0.9));
+	}
+
+	.aurora-blob {
+		filter: blur(80px);
+		opacity: 0.35;
+	}
+}
+
+@keyframes slide-progress {
+	from { width: 0% }
+	to { width: 100% }
+}
+
+@keyframes fade-up {
+	from { opacity: 0; transform: translateY(16px) }
+	to { opacity: 1; transform: translateY(0) }
+}
+
+@keyframes fade-in {
+	from { opacity: 0 }
+	to { opacity: 1 }
+}
+
+/* Utility class to animate progress bars. Override --duration to sync with slide duration */
+.animate-progress {
+	animation: slide-progress var(--duration,12s) linear forwards;
+}
+

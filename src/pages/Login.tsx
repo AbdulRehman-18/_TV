@@ -41,8 +41,12 @@ export function Login() {
       if (error) {
         throw error;
       }
-    } catch (error: any) {
-      setError(error.message || 'An error occurred during login');
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setError(error.message || 'An error occurred during login');
+      } else {
+        setError('An error occurred during login');
+      }
     } finally {
       setIsLoading(false);
     }
