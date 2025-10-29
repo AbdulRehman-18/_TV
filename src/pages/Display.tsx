@@ -183,24 +183,34 @@ export function Display() {
     };
   }, []);
 
+  // Slideshow timer logic: pause for video, 12s for others
   useEffect(() => {
     const activeAnnouncements = announcements.filter(a => a.is_active);
     const activeEvents = events.filter(e => e.is_active);
     const activeMedia = media.filter(m => m.is_active);
-    
     const totalItems = activeAnnouncements.length + activeEvents.length + activeMedia.length;
-    
-    if (totalItems === 0) {
+    if (totalItems === 0) return;
+
+    // Determine if current slide is a video
+    const allItems = [
+      ...activeAnnouncements.map(item => ({ ...item, type: 'announcement' as const })),
+      ...activeEvents.map(item => ({ ...item, type: 'event' as const })),
+      ...activeMedia.map(item => ({ ...item, type: 'media' as const }))
+    ];
+    const currentItem = allItems[currentIndex];
+
+    // If current slide is a video, do not auto-advance
+    if (currentItem && currentItem.type === 'media' && currentItem.file_type === 'video') {
+      // Do nothing: video will advance onEnded
       return;
     }
 
-    // Auto-advance slideshow every 12 seconds
+    // Otherwise, auto-advance every 12s
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % totalItems);
+      setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current);
     }, 12000);
-
     return () => clearInterval(timer);
-  }, [announcements, events, media]);
+  }, [announcements, events, media, currentIndex]);
 
   const loadAnnouncements = async () => {
     try {
@@ -263,6 +273,10 @@ export function Display() {
     ...activeEvents.map(item => ({ ...item, type: 'event' as const })),
     ...activeMedia.map(item => ({ ...item, type: 'media' as const }))
   ];
+
+  // Use ref to avoid stale closure in video onEnded callback
+  const totalItemsRef = useRef(allItems.length);
+  totalItemsRef.current = allItems.length;
   
   const currentItem: SlideItem = allItems[currentIndex];
 
@@ -298,6 +312,9 @@ export function Display() {
 
   const slideDurationMs = 12000;
   const progressStyle: CSSProperties & Record<'--duration', string> = { ['--duration']: `${slideDurationMs}ms` };
+
+  // Determine if current slide is a video
+  const isCurrentSlideVideo = allItems[currentIndex]?.type === 'media' && allItems[currentIndex]?.file_type === 'video';
 
   return (
     <div className="min-h-screen relative overflow-hidden bg-gradient-to-b from-slate-900 via-black to-black text-white">
@@ -478,31 +495,11 @@ export function Display() {
               </div>
             ) : (
               <div className="min-h-screen relative bg-black">
-                <video
+                <VideoSlide
                   src={(currentItem as Media & { type: 'media' }).file_url}
-                  className="w-full h-screen object-cover"
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
+                  onEnded={() => setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current)}
+                  description={(currentItem as Media & { type: 'media' }).description}
                 />
-                <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                {((currentItem as Media & { type: 'media' }).title || (currentItem as Media & { type: 'media' }).description) && (
-                  <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
-                    <div className="glass elevate soft-shadow rounded-2xl px-5 py-4 md:px-6 md:py-5 bg-black/40 max-w-4xl">
-                      {(currentItem as Media & { type: 'media' }).title && (
-                        <div className="text-lg md:text-2xl font-medium">
-                          {(currentItem as Media & { type: 'media' }).title}
-                        </div>
-                      )}
-                      {(currentItem as Media & { type: 'media' }).description && (
-                        <div className="text-sm md:text-base text-white/75 mt-1">
-                          {(currentItem as Media & { type: 'media' }).description}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
               </div>
             )
           )}
@@ -521,16 +518,129 @@ export function Display() {
             </div>
           )}
 
-          {/* Auto-advance progress bar */}
-          <div className="absolute bottom-0 left-0 w-full h-1.5 bg-white/10 overflow-hidden">
-            <div
-              key={currentIndex}
-              className="h-full bg-white/90 animate-progress"
-              style={progressStyle}
-            />
-          </div>
+          {/* Auto-advance progress bar - only show for non-video slides */}
+          {!isCurrentSlideVideo && (
+            <div className="absolute bottom-0 left-0 w-full h-1.5 bg-white/10 overflow-hidden">
+              <div
+                key={currentIndex}
+                className="h-full bg-white/90 animate-progress"
+                style={progressStyle}
+              />
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
     </div>
+  );
+}
+
+export default Display;
+
+// VideoSlide component: plays video with audio, advances on end
+type VideoSlideProps = {
+  src: string;
+  onEnded: () => void;
+  description?: string;
+};
+function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const attemptAudioPlayback = async () => {
+      try {
+        // First try to play with audio
+        video.muted = false;
+        video.volume = 1.0;
+        await video.play();
+        console.log('Video playing with audio');
+      } catch (error) {
+        console.warn('Audio autoplay blocked, trying muted playback:', error);
+        try {
+          // Fallback: play muted first
+          video.muted = true;
+          video.volume = 1.0;
+          await video.play();
+          console.log('Video playing muted, attempting to unmute...');
+
+          // Try to unmute after a short delay
+          setTimeout(async () => {
+            try {
+              video.muted = false;
+              console.log('Successfully unmuted video');
+            } catch (unmuteError) {
+              console.warn('Could not unmute video:', unmuteError);
+              // Keep muted if unmute fails
+            }
+          }, 100);
+        } catch (mutedError) {
+          console.error('Video playback failed completely:', mutedError);
+        }
+      }
+    };
+
+    // Wait for video to be ready before attempting playback
+    const handleCanPlay = () => {
+      video.removeEventListener('canplay', handleCanPlay);
+      attemptAudioPlayback();
+    };
+
+    if (video.readyState >= 2) { // HAVE_CURRENT_DATA or higher
+      attemptAudioPlayback();
+    } else {
+      video.addEventListener('canplay', handleCanPlay);
+    }
+
+    // Add global click handler to enable audio on user interaction
+    const handleUserInteraction = () => {
+      const allVideos = document.querySelectorAll('video');
+      allVideos.forEach(v => {
+        if (v.muted) {
+          v.muted = false;
+          console.log('Unmuted video on user interaction');
+        }
+      });
+      // Remove listener after first interaction
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+    };
+
+    document.addEventListener('click', handleUserInteraction);
+    document.addEventListener('touchstart', handleUserInteraction);
+    document.addEventListener('keydown', handleUserInteraction);
+
+    return () => {
+      video.pause();
+      video.currentTime = 0;
+      video.removeEventListener('canplay', handleCanPlay);
+      document.removeEventListener('click', handleUserInteraction);
+      document.removeEventListener('touchstart', handleUserInteraction);
+      document.removeEventListener('keydown', handleUserInteraction);
+    };
+  }, [src]);
+
+  return (
+    <>
+      <video
+        ref={videoRef}
+        src={src}
+        className="w-full h-screen object-cover"
+        autoPlay
+        playsInline
+        preload="auto"
+        onEnded={onEnded}
+        controls={false}
+      />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+      {description && (
+        <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
+          <div className="glass elevate soft-shadow rounded-2xl px-5 py-4 md:px-6 md:py-5 bg-black/40 max-w-4xl">
+            <div className="text-sm md:text-base text-white/75">{description}</div>
+          </div>
+        </div>
+      )}
+    </>
   );
 }
