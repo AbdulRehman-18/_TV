@@ -544,80 +544,58 @@ type VideoSlideProps = {
 };
 function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [needsUnmute, setNeedsUnmute] = useState(false);
+  const [mutedFallback, setMutedFallback] = useState(false);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    const attemptAudioPlayback = async () => {
-      try {
-        // First try to play with audio
-        video.muted = false;
-        video.volume = 1.0;
-        await video.play();
-        console.log('Video playing with audio');
-      } catch (error) {
-        console.warn('Audio autoplay blocked, trying muted playback:', error);
-        try {
-          // Fallback: play muted first
-          video.muted = true;
-          video.volume = 1.0;
-          await video.play();
-          console.log('Video playing muted, attempting to unmute...');
+    let mounted = true;
 
-          // Try to unmute after a short delay
-          setTimeout(async () => {
-            try {
-              video.muted = false;
-              console.log('Successfully unmuted video');
-            } catch (unmuteError) {
-              console.warn('Could not unmute video:', unmuteError);
-              // Keep muted if unmute fails
-            }
-          }, 100);
-        } catch (mutedError) {
-          console.error('Video playback failed completely:', mutedError);
+    const tryPlay = async () => {
+      try {
+        // Try to play with audio first
+        video.muted = false;
+        video.currentTime = 0;
+        await video.play();
+        if (!mounted) return;
+        setNeedsUnmute(false);
+        setMutedFallback(false);
+      } catch (err) {
+        // Browser blocked unmuted autoplay — try muted autoplay so video still plays
+        console.warn('Unmuted autoplay blocked, falling back to muted autoplay', err);
+        try {
+          video.muted = true;
+          setMutedFallback(true);
+          await video.play();
+          if (!mounted) return;
+          // Show unmute affordance so user can enable audio with a gesture
+          setNeedsUnmute(true);
+        } catch (err2) {
+          console.error('Muted autoplay also failed', err2);
+          // Final fallback: mark as needing unmute so user can start playback
+          setNeedsUnmute(true);
         }
       }
     };
 
-    // Wait for video to be ready before attempting playback
-    const handleCanPlay = () => {
-      video.removeEventListener('canplay', handleCanPlay);
-      attemptAudioPlayback();
-    };
-
-    if (video.readyState >= 2) { // HAVE_CURRENT_DATA or higher
-      attemptAudioPlayback();
-    } else {
-      video.addEventListener('canplay', handleCanPlay);
-    }
-
-    // Add global click handler to enable audio on user interaction
-    const handleUserInteraction = () => {
-      const allVideos = document.querySelectorAll('video');
-      allVideos.forEach(v => {
-        if (v.muted) {
-          v.muted = false;
-          console.log('Unmuted video on user interaction');
-        }
-      });
-      // Remove listener after first interaction
-      document.removeEventListener('click', handleUserInteraction);
-      document.removeEventListener('touchstart', handleUserInteraction);
-      document.removeEventListener('keydown', handleUserInteraction);
-    };
-
-    document.addEventListener('click', handleUserInteraction);
-    document.addEventListener('touchstart', handleUserInteraction);
-    document.addEventListener('keydown', handleUserInteraction);
+    tryPlay();
 
     return () => {
-      video.pause();
-      video.currentTime = 0;
-      video.removeEventListener('canplay', handleCanPlay);
-      document.removeEventListener('click', handleUserInteraction);
-      document.removeEventListener('touchstart', handleUserInteraction);
-      document.removeEventListener('keydown', handleUserInteraction);
+      mounted = false;
+      if (video) {
+        try {
+          video.pause();
+        } catch (e) {
+          console.warn('Error pausing video on cleanup', e);
+        }
+        try {
+          video.currentTime = 0;
+        } catch (e) {
+          console.warn('Error resetting video time on cleanup', e);
+        }
+      }
     };
   }, [src]);
 
@@ -630,9 +608,33 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
         autoPlay
         playsInline
         preload="auto"
+        muted={mutedFallback}
         onEnded={onEnded}
         controls={false}
       />
+      {/* Unmute overlay shown when autoplay was only allowed muted — user must gesture to enable audio */}
+      {needsUnmute && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
+          <button
+            onClick={async () => {
+              const v = videoRef.current;
+              if (!v) return;
+              try {
+                v.muted = false;
+                await v.play();
+                setNeedsUnmute(false);
+                setMutedFallback(false);
+              } catch (err) {
+                console.error('Failed to unmute video on user gesture', err);
+              }
+            }}
+            className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full glass elevate"
+            aria-label="Enable sound"
+          >
+            Enable sound
+          </button>
+        </div>
+      )}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       {description && (
         <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
