@@ -544,46 +544,27 @@ type VideoSlideProps = {
 };
 function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [needsUnmute, setNeedsUnmute] = useState(false);
-  const [mutedFallback, setMutedFallback] = useState(false);
-
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
-    let mounted = true;
-
     const tryPlay = async () => {
       try {
-        // Try to play with audio first
+        // Attempt to play with audio enabled. In controlled kiosk environments
+        // this should succeed. If the browser blocks autoplay with audio, the
+        // video may not start — that's expected behavior for browsers that
+        // enforce autoplay policies.
         video.muted = false;
         video.currentTime = 0;
         await video.play();
-        if (!mounted) return;
-        setNeedsUnmute(false);
-        setMutedFallback(false);
       } catch (err) {
-        // Browser blocked unmuted autoplay — try muted autoplay so video still plays
-        console.warn('Unmuted autoplay blocked, falling back to muted autoplay', err);
-        try {
-          video.muted = true;
-          setMutedFallback(true);
-          await video.play();
-          if (!mounted) return;
-          // Show unmute affordance so user can enable audio with a gesture
-          setNeedsUnmute(true);
-        } catch (err2) {
-          console.error('Muted autoplay also failed', err2);
-          // Final fallback: mark as needing unmute so user can start playback
-          setNeedsUnmute(true);
-        }
+        console.error('Autoplay with audio failed', err);
       }
     };
 
     tryPlay();
 
     return () => {
-      mounted = false;
       if (video) {
         try {
           video.pause();
@@ -608,33 +589,11 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
         autoPlay
         playsInline
         preload="auto"
-        muted={mutedFallback}
+        muted={false}
         onEnded={onEnded}
         controls={false}
       />
-      {/* Unmute overlay shown when autoplay was only allowed muted — user must gesture to enable audio */}
-      {needsUnmute && (
-        <div className="absolute inset-0 flex items-center justify-center pointer-events-auto">
-          <button
-            onClick={async () => {
-              const v = videoRef.current;
-              if (!v) return;
-              try {
-                v.muted = false;
-                await v.play();
-                setNeedsUnmute(false);
-                setMutedFallback(false);
-              } catch (err) {
-                console.error('Failed to unmute video on user gesture', err);
-              }
-            }}
-            className="bg-white/10 hover:bg-white/20 text-white px-6 py-3 rounded-full glass elevate"
-            aria-label="Enable sound"
-          >
-            Enable sound
-          </button>
-        </div>
-      )}
+      {/* Note: no unmute UI — videos are attempted with audio enabled by default */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       {description && (
         <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">
