@@ -1,4 +1,5 @@
 import { Home, Upload, Settings, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 
@@ -9,9 +10,19 @@ interface ClientBottomNavProps {
 }
 
 export function ClientBottomNav({ activeTab, onTabChange, onLogout }: ClientBottomNavProps) {
+  const navigate = useNavigate();
+
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      // Attempt to sign out from Supabase
+      await supabase.auth.signOut();
+    } catch (error) {
+      // Log error but continue with navigation
+      console.error('Logout error:', error);
+    }
+    // Always call onLogout and navigate
     onLogout?.();
+    navigate('/login', { replace: true });
   };
 
   const isActive = (tab: string) => activeTab === tab;

@@ -31,8 +31,15 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+    try {
+      // Attempt to sign out from Supabase
+      await supabase.auth.signOut();
+    } catch (error) {
+      // Log error but continue with navigation
+      console.error('Logout error:', error);
+    }
+    // Always navigate to login
+    navigate('/login', { replace: true });
   };
 
   const openDisplayPage = () => {

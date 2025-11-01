@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { 
   Home, 
   Users,
@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { supabase } from '@/lib/supabase';
 
 interface BottomNavProps {
   onRefresh?: (hard: boolean) => void;
@@ -23,6 +24,7 @@ const quickAddItems = [
 ];
 
 export function BottomNav({ onRefresh, onForce, onLogout }: BottomNavProps) {
+  const navigate = useNavigate();
   const [showQuickAdd, setShowQuickAdd] = useState(false);
   const [fabPos, setFabPos] = useState<{ x: number; y: number } | null>(null);
   const [dragging, setDragging] = useState(false);
@@ -33,15 +35,14 @@ export function BottomNav({ onRefresh, onForce, onLogout }: BottomNavProps) {
 
   const handleLogout = async () => {
     try {
-      // sign out via supabase if available
-      // import supabase lazily to avoid circular imports
-      const { supabase } = await import('@/lib/supabase');
+      // Attempt to sign out from Supabase
       await supabase.auth.signOut();
-    } catch {
-      // ignore
+    } catch (error) {
+      // Log error but continue with navigation
+      console.error('Logout error:', error);
     }
-    // navigate to login
-    window.location.href = '/login';
+    // Always navigate to login
+    navigate('/login', { replace: true });
   };
 
   return (

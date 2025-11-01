@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -12,6 +13,7 @@ import { Settings } from '@/pages/client/Settings';
 
 export function Client() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeTab, setActiveTab] = useState<'home' | 'upload' | 'settings'>('home');
   const [showMediaForm, setShowMediaForm] = useState(false);
@@ -68,7 +70,15 @@ export function Client() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    try {
+      // Attempt to sign out from Supabase
+      await supabase.auth.signOut();
+    } catch (error) {
+      // Log error but continue with navigation
+      console.error('Logout error:', error);
+    }
+    // Always navigate to login
+    navigate('/login', { replace: true });
   };
 
   const getPendingCount = () => mediaList.filter(m => m.status === 'pending').length;
