@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import loginImage from './assets/images/login.jpg';
 
 export function Login() {
   const { user, loading } = useAuth();
@@ -139,7 +140,7 @@ export function Login() {
         <div className="relative z-10 w-full h-full flex items-center justify-center">
           {/* Logo area with actual image */}
           <img 
-            src="/src/pages/assets/images/login.jpg" 
+            src={loginImage} 
             alt="Wava AI Login Illustration" 
             className="w-full h-full object-cover rounded-2xl"
           />
