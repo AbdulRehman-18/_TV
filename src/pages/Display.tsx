@@ -464,34 +464,28 @@ export function Display() {
           ) : (
             // Media
             (currentItem as Media & { type: 'media' }).file_type === 'image' ? (
-              <div className="min-h-screen flex items-center justify-center bg-black px-6 md:px-10">
-                <div className="relative max-w-[92vw] max-h-[88vh] w-full h-full flex items-center justify-center">
-                  <div className="absolute inset-6 -z-10 rounded-3xl bg-gradient-to-tr from-white/10 to-white/0 blur-2xl" />
-                  <div className="relative rounded-3xl overflow-hidden soft-shadow" style={{ boxShadow: '0 20px 60px rgba(0,0,0,0.45)' }}>
-                    <div className="absolute inset-0 rounded-3xl pointer-events-none" style={{ boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.12)' }} />
-                    <img
-                      src={(currentItem as Media & { type: 'media' }).file_url}
-                      alt={(currentItem as Media & { type: 'media' }).title}
-                      className="object-contain max-h-[88vh] max-w-[92vw] bg-neutral-900"
-                    />
-                    {((currentItem as Media & { type: 'media' }).title || (currentItem as Media & { type: 'media' }).description) && (
-                      <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
-                        <div className="glass elevate soft-shadow rounded-xl px-4 py-3 md:px-5 md:py-4 bg-black/40">
-                          {(currentItem as Media & { type: 'media' }).title && (
-                            <div className="text-base md:text-lg font-medium">
-                              {(currentItem as Media & { type: 'media' }).title}
-                            </div>
-                          )}
-                          {(currentItem as Media & { type: 'media' }).description && (
-                            <div className="text-xs md:text-sm text-white/70 mt-0.5">
-                              {(currentItem as Media & { type: 'media' }).description}
-                            </div>
-                          )}
+              <div className="min-h-screen relative bg-black">
+                <img
+                  src={(currentItem as Media & { type: 'media' }).file_url}
+                  alt={(currentItem as Media & { type: 'media' }).title}
+                  className="w-full h-screen object-cover"
+                />
+                {((currentItem as Media & { type: 'media' }).title || (currentItem as Media & { type: 'media' }).description) && (
+                  <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
+                    <div className="glass elevate soft-shadow rounded-xl px-4 py-3 md:px-5 md:py-4 bg-black/40">
+                      {(currentItem as Media & { type: 'media' }).title && (
+                        <div className="text-base md:text-lg font-medium">
+                          {(currentItem as Media & { type: 'media' }).title}
                         </div>
-                      </div>
-                    )}
+                      )}
+                      {(currentItem as Media & { type: 'media' }).description && (
+                        <div className="text-xs md:text-sm text-white/70 mt-0.5">
+                          {(currentItem as Media & { type: 'media' }).description}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             ) : (
               <div className="min-h-screen relative bg-black">
@@ -550,21 +544,28 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
 
     const tryPlay = async () => {
       try {
-        // Attempt to play with audio enabled. In controlled kiosk environments
-        // this should succeed. If the browser blocks autoplay with audio, the
-        // video may not start — that's expected behavior for browsers that
-        // enforce autoplay policies.
+        // First try: play with audio enabled (for kiosk environments with user interaction)
         video.muted = false;
         video.currentTime = 0;
         await video.play();
       } catch (err) {
-        console.error('Autoplay with audio failed', err);
+        console.warn('Autoplay with audio failed, trying muted:', err);
+        try {
+          // Fallback: play muted (will always succeed even without user interaction)
+          video.muted = true;
+          await video.play();
+          console.log('Playing video muted due to browser autoplay policy');
+        } catch (mutedErr) {
+          console.error('Failed to play video even when muted:', mutedErr);
+        }
       }
     };
 
-    tryPlay();
+    // Small delay to ensure video element is ready
+    const playTimeout = setTimeout(tryPlay, 100);
 
     return () => {
+      clearTimeout(playTimeout);
       if (video) {
         try {
           video.pause();
@@ -586,14 +587,13 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
         ref={videoRef}
         src={src}
         className="w-full h-screen object-cover"
-        autoPlay
         playsInline
         preload="auto"
-        muted={false}
         onEnded={onEnded}
         controls={false}
       />
-      {/* Note: no unmute UI — videos are attempted with audio enabled by default */}
+      {/* Videos attempt to play with audio first. If browser blocks due to autoplay policy,
+          we fallback to muted playback which will always work. */}
       <div className="pointer-events-none absolute inset-x-0 bottom-0 h-56 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
       {description && (
         <div className="absolute inset-x-0 bottom-0 p-6 md:p-8">

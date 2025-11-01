@@ -51,8 +51,8 @@ export function Settings() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-sm text-gray-600">Configure application behavior and display preferences.</p>
+        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Settings</h1>
+        <p className="text-sm md:text-base text-gray-500 mt-1">Configure application behavior and display preferences.</p>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

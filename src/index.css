@@ -32,6 +32,30 @@
 		filter: blur(80px);
 		opacity: 0.35;
 	}
+
+	/* Mobile responsive utilities */
+	.scrollbar-hide {
+		-ms-overflow-style: none;
+		scrollbar-width: none;
+	}
+
+	.scrollbar-hide::-webkit-scrollbar {
+		display: none;
+	}
+
+	/* Safe area insets for notched devices */
+	.pt-safe {
+		padding-top: max(1rem, env(safe-area-inset-top));
+	}
+
+	.pb-safe {
+		padding-bottom: max(1rem, env(safe-area-inset-bottom));
+	}
+
+	.px-safe {
+		padding-left: max(1rem, env(safe-area-inset-left));
+		padding-right: max(1rem, env(safe-area-inset-right));
+	}
 }
 
 @keyframes slide-progress {
@@ -53,4 +77,38 @@
 .animate-progress {
 	animation: slide-progress var(--duration,12s) linear forwards;
 }
+
+/* Mobile-first responsive adjustments */
+@media (max-width: 768px) {
+	html {
+		font-size: 14px;
+	}
+
+	body {
+		-webkit-user-select: none;
+		user-select: none;
+	}
+
+	/* Prevent zoom on input focus for iOS */
+	input[type="text"],
+	input[type="email"],
+	input[type="password"],
+	input[type="tel"],
+	input[type="number"],
+	select,
+	textarea {
+		font-size: 16px;
+		-webkit-user-select: text;
+		user-select: text;
+	}
+
+	/* Improve touch targets on mobile */
+	button,
+	a[role="button"],
+	[role="button"] {
+		min-height: 44px;
+		min-width: 44px;
+	}
+}
+
 

@@ -29,11 +29,26 @@ export interface Media {
   file_size?: number;
   created_at: string;
   is_active: boolean;
+  client_id?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  admin_notes?: string;
+}
+
+export interface Client {
+  id: string;
+  name: string;
+  phone_number: string;
+  email: string;
+  organization: string;
+  is_approved: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface User {
   id: string;
   email: string;
+  role?: 'admin' | 'client';
 }
 
 export interface AuthState {

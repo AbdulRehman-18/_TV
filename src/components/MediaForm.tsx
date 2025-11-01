@@ -79,6 +79,8 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
         description: description || null,
         ...fileData,
         is_active: true,
+        client_id: null, // Admin uploads don't have a client
+        status: 'approved', // Admin uploads are pre-approved
       };
 
       let result;
