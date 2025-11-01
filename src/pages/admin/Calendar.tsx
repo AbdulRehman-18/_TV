@@ -139,12 +139,12 @@ export function CalendarView() {
   return (
     <div className="space-y-8">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col md:flex-row items-start md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-light text-gray-900">Calendar</h1>
-          <p className="text-gray-500 mt-1">Events and announcements overview</p>
+          <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Calendar</h1>
+          <p className="text-sm md:text-base text-gray-500 mt-1">Events and announcements overview</p>
         </div>
-        <Button onClick={goToToday} variant="ghost" className="text-gray-600 hover:text-gray-900">
+        <Button onClick={goToToday} variant="outline" className="w-full md:w-auto">
           Today
         </Button>
       </div>

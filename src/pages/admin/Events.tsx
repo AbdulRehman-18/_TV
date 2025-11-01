@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { EventCard } from '@/components/EventCard';
 import { EventForm } from '@/components/EventForm';
-import { Plus, Calendar, RefreshCw, MapPin, Clock } from 'lucide-react';
+import { Plus, Calendar, RefreshCw, Clock, CheckCircle2 } from 'lucide-react';
 import { Event } from '@/types';
 
 export function Events() {
@@ -118,11 +118,63 @@ export function Events() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Events</h1>
-          <p className="text-gray-600">Manage your events and schedules</p>
+      <div>
+        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Events</h1>
+        <p className="text-sm md:text-base text-gray-500 mt-1">Manage and schedule your events</p>
+      </div>
+
+      {/* Stats Cards - Horizontal Scroll */}
+      <div className="overflow-x-auto scrollbar-hide">
+        <div className="flex gap-3 md:gap-4 pb-2 min-w-max md:min-w-0 md:grid md:grid-cols-4">
+          {/* Total Events */}
+          <div className="bg-blue-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Total Events</p>
+                <p className="text-2xl md:text-3xl font-bold text-blue-600 mt-2">{events.length}</p>
+              </div>
+              <Calendar className="w-6 h-6 md:w-8 md:h-8 text-blue-500 opacity-20" />
+            </div>
+          </div>
+
+          {/* Upcoming */}
+          <div className="bg-purple-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Upcoming</p>
+                <p className="text-2xl md:text-3xl font-bold text-purple-600 mt-2">{getUpcomingEvents().length}</p>
+              </div>
+              <Clock className="w-6 h-6 md:w-8 md:h-8 text-purple-500 opacity-20" />
+            </div>
+          </div>
+
+          {/* Ongoing */}
+          <div className="bg-green-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Ongoing</p>
+                <p className="text-2xl md:text-3xl font-bold text-green-600 mt-2">{getOngoingEvents().length}</p>
+              </div>
+              <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 text-green-500 opacity-20" />
+            </div>
+          </div>
+
+          {/* Past */}
+          <div className="bg-gray-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <p className="text-xs md:text-sm font-medium text-gray-600">Past</p>
+                <p className="text-2xl md:text-3xl font-bold text-gray-600 mt-2">{getPastEvents().length}</p>
+              </div>
+              <Calendar className="w-6 h-6 md:w-8 md:h-8 text-gray-500 opacity-20" />
+            </div>
+          </div>
         </div>
+      </div>
+
+      {/* Action Bar */}
+      <div className="flex justify-between items-center">
+        <span></span>
         <div className="flex items-center space-x-3">
           <Button
             variant="outline"
@@ -134,45 +186,9 @@ export function Events() {
           </Button>
           <Button onClick={handleCreateNew} className="flex items-center space-x-2">
             <Plus className="h-4 w-4" />
-            <span>Create New Event</span>
+            <span>New Event</span>
           </Button>
         </div>
-      </div>
-
-      {/* Statistics Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-blue-600">
-              {events.length}
-            </div>
-            <div className="text-sm text-blue-600">Total Events</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-green-600">
-              {getUpcomingEvents().length}
-            </div>
-            <div className="text-sm text-green-600">Upcoming</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-purple-600">
-              {getOngoingEvents().length}
-            </div>
-            <div className="text-sm text-purple-600">Ongoing</div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6 text-center">
-            <div className="text-2xl font-bold text-gray-600">
-              {getPastEvents().length}
-            </div>
-            <div className="text-sm text-gray-600">Past Events</div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Events List */}
@@ -244,7 +260,7 @@ export function Events() {
           {getPastEvents().length > 0 && (
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                <MapPin className="h-5 w-5 mr-2 text-gray-600" />
+                <Calendar className="h-5 w-5 mr-2 text-gray-600" />
                 Past Events
               </h2>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

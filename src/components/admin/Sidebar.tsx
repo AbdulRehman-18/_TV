@@ -4,6 +4,7 @@ import {
   Megaphone, 
   Calendar, 
   Video,  
+  Users,
   Settings, 
   Monitor,
   LogOut
@@ -16,7 +17,7 @@ const navigationItems = [
   { name: 'Announcements', href: '/admin/announcements', icon: Megaphone },
   { name: 'Events', href: '/admin/events', icon: Calendar },
   { name: 'Media', href: '/admin/media', icon: Video },
-
+  { name: 'Clients', href: '/admin/clients', icon: Users },
   { name: 'Calendar', href: '/admin/calendar', icon: Calendar },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ];
@@ -76,7 +77,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
           >
             {({ isActive }) => (
               <>
-                <item.icon className={`transition-colors duration-200 ${isActive ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'} ${collapsed ? 'h-5 w-5' : 'h-5 w-5 mr-3'}`} />
+                <item.icon className={`transition-colors duration-200 ${isActive ? 'text-gray-900' : 'text-gray-400 group-hover:text-gray-600'} ${collapsed ? 'h-6 w-6' : 'h-5 w-5 mr-3'}`} />
                 {!collapsed && (
                   <span className="truncate">{item.name}</span>
                 )}

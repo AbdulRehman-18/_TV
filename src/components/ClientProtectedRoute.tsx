@@ -2,11 +2,11 @@ import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
-interface ProtectedRouteProps {
+interface ClientProtectedRouteProps {
   children: React.ReactNode;
 }
 
-export function ProtectedRoute({ children }: ProtectedRouteProps) {
+export function ClientProtectedRoute({ children }: ClientProtectedRouteProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
@@ -21,8 +21,8 @@ export function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Navigate to="/login" replace />;
   }
 
-  if (user.role !== 'admin') {
-    return <Navigate to="/client" replace />;
+  if (user.role !== 'client') {
+    return <Navigate to="/admin" replace />;
   }
 
   return <>{children}</>;
