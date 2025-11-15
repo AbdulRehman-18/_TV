@@ -68,11 +68,7 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
         return;
       }
 
-      if (!title.trim()) {
-        setError('Please enter a title');
-        setIsLoading(false);
-        return;
-      }
+      // Title is now optional, so no validation needed
 
       // Upload file to storage
       const fileExt = file.name.split('.').pop();
@@ -142,14 +138,13 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="title">Title *</Label>
+            <Label htmlFor="title">Title (Optional)</Label>
             <Input
               id="title"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="e.g., Company Presentation Q4 2025"
-              required
             />
           </div>
 

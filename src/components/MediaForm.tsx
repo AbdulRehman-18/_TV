@@ -169,13 +169,12 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Media Title</Label>
+            <Label htmlFor="title">Media Title (Optional)</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter media title"
-              required
             />
           </div>
 

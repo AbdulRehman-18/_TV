@@ -21,7 +21,7 @@ export interface Event {
 
 export interface Media {
   id: string;
-  title: string;
+  title?: string;
   description?: string;
   file_url: string;
   file_type: 'image' | 'video';

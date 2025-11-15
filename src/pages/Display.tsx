@@ -467,22 +467,15 @@ export function Display() {
               <div className="min-h-screen relative bg-black">
                 <img
                   src={(currentItem as Media & { type: 'media' }).file_url}
-                  alt={(currentItem as Media & { type: 'media' }).title}
+                  alt={(currentItem as Media & { type: 'media' }).title || 'Media'}
                   className="w-full h-screen object-cover"
                 />
-                {((currentItem as Media & { type: 'media' }).title || (currentItem as Media & { type: 'media' }).description) && (
+                {(currentItem as Media & { type: 'media' }).description && (
                   <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
                     <div className="glass elevate soft-shadow rounded-xl px-4 py-3 md:px-5 md:py-4 bg-black/40">
-                      {(currentItem as Media & { type: 'media' }).title && (
-                        <div className="text-base md:text-lg font-medium">
-                          {(currentItem as Media & { type: 'media' }).title}
-                        </div>
-                      )}
-                      {(currentItem as Media & { type: 'media' }).description && (
-                        <div className="text-xs md:text-sm text-white/70 mt-0.5">
-                          {(currentItem as Media & { type: 'media' }).description}
-                        </div>
-                      )}
+                      <div className="text-xs md:text-sm text-white/70">
+                        {(currentItem as Media & { type: 'media' }).description}
+                      </div>
                     </div>
                   </div>
                 )}
