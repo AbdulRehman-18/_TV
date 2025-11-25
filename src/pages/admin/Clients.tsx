@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -15,6 +15,8 @@ import {
   ThumbsDown,
   CheckCircle2,
   XCircle,
+  Filter,
+  MoreHorizontal
 } from 'lucide-react';
 import { Media } from '@/types';
 
@@ -55,29 +57,24 @@ export function Clients() {
         .order('created_at', { ascending: false });
 
       if (clientsError) throw clientsError;
-      console.log('All clients from DB:', clientsData);
 
-      // Filter out admin user in app logic (more reliable)
+      // Filter out admin user in app logic
       const filteredClients = (clientsData || []).filter(c => c.email !== adminEmail);
-      console.log('Clients after filtering admin:', filteredClients);
 
-      // Fetch all media (we'll filter by client_id in code)
+      // Fetch all media
       const { data: mediaData, error: mediaError } = await supabase
         .from('media')
         .select('*')
         .order('created_at', { ascending: false });
 
       if (mediaError) throw mediaError;
-      console.log('All media from DB:', mediaData);
-      
-      // Filter media to only client uploads (exclude admin uploads with null client_id)
+
+      // Filter media to only client uploads
       const clientMediaData = (mediaData || []).filter(m => m.client_id !== null);
-      console.log('Filtered media (non-admin):', clientMediaData);
 
       // Build client-media relationship
       const clientsWithMedia: ClientWithMedia[] = filteredClients.map((client) => {
         const clientMedia = (clientMediaData || []).filter((m) => m.client_id === client.id);
-        console.log(`Client ${client.email}: ${clientMedia.length} media items`);
         return {
           id: client.id,
           email: client.email,
@@ -90,7 +87,6 @@ export function Clients() {
         };
       });
 
-      console.log('Final clients with media:', clientsWithMedia);
       setClients(clientsWithMedia);
     } catch (error) {
       console.error('Error loading clients:', error);
@@ -160,294 +156,241 @@ export function Clients() {
     return media.filter((m) => m.status === filterStatus);
   };
 
+  const getStatusButtonClass = (status: string) => {
+    const base = "px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-200 capitalize";
+    if (filterStatus === status) {
+      return `${base} bg-white text-gray-900 shadow-sm ring-1 ring-gray-200`;
+    }
+    return `${base} text-gray-500 hover:text-gray-900 hover:bg-gray-100/50`;
+  };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading clients...</p>
+      <div className="flex items-center justify-center h-[60vh]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-2 border-gray-900 border-t-transparent rounded-full animate-spin"></div>
+          <p className="text-gray-400 font-medium">Loading clients...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Client Management</h1>
-        <p className="text-sm md:text-base text-gray-500 mt-1">Review and approve media uploaded by clients</p>
-      </div>
+    <div className="max-w-7xl mx-auto space-y-8 p-1">
+      {/* Header & Stats */}
+      <div className="space-y-6">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Clients</h1>
+          <p className="text-gray-500 mt-1">Manage client accounts and review uploads.</p>
+        </div>
 
-      {/* Stats Cards - Horizontal Scroll */}
-      <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex gap-3 md:gap-4 pb-2 min-w-max md:min-w-0 md:grid md:grid-cols-4">
-          {/* Total Clients */}
-          <div className="bg-blue-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Total Clients</p>
-                <p className="text-2xl md:text-3xl font-bold text-blue-600 mt-2">{clients.length}</p>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          {/* Stat Card Component */}
+          {[
+            { label: 'Total Clients', value: clients.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
+            { label: 'Pending Review', value: clients.reduce((sum, c) => sum + c.pending_count, 0), icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+            { label: 'Approved', value: clients.reduce((sum, c) => sum + c.approved_count, 0), icon: CheckCircle2, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            { label: 'Rejected', value: clients.reduce((sum, c) => sum + c.rejected_count, 0), icon: XCircle, color: 'text-red-600', bg: 'bg-red-50' },
+          ].map((stat, idx) => (
+            <div key={idx} className="bg-white rounded-xl border border-gray-100 p-5 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] flex flex-col justify-between h-28">
+              <div className="flex justify-between items-start">
+                <span className="text-sm font-medium text-gray-500">{stat.label}</span>
+                <div className={`p-1.5 rounded-lg ${stat.bg}`}>
+                  <stat.icon className={`w-4 h-4 ${stat.color}`} />
+                </div>
               </div>
-              <Users className="w-6 h-6 md:w-8 md:h-8 text-blue-500 opacity-20" />
+              <span className="text-3xl font-bold text-gray-900">{stat.value}</span>
             </div>
-          </div>
-
-          {/* Pending Review */}
-          <div className="bg-yellow-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Pending Review</p>
-                <p className="text-2xl md:text-3xl font-bold text-yellow-600 mt-2">{clients.reduce((sum, c) => sum + c.pending_count, 0)}</p>
-              </div>
-              <Clock className="w-6 h-6 md:w-8 md:h-8 text-yellow-500 opacity-20" />
-            </div>
-          </div>
-
-          {/* Approved */}
-          <div className="bg-green-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Approved</p>
-                <p className="text-2xl md:text-3xl font-bold text-green-600 mt-2">{clients.reduce((sum, c) => sum + c.approved_count, 0)}</p>
-              </div>
-              <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 text-green-500 opacity-20" />
-            </div>
-          </div>
-
-          {/* Rejected */}
-          <div className="bg-red-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Rejected</p>
-                <p className="text-2xl md:text-3xl font-bold text-red-600 mt-2">{clients.reduce((sum, c) => sum + c.rejected_count, 0)}</p>
-              </div>
-              <XCircle className="w-6 h-6 md:w-8 md:h-8 text-red-500 opacity-20" />
-            </div>
-          </div>
+          ))}
         </div>
       </div>
 
-      {/* Search and Filter */}
-      <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+      {/* Toolbar */}
+      <div className="flex flex-col md:flex-row gap-4 items-center justify-between bg-white p-2 rounded-xl border border-gray-100 shadow-sm">
+        <div className="relative w-full md:w-80">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
           <Input
-            placeholder="Search by email or name..."
+            placeholder="Search clients..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
+            className="pl-9 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-gray-400"
           />
         </div>
 
-        <div className="flex gap-2">
-          <button
-            onClick={() => setFilterStatus('all')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              filterStatus === 'all'
-                ? 'bg-blue-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            All
-          </button>
-          <button
-            onClick={() => setFilterStatus('pending')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              filterStatus === 'pending'
-                ? 'bg-yellow-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Pending
-          </button>
-          <button
-            onClick={() => setFilterStatus('approved')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              filterStatus === 'approved'
-                ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Approved
-          </button>
-          <button
-            onClick={() => setFilterStatus('rejected')}
-            className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-              filterStatus === 'rejected'
-                ? 'bg-red-600 text-white'
-                : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-            }`}
-          >
-            Rejected
-          </button>
+        <div className="flex items-center gap-1 bg-gray-50/80 p-1 rounded-lg w-full md:w-auto overflow-x-auto">
+          {['all', 'pending', 'approved', 'rejected'].map((status) => (
+            <button
+              key={status}
+              onClick={() => setFilterStatus(status as any)}
+              className={getStatusButtonClass(status)}
+            >
+              {status}
+            </button>
+          ))}
         </div>
       </div>
 
       {/* Clients List */}
       <div className="space-y-4">
         {filteredClients.length === 0 ? (
-          <Card>
-            <CardContent className="pt-6">
-              <div className="text-center py-12">
-                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">No clients found</p>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="bg-white rounded-xl border border-dashed border-gray-200 p-12 text-center">
+            <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-6 h-6 text-gray-300" />
+            </div>
+            <p className="text-gray-900 font-medium">No clients found</p>
+            <p className="text-sm text-gray-500">Try adjusting your search or filters</p>
+          </div>
         ) : (
           filteredClients.map((client) => {
             const isExpanded = expandedClientId === client.id;
             const clientMediaFiltered = filteredMediaByStatus(client.media_items);
 
             return (
-              <Card key={client.id}>
+              <div
+                key={client.id}
+                className={`group bg-white rounded-xl border transition-all duration-200 overflow-hidden
+                    ${isExpanded ? 'border-gray-200 shadow-sm ring-1 ring-gray-200' : 'border-gray-100 hover:border-gray-200 hover:shadow-sm'}
+                `}
+              >
                 <div
-                  className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
+                  className="p-5 cursor-pointer flex items-center gap-6"
                   onClick={() => setExpandedClientId(isExpanded ? null : client.id)}
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="flex-shrink-0">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          <Users className="w-6 h-6 text-blue-600" />
-                        </div>
-                      </div>
+                  {/* Avatar */}
+                  <div className="flex-shrink-0">
+                    <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center border border-gray-200">
+                      <span className="font-semibold text-gray-600 text-sm">
+                        {(client.name || client.email).charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
 
-                      <div className="flex-1">
-                        <h3 className="font-semibold text-gray-900">{client.name || client.email}</h3>
-                        <p className="text-sm text-gray-600">{client.email}</p>
-                      </div>
-
-                      <div className="flex items-center space-x-4">
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">{client.total_uploads}</p>
-                          <p className="text-xs text-gray-600">uploads</p>
-                        </div>
-
-                        {client.pending_count > 0 && (
-                          <div className="bg-yellow-50 px-3 py-1 rounded-full">
-                            <p className="text-sm font-medium text-yellow-700">{client.pending_count} pending</p>
-                          </div>
-                        )}
-
-                        {client.approved_count > 0 && (
-                          <div className="bg-green-50 px-3 py-1 rounded-full">
-                            <p className="text-sm font-medium text-green-700">{client.approved_count} approved</p>
-                          </div>
-                        )}
-
-                        {client.rejected_count > 0 && (
-                          <div className="bg-red-50 px-3 py-1 rounded-full">
-                            <p className="text-sm font-medium text-red-700">{client.rejected_count} rejected</p>
-                          </div>
-                        )}
-                      </div>
+                  {/* Info */}
+                  <div className="flex-1 min-w-0 grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+                    <div className="md:col-span-4">
+                      <h3 className="font-medium text-gray-900 truncate">{client.name || 'Unnamed Client'}</h3>
+                      <p className="text-xs text-gray-500 truncate">{client.email}</p>
                     </div>
 
-                    <div className="flex-shrink-0 ml-4">
-                      {isExpanded ? (
-                        <ChevronUp className="w-5 h-5 text-gray-400" />
-                      ) : (
-                        <ChevronDown className="w-5 h-5 text-gray-400" />
+                    {/* Stats Pills */}
+                    <div className="md:col-span-8 flex flex-wrap items-center gap-2">
+                      <span className="px-2.5 py-1 rounded-full bg-gray-50 border border-gray-100 text-xs font-medium text-gray-600">
+                        {client.total_uploads} Uploads
+                      </span>
+
+                      {client.pending_count > 0 && (
+                        <span className="px-2.5 py-1 rounded-full bg-yellow-50 border border-yellow-100 text-xs font-medium text-yellow-700 flex items-center gap-1">
+                          <div className="w-1.5 h-1.5 rounded-full bg-yellow-500"></div>
+                          {client.pending_count} Pending
+                        </span>
+                      )}
+                      {client.approved_count > 0 && (
+                        <span className="px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-100 text-xs font-medium text-emerald-700">
+                          {client.approved_count} Approved
+                        </span>
+                      )}
+                      {client.rejected_count > 0 && (
+                        <span className="px-2.5 py-1 rounded-full bg-red-50 border border-red-100 text-xs font-medium text-red-700">
+                          {client.rejected_count} Rejected
+                        </span>
                       )}
                     </div>
                   </div>
+
+                  <div className="flex-shrink-0 text-gray-300">
+                    {isExpanded ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                  </div>
                 </div>
 
+                {/* Expanded Content */}
                 {isExpanded && (
-                  <div className="border-t border-gray-200 p-4 bg-gray-50">
+                  <div className="border-t border-gray-100 bg-gray-50/50 p-4 md:p-6">
                     {clientMediaFiltered.length === 0 ? (
-                      <p className="text-center text-gray-600 py-8">No media to review</p>
+                      <div className="text-center py-8 text-gray-400 text-sm">No media items match the current filter</div>
                     ) : (
-                      <div className="space-y-4">
+                      <div className="space-y-3">
                         {clientMediaFiltered.map((media) => (
                           <div
                             key={media.id}
-                            className="bg-white rounded-lg p-4 border border-gray-200 hover:border-gray-300 transition-colors"
+                            className="bg-white rounded-lg p-3 border border-gray-100 flex gap-4 hover:border-gray-300 transition-colors group/item"
                           >
-                            <div className="flex items-start space-x-4">
-                              {/* Thumbnail */}
-                              <div className="w-20 h-20 flex-shrink-0 bg-gray-100 rounded overflow-hidden">
-                                {media.file_type === 'image' ? (
-                                  <img
-                                    src={media.file_url}
-                                    alt={media.title}
-                                    className="w-full h-full object-cover"
-                                  />
-                                ) : (
-                                  <video src={media.file_url} className="w-full h-full object-cover" />
-                                )}
-                              </div>
-
-                              <div className="flex-1 min-w-0">
-                                <div className="flex items-start justify-between mb-2">
-                                  <div>
-                                    <h4 className="font-semibold text-gray-900 truncate">{media.title}</h4>
-                                    <p className="text-sm text-gray-600">{media.file_type}</p>
+                            {/* Thumbnail */}
+                            <div className="w-24 h-16 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden border border-gray-200 relative">
+                              {media.file_type === 'image' ? (
+                                <img
+                                  src={media.file_url}
+                                  alt={media.title}
+                                  className="w-full h-full object-cover"
+                                />
+                              ) : (
+                                <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                                  <video src={media.file_url} className="w-full h-full object-cover opacity-60" />
+                                  <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                                      <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5"></div>
+                                    </div>
                                   </div>
-
-                                  <div className="flex-shrink-0 ml-2">
-                                    {media.status === 'pending' && (
-                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-50 text-yellow-700">
-                                        <Clock className="w-4 h-4 mr-1" />
-                                        Pending
-                                      </span>
-                                    )}
-                                    {media.status === 'approved' && (
-                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-50 text-green-700">
-                                        <CheckCircle2 className="w-4 h-4 mr-1" />
-                                        Approved
-                                      </span>
-                                    )}
-                                    {media.status === 'rejected' && (
-                                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-50 text-red-700">
-                                        <XCircle className="w-4 h-4 mr-1" />
-                                        Rejected
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-
-                                {media.description && (
-                                  <p className="text-sm text-gray-600 mb-2 line-clamp-2">{media.description}</p>
-                                )}
-
-                                {media.admin_notes && (
-                                  <div className="mb-2 p-2 bg-blue-50 rounded border border-blue-200">
-                                    <p className="text-xs font-medium text-blue-900 mb-1">Admin Notes:</p>
-                                    <p className="text-xs text-blue-800">{media.admin_notes}</p>
-                                  </div>
-                                )}
-
-                                <p className="text-xs text-gray-500">
-                                  {new Date(media.created_at).toLocaleDateString()} at{' '}
-                                  {new Date(media.created_at).toLocaleTimeString()}
-                                </p>
-                              </div>
-
-                              {/* Actions */}
-                              {media.status === 'pending' && (
-                                <div className="flex-shrink-0 flex space-x-2">
-                                  <Button
-                                    onClick={() => setSelectedMedia(media)}
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-blue-600 border-blue-600 hover:bg-blue-50"
-                                  >
-                                    <Eye className="w-4 h-4 mr-1" />
-                                    Review
-                                  </Button>
                                 </div>
                               )}
                             </div>
+
+                            <div className="flex-1 min-w-0 flex flex-col justify-center">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <h4 className="text-sm font-medium text-gray-900 truncate pr-4">{media.title}</h4>
+                                  <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-2">
+                                    <span className="uppercase">{media.file_type}</span>
+                                    <span className="w-0.5 h-0.5 rounded-full bg-gray-300"></span>
+                                    <span>{new Date(media.created_at).toLocaleDateString()}</span>
+                                  </p>
+                                </div>
+
+                                {/* Status Badge */}
+                                <div className="flex-shrink-0">
+                                  {media.status === 'pending' && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-100/50">Pending</span>
+                                  )}
+                                  {media.status === 'approved' && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100/50">Approved</span>
+                                  )}
+                                  {media.status === 'rejected' && (
+                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700 border border-red-100/50">Rejected</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Admin Note Preview */}
+                              {media.admin_notes && (
+                                <div className="mt-2 text-xs text-gray-500 bg-gray-50 p-1.5 rounded flex items-start gap-1.5">
+                                  <MoreHorizontal className="w-3 h-3 mt-0.5 flex-shrink-0 opacity-50" />
+                                  <span className="line-clamp-1">{media.admin_notes}</span>
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Action Button */}
+                            {media.status === 'pending' && (
+                              <div className="flex items-center self-center pl-2">
+                                <Button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setSelectedMedia(media);
+                                  }}
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-normal text-xs"
+                                >
+                                  Review
+                                </Button>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
                 )}
-              </Card>
+              </div>
             );
           })
         )}
@@ -455,59 +398,70 @@ export function Clients() {
 
       {/* Review Modal */}
       {selectedMedia && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <Card className="w-full max-w-2xl max-h-screen overflow-y-auto">
-            <CardHeader>
-              <CardTitle>Review Media - {selectedMedia.title}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Media Preview */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Preview</label>
-                {selectedMedia.file_type === 'image' ? (
-                  <img
-                    src={selectedMedia.file_url}
-                    alt={selectedMedia.title}
-                    className="w-full h-auto rounded-lg border border-gray-200"
-                  />
-                ) : (
-                  <video
-                    src={selectedMedia.file_url}
-                    controls
-                    className="w-full rounded-lg border border-gray-200"
-                  />
-                )}
-              </div>
+        <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
+          <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
 
-              {/* Details */}
-              <div className="space-y-2">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Title</label>
-                  <p className="text-gray-900">{selectedMedia.title}</p>
-                </div>
-                {selectedMedia.description && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700">Description</label>
-                    <p className="text-gray-600">{selectedMedia.description}</p>
-                  </div>
-                )}
+            {/* Left: Media Preview */}
+            <div className="w-full md:w-3/5 bg-gray-950 flex items-center justify-center p-4 md:p-8 relative">
+              <div className="absolute top-4 left-4 z-10">
+                <span className="px-2 py-1 bg-black/50 text-white text-xs font-medium rounded backdrop-blur-md uppercase tracking-wide">
+                  {selectedMedia.file_type}
+                </span>
               </div>
-
-              {/* Admin Notes */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Admin Notes</label>
-                <Textarea
-                  value={reviewNotes}
-                  onChange={(e) => setReviewNotes(e.target.value)}
-                  placeholder="Add notes for approval or rejection reason..."
-                  rows={4}
+              {selectedMedia.file_type === 'image' ? (
+                <img
+                  src={selectedMedia.file_url}
+                  alt={selectedMedia.title}
+                  className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
                 />
+              ) : (
+                <video
+                  src={selectedMedia.file_url}
+                  controls
+                  className="max-w-full max-h-full rounded-lg shadow-lg"
+                />
+              )}
+            </div>
+
+            {/* Right: Controls */}
+            <div className="w-full md:w-2/5 flex flex-col h-full bg-white">
+              <div className="p-6 flex-1 overflow-y-auto">
+                <div className="mb-6">
+                  <h2 className="text-xl font-bold text-gray-900">{selectedMedia.title}</h2>
+                  {selectedMedia.description ? (
+                    <p className="text-gray-600 mt-2 text-sm leading-relaxed">{selectedMedia.description}</p>
+                  ) : (
+                    <p className="text-gray-400 mt-2 text-sm italic">No description provided.</p>
+                  )}
+                </div>
+
+                <div className="space-y-4">
+                  <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500 space-y-1">
+                    <div className="flex justify-between">
+                      <span>Uploaded</span>
+                      <span className="font-medium text-gray-900">{new Date(selectedMedia.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>Time</span>
+                      <span className="font-medium text-gray-900">{new Date(selectedMedia.created_at).toLocaleTimeString()}</span>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Review Notes</label>
+                    <Textarea
+                      value={reviewNotes}
+                      onChange={(e) => setReviewNotes(e.target.value)}
+                      placeholder="Add optional reason for rejection or approval notes..."
+                      className="min-h-[120px] resize-none text-sm"
+                    />
+                  </div>
+                </div>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex gap-3 justify-end">
+              <div className="p-6 border-t border-gray-100 bg-gray-50 flex gap-3 justify-end">
                 <Button
-                  variant="outline"
+                  variant="ghost"
                   onClick={() => {
                     setSelectedMedia(null);
                     setReviewNotes('');
@@ -515,26 +469,24 @@ export function Clients() {
                 >
                   Cancel
                 </Button>
-
                 <Button
                   variant="destructive"
                   onClick={() => handleRejectMedia(selectedMedia)}
-                  className="bg-red-600 hover:bg-red-700"
+                  className="bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
                 >
                   <ThumbsDown className="w-4 h-4 mr-2" />
                   Reject
                 </Button>
-
                 <Button
                   onClick={() => handleApproveMedia(selectedMedia)}
-                  className="bg-green-600 hover:bg-green-700"
+                  className="bg-gray-900 hover:bg-gray-800 text-white"
                 >
                   <ThumbsUp className="w-4 h-4 mr-2" />
                   Approve
                 </Button>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
       )}
     </div>

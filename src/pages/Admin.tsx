@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { BottomNav } from '@/components/BottomNav';
@@ -9,6 +9,7 @@ import { Media } from '@/pages/admin/Media';
 import { Clients } from '@/pages/admin/Clients';
 import { CalendarView } from '@/pages/admin/Calendar';
 import { Settings } from '@/pages/admin/Settings';
+import { LiveDisplay } from '@/pages/admin/LiveDisplay';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
@@ -19,6 +20,8 @@ export function Admin() {
   const [reloading, setReloading] = useState(false);
   const [controlReady, setControlReady] = useState(false);
   const controlChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
+  const location = useLocation();
+  const isLiveDisplayRoute = location.pathname === '/admin/live-display';
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
@@ -82,6 +85,11 @@ export function Admin() {
     }
     navigate('/login');
   };
+
+  // If on live display route, render full screen without layout
+  if (isLiveDisplayRoute) {
+    return <LiveDisplay />;
+  }
 
   return (
     <div className="h-screen bg-gray-50 flex flex-col md:flex-row overflow-hidden">

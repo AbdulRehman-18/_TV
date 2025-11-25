@@ -138,6 +138,24 @@ export function ClientMediaCard({ media, onDelete }: ClientMediaCardProps) {
           <p>Uploaded: {formatDate(media.created_at)}</p>
         </div>
 
+        {/* Schedule Info */}
+        {(media.schedule_start_date || media.schedule_end_date) && (
+          <div className="bg-gray-50 border border-gray-200 rounded p-2 mb-3">
+            <p className="text-xs font-medium text-gray-800 mb-1 flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              Scheduled Display
+            </p>
+            <div className="text-xs text-gray-700 space-y-0.5">
+              {media.schedule_start_date && (
+                <p>Start: {new Date(media.schedule_start_date).toLocaleDateString()}</p>
+              )}
+              {media.schedule_end_date && (
+                <p>End: {new Date(media.schedule_end_date).toLocaleDateString()}</p>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Admin Notes */}
         {media.status === 'rejected' && media.admin_notes && (
           <div className="bg-red-50 border border-red-200 rounded p-2 mb-3">

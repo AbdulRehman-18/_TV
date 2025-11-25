@@ -1,5 +1,5 @@
-﻿import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
+﻿import React, { useState, useEffect } from 'react';
+import { Navigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,16 @@ import loginImage from './assets/images/login.jpg';
 
 export function Login() {
   const { user, loading } = useAuth();
+  const [searchParams] = useSearchParams();
   const [isLoginMode, setIsLoginMode] = useState(true);
+
+  // Check if signup query parameter exists
+  useEffect(() => {
+    const signupParam = searchParams.get('signup');
+    if (signupParam === 'true') {
+      setIsLoginMode(false);
+    }
+  }, [searchParams]);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -134,7 +143,7 @@ export function Login() {
       {/* Left Section - Illustration & Branding */}
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex-col items-center justify-center p-12 relative overflow-hidden">
         {/* Decorative blobs */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500/20 rounded-full filter blur-3xl animate-pulse"></div>
+        <div className="absolute top-20 left-10 w-72 h-72 bg-gray-500/20 rounded-full filter blur-3xl animate-pulse"></div>
         <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full filter blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
         
         <div className="relative z-10 w-full h-full flex items-center justify-center">
@@ -153,10 +162,10 @@ export function Login() {
           {/* Welcome Text - Desktop and Mobile */}
           <div className="mb-8 text-center">
             <h1 className="text-3xl font-bold mb-2">
-              {isLoginMode ? 'Welcome back' : 'Hey there'}
+              {isLoginMode ? 'Welcome Back' : 'Create Your Account'}
             </h1>
             <p className="text-slate-400">
-              {isLoginMode ? 'Sign in to your account' : 'Create your account'}
+              {isLoginMode ? 'Sign in to continue to your dashboard' : 'Join us and start managing your content'}
             </p>
           </div>
 
@@ -164,19 +173,19 @@ export function Login() {
             // Email Confirmation Screen
             <div className="space-y-6">
               <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center">
-                <div className="w-16 h-16 bg-blue-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="h-8 w-8 text-blue-400" />
+                <div className="w-16 h-16 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Mail className="h-8 w-8 text-gray-400" />
                 </div>
                 <h2 className="text-xl font-semibold mb-2">Check your email</h2>
                 <p className="text-sm text-slate-400 mb-4">
                   We've sent a confirmation link to:
                 </p>
-                <p className="text-sm font-mono bg-slate-950 p-3 rounded-lg text-blue-400 break-all">
+                <p className="text-sm font-mono bg-slate-950 p-3 rounded-lg text-gray-300 break-all">
                   {pendingEmail}
                 </p>
               </div>
 
-              <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
+              <div className="bg-gray-500/10 border border-gray-500/20 rounded-lg p-4">
                 <p className="text-sm text-blue-300">
                   <strong>Please verify your email</strong> to complete your account setup.
                 </p>
@@ -207,7 +216,7 @@ export function Login() {
               {!isLoginMode && (
                 <>
                   <div>
-                    <Label htmlFor="name" className="text-slate-300 mb-2 block">Full Name</Label>
+                    <Label htmlFor="name" className="text-slate-300 mb-2 block font-medium">Full Name</Label>
                     <Input
                       id="name"
                       type="text"
@@ -215,62 +224,62 @@ export function Login() {
                       onChange={(e) => setName(e.target.value)}
                       placeholder="your name"
                       required
-                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-cyan-500/30"
+                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="phoneNumber" className="text-slate-300 mb-2 block">Phone Number</Label>
+                    <Label htmlFor="phoneNumber" className="text-slate-300 mb-2 block font-medium">Phone Number</Label>
                     <Input
                       id="phoneNumber"
                       type="tel"
                       value={phoneNumber}
                       onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="+91 00000000"
+                      placeholder="+1 (555) 000-0000"
                       required
-                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-cyan-500/30"
+                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30"
                     />
                   </div>
 
                   <div>
-                    <Label htmlFor="organization" className="text-slate-300 mb-2 block">Organization</Label>
+                    <Label htmlFor="organization" className="text-slate-300 mb-2 block font-medium">Organization</Label>
                     <Input
                       id="organization"
                       type="text"
                       value={organization}
                       onChange={(e) => setOrganization(e.target.value)}
-                      placeholder="Your Company"
+                      placeholder="Aitm Institute"
                       required
-                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-cyan-500/30"
+                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30"
                     />
                   </div>
                 </>
               )}
 
               <div>
-                <Label htmlFor="email" className="text-slate-300 mb-2 block">Email address</Label>
+                <Label htmlFor="email" className="text-slate-300 mb-2 block font-medium">Email Address</Label>
                 <Input
                   id="email"
                   type="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder={isLoginMode ? 'your@email.com' : 'your@email.com'}
+                  placeholder="your@email.com"
                   required
-                  className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-cyan-500/30"
+                  className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30"
                 />
               </div>
 
               <div>
-                <Label htmlFor="password" className="text-slate-300 mb-2 block">Password</Label>
+                <Label htmlFor="password" className="text-slate-300 mb-2 block font-medium">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="Enter your password"
+                    placeholder="••••••••"
                     required
-                    className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-cyan-500/30 pr-10"
+                    className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30 pr-10"
                   />
                   <button
                     type="button"
@@ -288,16 +297,16 @@ export function Login() {
 
               {!isLoginMode && (
                 <div>
-                  <Label htmlFor="confirmPassword" className="text-slate-300 mb-2 block">Confirm Password</Label>
+                  <Label htmlFor="confirmPassword" className="text-slate-300 mb-2 block font-medium">Confirm Password</Label>
                   <div className="relative">
                     <Input
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="Confirm your password"
+                      placeholder="••••••••"
                       required
-                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-cyan-500 focus:ring-cyan-500/30 pr-10"
+                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30 pr-10"
                     />
                     <button
                       type="button"
@@ -314,9 +323,9 @@ export function Login() {
                 </div>
               )}
 
-              <Button 
-                type="submit" 
-                className="w-full bg-red-500 hover:bg-red-600 text-white font-semibold py-2.5 rounded-lg transition-colors"
+              <Button
+                type="submit"
+                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -326,7 +335,7 @@ export function Login() {
                   </>
                 ) : (
                   <>
-                    {isLoginMode ? 'Continue with Email' : 'Create Account'}
+                    {isLoginMode ? 'Sign In' : 'Create Account'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </>
                 )}
@@ -364,7 +373,7 @@ export function Login() {
                     setIsLoginMode(!isLoginMode);
                     setError('');
                   }}
-                  className="text-cyan-400 hover:text-cyan-300 font-semibold transition-colors"
+                  className="text-white hover:text-gray-300 font-semibold transition-colors underline"
                   disabled={isLoading}
                 >
                   {isLoginMode ? 'Sign up' : 'Sign in'}

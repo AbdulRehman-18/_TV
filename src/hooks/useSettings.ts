@@ -8,7 +8,11 @@ export interface SettingsState {
   autoplayVideos: boolean;
   showAnnouncementsOnDisplay: boolean;
   showEventsOnDisplay: boolean;
+  showMediaOnDisplay: boolean;
   notifyOnUpload: boolean;
+  displayName: string;
+  enableTransitions: boolean;
+  showDateTimeOnDisplay: boolean;
 }
 
 const DEFAULT_SETTINGS: SettingsState = {
@@ -17,7 +21,11 @@ const DEFAULT_SETTINGS: SettingsState = {
   autoplayVideos: true,
   showAnnouncementsOnDisplay: true,
   showEventsOnDisplay: true,
+  showMediaOnDisplay: true,
   notifyOnUpload: true,
+  displayName: 'Main Corridor TV',
+  enableTransitions: true,
+  showDateTimeOnDisplay: true,
 };
 
 const STORAGE_KEY = 'smart-tv-settings-v1';

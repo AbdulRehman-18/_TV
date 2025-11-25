@@ -21,6 +21,8 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [fileName, setFileName] = useState('');
+  const [scheduleStartDate, setScheduleStartDate] = useState('');
+  const [scheduleEndDate, setScheduleEndDate] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -101,6 +103,8 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
           client_id: clientId,
           status: 'pending',
           is_active: false,
+          schedule_start_date: scheduleStartDate || null,
+          schedule_end_date: scheduleEndDate || null,
         })
         .select()
         .single();
@@ -115,6 +119,8 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
       setFile(null);
       setFileName('');
       setPreview(null);
+      setScheduleStartDate('');
+      setScheduleEndDate('');
     } catch (err) {
       console.error('Error uploading media:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload media');
@@ -159,9 +165,48 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
             />
           </div>
 
+          <div className="border border-gray-200 rounded-lg p-4 space-y-4 bg-gray-50">
+            <div className="flex items-center gap-2">
+              <div className="w-1 h-4 bg-gray-500 rounded"></div>
+              <h3 className="text-sm font-semibold text-gray-900">Schedule Display (Optional)</h3>
+            </div>
+            <p className="text-xs text-gray-600">Set when this media should automatically activate and deactivate on the display</p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="scheduleStartDate" className="text-sm">Start Date</Label>
+                <Input
+                  id="scheduleStartDate"
+                  type="date"
+                  value={scheduleStartDate}
+                  onChange={(e) => setScheduleStartDate(e.target.value)}
+                  className="bg-white"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="scheduleEndDate" className="text-sm">End Date</Label>
+                <Input
+                  id="scheduleEndDate"
+                  type="date"
+                  value={scheduleEndDate}
+                  onChange={(e) => setScheduleEndDate(e.target.value)}
+                  min={scheduleStartDate || undefined}
+                  className="bg-white"
+                />
+              </div>
+            </div>
+
+            {scheduleStartDate && scheduleEndDate && (
+              <div className="bg-gray-100 border border-gray-300 rounded p-2 text-xs text-gray-800">
+                <span className="font-medium">Scheduled:</span> Will be active from {new Date(scheduleStartDate).toLocaleDateString()} to {new Date(scheduleEndDate).toLocaleDateString()}
+              </div>
+            )}
+          </div>
+
           <div className="space-y-2">
             <Label htmlFor="file">File *</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-gray-400 transition-colors">
               <input
                 id="file"
                 type="file"
@@ -194,7 +239,7 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
             </div>
           )}
 
-          <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-md text-sm">
+          <div className="bg-gray-50 border border-gray-200 text-gray-800 px-4 py-3 rounded-md text-sm">
             <p className="font-medium mb-1">Note:</p>
             <p>Your media will be submitted for admin review. Once approved, it will appear on the display.</p>
           </div>
@@ -203,7 +248,7 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
             <Button
               type="submit"
               disabled={isLoading || !file}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              className="flex-1 bg-gray-900 hover:bg-gray-800 text-white"
             >
               {isLoading ? (
                 <>

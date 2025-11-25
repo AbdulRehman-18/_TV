@@ -42,8 +42,8 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
     navigate('/login', { replace: true });
   };
 
-  const openDisplayPage = () => {
-    window.open('/display', '_blank');
+  const openLiveDisplay = () => {
+    navigate('/admin/live-display');
   };
 
   return (
@@ -99,7 +99,7 @@ export function Sidebar({ collapsed, onToggle }: SidebarProps) {
         <Button
           variant="outline"
           size="sm"
-          onClick={openDisplayPage}
+          onClick={openLiveDisplay}
           className={`w-full ${collapsed ? 'px-2' : 'justify-start text-left'}`}
           title={collapsed ? 'Live Display' : undefined}
         >

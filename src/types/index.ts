@@ -32,6 +32,8 @@ export interface Media {
   client_id?: string;
   status?: 'pending' | 'approved' | 'rejected';
   admin_notes?: string;
+  schedule_start_date?: string;
+  schedule_end_date?: string;
 }
 
 export interface Client {

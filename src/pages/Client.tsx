@@ -128,7 +128,7 @@ export function Client() {
                   onClick={() => setActiveTab('home')}
                   className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors font-medium text-sm ${
                     activeTab === 'home'
-                      ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                      ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
@@ -144,7 +144,7 @@ export function Client() {
                   }}
                   className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors font-medium text-sm ${
                     activeTab === 'upload'
-                      ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                      ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
@@ -157,7 +157,7 @@ export function Client() {
                   onClick={() => setActiveTab('settings')}
                   className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg transition-colors font-medium text-sm ${
                     activeTab === 'settings'
-                      ? 'bg-blue-50 text-blue-600 hover:bg-blue-100'
+                      ? 'bg-gray-100 text-gray-900 hover:bg-gray-200'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
@@ -185,29 +185,29 @@ export function Client() {
       {/* Main Content */}
       <div className="flex-1 flex flex-col h-full overflow-hidden pb-20 md:pb-0">
         {/* Header */}
-        <div className="bg-white shadow-sm border-b px-3 md:px-6 py-3 md:py-4 flex-shrink-0">
+        <div className="bg-white border-b border-gray-200 px-3 md:px-6 py-3 md:py-4 flex-shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
             <div>
-              <h2 className="text-lg md:text-2xl font-bold text-gray-900">
+              <h2 className="text-xl md:text-2xl font-semibold text-gray-900">
                 {activeTab === 'home' && 'Media Manager'}
                 {activeTab === 'upload' && 'Upload Media'}
                 {activeTab === 'settings' && 'Settings'}
               </h2>
-              <p className="text-xs md:text-sm text-gray-600 mt-1">
+              <p className="text-xs md:text-sm text-gray-500 mt-1">
                 {activeTab === 'home' && (clientProfile?.organization || 'Your Organization')}
                 {activeTab === 'upload' && 'Upload and manage your media files'}
                 {activeTab === 'settings' && 'Manage your profile and account information'}
               </p>
             </div>
-            <div className="hidden md:flex items-center gap-4">
+            <div className="hidden md:flex items-center gap-3">
               <div className="text-right">
                 <p className="text-sm font-medium text-gray-900">
                   {clientProfile?.name || user?.email}
                 </p>
                 <p className="text-xs text-gray-500">{clientProfile?.email}</p>
               </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0">
-                <UserIcon className="w-6 h-6 text-white" />
+              <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center flex-shrink-0">
+                <UserIcon className="w-5 h-5 text-white" />
               </div>
             </div>
           </div>
@@ -219,42 +219,34 @@ export function Client() {
           {activeTab === 'home' && (
             <>
               {/* Statistics Cards */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-4 mb-6">
-                <Card>
-                  <CardContent className="pt-4 md:pt-6 px-2 md:px-4">
-                    <div className="text-center">
-                      <div className="text-2xl md:text-3xl font-bold text-blue-600">{mediaList.length}</div>
-                      <p className="text-xs md:text-sm text-gray-600 mt-1">Total Media</p>
-                    </div>
-                  </CardContent>
-                </Card>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-6">
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-gray-500">Total Media</span>
+                    <span className="text-2xl font-bold text-gray-900 mt-1">{mediaList.length}</span>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardContent className="pt-4 md:pt-6 px-2 md:px-4">
-                    <div className="text-center">
-                      <div className="text-2xl md:text-3xl font-bold text-yellow-600">{getPendingCount()}</div>
-                      <p className="text-xs md:text-sm text-gray-600 mt-1">Pending</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-gray-500">Pending</span>
+                    <span className="text-2xl font-bold text-amber-600 mt-1">{getPendingCount()}</span>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardContent className="pt-4 md:pt-6 px-2 md:px-4">
-                    <div className="text-center">
-                      <div className="text-2xl md:text-3xl font-bold text-green-600">{getApprovedCount()}</div>
-                      <p className="text-xs md:text-sm text-gray-600 mt-1">Approved</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-gray-500">Approved</span>
+                    <span className="text-2xl font-bold text-emerald-600 mt-1">{getApprovedCount()}</span>
+                  </div>
+                </div>
 
-                <Card>
-                  <CardContent className="pt-4 md:pt-6 px-2 md:px-4">
-                    <div className="text-center">
-                      <div className="text-2xl md:text-3xl font-bold text-red-600">{getRejectedCount()}</div>
-                      <p className="text-xs md:text-sm text-gray-600 mt-1">Rejected</p>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="bg-white border border-gray-200 rounded-lg p-4">
+                  <div className="flex flex-col">
+                    <span className="text-xs font-medium text-gray-500">Rejected</span>
+                    <span className="text-2xl font-bold text-red-600 mt-1">{getRejectedCount()}</span>
+                  </div>
+                </div>
               </div>
 
               {/* Upload Button and Media List */}
@@ -265,7 +257,7 @@ export function Client() {
                     setActiveTab('upload');
                     setShowMediaForm(true);
                   }}
-                  className="bg-blue-600 hover:bg-blue-700 hidden md:inline-flex text-sm"
+                  className="bg-gray-900 hover:bg-gray-800 text-white hidden md:inline-flex text-sm"
                 >
                   <Upload className="w-4 h-4 mr-2" />
                   Upload Media
@@ -273,27 +265,27 @@ export function Client() {
               </div>
 
               {mediaList.length === 0 ? (
-                <Card>
-                  <CardContent className="pt-8 pb-8 md:pt-12 md:pb-12 text-center">
-                    <Upload className="w-12 md:w-16 h-12 md:h-16 mx-auto text-gray-300 mb-4" />
-                    <h4 className="text-base md:text-lg font-medium text-gray-900 mb-2">
-                      No media uploaded yet
-                    </h4>
-                    <p className="text-xs md:text-sm text-gray-600 mb-6">
-                      Click the upload button to add your first media file
-                    </p>
-                    <Button 
-                      onClick={() => {
-                        setActiveTab('upload');
-                        setShowMediaForm(true);
-                      }} 
-                      size="sm" 
-                      className="text-xs md:text-sm"
-                    >
-                      Upload Your First Media
-                    </Button>
-                  </CardContent>
-                </Card>
+                <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                    No media uploaded yet
+                  </h4>
+                  <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
+                    Upload your first image or video to start displaying content on the TV screens
+                  </p>
+                  <Button
+                    onClick={() => {
+                      setActiveTab('upload');
+                      setShowMediaForm(true);
+                    }}
+                    className="bg-gray-900 hover:bg-gray-800"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Upload Media
+                  </Button>
+                </div>
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
                   {mediaList.map(media => (
@@ -318,25 +310,24 @@ export function Client() {
                 />
               )}
               {!showMediaForm && (
-                <Card>
-                  <CardContent className="pt-8 pb-8 md:pt-12 md:pb-12 text-center">
-                    <Upload className="w-12 md:w-16 h-12 md:h-16 mx-auto text-gray-300 mb-4" />
-                    <h4 className="text-base md:text-lg font-medium text-gray-900 mb-2">
-                      Ready to upload?
-                    </h4>
-                    <p className="text-xs md:text-sm text-gray-600 mb-6">
-                      Click below to start uploading your media files
-                    </p>
-                    <Button 
-                      onClick={() => setShowMediaForm(true)} 
-                      size="sm" 
-                      className="text-xs md:text-sm"
-                    >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Start Upload
-                    </Button>
-                  </CardContent>
-                </Card>
+                <div className="bg-white border border-gray-200 rounded-lg p-12 text-center">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Upload className="w-8 h-8 text-gray-400" />
+                  </div>
+                  <h4 className="text-lg font-semibold text-gray-900 mb-2">
+                    Ready to upload?
+                  </h4>
+                  <p className="text-sm text-gray-500 mb-6 max-w-md mx-auto">
+                    Click below to start uploading your media files
+                  </p>
+                  <Button
+                    onClick={() => setShowMediaForm(true)}
+                    className="bg-gray-900 hover:bg-gray-800"
+                  >
+                    <Upload className="w-4 h-4 mr-2" />
+                    Start Upload
+                  </Button>
+                </div>
               )}
             </div>
           )}
@@ -352,10 +343,9 @@ export function Client() {
       </div>
 
       {/* Bottom Navigation - Visible only on mobile */}
-      <ClientBottomNav 
+      <ClientBottomNav
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        onLogout={handleLogout}
       />
     </div>
   );

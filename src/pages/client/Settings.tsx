@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { AlertCircle, Save, User as UserIcon } from 'lucide-react';
+import { AlertCircle, Save, User as UserIcon, LogOut } from 'lucide-react';
 import type { Client as ClientType } from '@/types';
 
 interface SettingsProps {
@@ -14,6 +15,7 @@ interface SettingsProps {
 }
 
 export function Settings({ clientProfile, onUpdate }: SettingsProps) {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [profile, setProfile] = useState<ClientType | null>(clientProfile);
   const [saving, setSaving] = useState(false);
@@ -60,6 +62,17 @@ export function Settings({ clientProfile, onUpdate }: SettingsProps) {
       setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    if (window.confirm('Are you sure you want to logout?')) {
+      try {
+        await supabase.auth.signOut();
+      } catch (error) {
+        console.error('Logout error:', error);
+      }
+      navigate('/login', { replace: true });
     }
   };
 
@@ -163,10 +176,30 @@ export function Settings({ clientProfile, onUpdate }: SettingsProps) {
             <Button
               onClick={handleSave}
               disabled={saving}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-gray-900 hover:bg-gray-800 text-white"
             >
               <Save className="w-4 h-4 mr-2" />
               {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Logout Section */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-base font-semibold text-gray-900">Sign Out</h3>
+              <p className="text-sm text-gray-500 mt-1">Sign out of your account</p>
+            </div>
+            <Button
+              onClick={handleLogout}
+              variant="outline"
+              className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
             </Button>
           </div>
         </CardContent>

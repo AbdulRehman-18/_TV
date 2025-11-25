@@ -4,16 +4,61 @@ import { supabase } from '@/lib/supabase';
 import { Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Clock, MapPin } from 'lucide-react';
+import { useSettings } from '@/hooks/useSettings';
 
 export function Display() {
+  const { settings } = useSettings();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [media, setMedia] = useState<Media[]>([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [currentTime, setCurrentTime] = useState(new Date());
+
+  // Volume control state (synced with LiveDisplay via localStorage)
+  const [volume, setVolume] = useState(() => {
+    const saved = localStorage.getItem('display-volume');
+    return saved ? parseInt(saved) / 100 : 0.5;
+  });
+  const [isMuted, setIsMuted] = useState(() => {
+    const saved = localStorage.getItem('display-muted');
+    return saved === 'true';
+  });
+  const videoRef = useRef<HTMLVideoElement>(null);
+
   // simple throttle using ref to avoid over-fetching
   const lastReloadRef = useRef(0);
   const reloadAllRef = useRef<null | ((reason?: string) => Promise<void>)>(null);
+
+  // Helper function to check if media is within scheduled dates
+  const isMediaScheduledForNow = (mediaItem: Media) => {
+    const now = new Date();
+
+    // If no schedule dates, media is always shown (when active)
+    if (!mediaItem.schedule_start_date && !mediaItem.schedule_end_date) {
+      return true;
+    }
+
+    // Check start date
+    if (mediaItem.schedule_start_date) {
+      const startDate = new Date(mediaItem.schedule_start_date);
+      startDate.setHours(0, 0, 0, 0);
+      if (now < startDate) {
+        return false; // Not yet started
+      }
+    }
+
+    // Check end date
+    if (mediaItem.schedule_end_date) {
+      const endDate = new Date(mediaItem.schedule_end_date);
+      endDate.setHours(23, 59, 59, 999);
+      if (now > endDate) {
+        return false; // Already ended
+      }
+    }
+
+    return true;
+  };
   if (!reloadAllRef.current) {
     reloadAllRef.current = async (reason?: string) => {
       const now = Date.now();
@@ -88,6 +133,28 @@ export function Display() {
       eventsSubscription.unsubscribe();
       mediaSubscription.unsubscribe();
     };
+  }, []);
+
+  // Sync volume with video element and listen for changes from LiveDisplay
+  useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.volume = volume;
+      videoRef.current.muted = isMuted;
+    }
+  }, [volume, isMuted]);
+
+  // Listen for volume changes from LiveDisplay page via localStorage
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'display-volume' && e.newValue) {
+        setVolume(parseInt(e.newValue) / 100);
+      } else if (e.key === 'display-muted' && e.newValue) {
+        setIsMuted(e.newValue === 'true');
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   // Listen for remote reload requests from the Admin via Supabase Realtime Broadcast
@@ -183,11 +250,18 @@ export function Display() {
     };
   }, []);
 
-  // Slideshow timer logic: pause for video, 12s for others
+  // Clock update
   useEffect(() => {
-    const activeAnnouncements = announcements.filter(a => a.is_active);
-    const activeEvents = events.filter(e => e.is_active);
-    const activeMedia = media.filter(m => m.is_active);
+    if (!settings.showDateTimeOnDisplay) return;
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000);
+    return () => clearInterval(timer);
+  }, [settings.showDateTimeOnDisplay]);
+
+  // Slideshow timer logic: pause for video, use settings interval for others
+  useEffect(() => {
+    const activeAnnouncements = settings.showAnnouncementsOnDisplay ? announcements.filter(a => a.is_active) : [];
+    const activeEvents = settings.showEventsOnDisplay ? events.filter(e => e.is_active) : [];
+    const activeMedia = settings.showMediaOnDisplay ? media.filter(m => m.is_active && isMediaScheduledForNow(m)) : [];
     const totalItems = activeAnnouncements.length + activeEvents.length + activeMedia.length;
     if (totalItems === 0) return;
 
@@ -205,12 +279,12 @@ export function Display() {
       return;
     }
 
-    // Otherwise, auto-advance every 12s
+    // Otherwise, auto-advance based on settings
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current);
-    }, 12000);
+    }, settings.slideshowInterval * 1000);
     return () => clearInterval(timer);
-  }, [announcements, events, media, currentIndex]);
+  }, [announcements, events, media, currentIndex, settings]);
 
   const loadAnnouncements = async () => {
     try {
@@ -262,10 +336,12 @@ export function Display() {
     }
   };
 
-  const activeAnnouncements = announcements.filter(a => a.is_active);
-  const activeEvents = events.filter(e => e.is_active);
-  const activeMedia = media.filter(m => m.is_active);
-  
+  const activeAnnouncements = settings.showAnnouncementsOnDisplay ? announcements.filter(a => a.is_active) : [];
+  const activeEvents = settings.showEventsOnDisplay ? events.filter(e => e.is_active) : [];
+  const activeMedia = settings.showMediaOnDisplay
+    ? media.filter(m => m.is_active && isMediaScheduledForNow(m))
+    : [];
+
   // Combine announcements, events, and media into a single array for slideshow
   type SlideItem = (Announcement & { type: 'announcement' }) | (Event & { type: 'event' }) | (Media & { type: 'media' });
   const allItems: SlideItem[] = [
@@ -310,7 +386,7 @@ export function Display() {
     );
   }
 
-  const slideDurationMs = 12000;
+  const slideDurationMs = settings.slideshowInterval * 1000;
   const progressStyle: CSSProperties & Record<'--duration', string> = { ['--duration']: `${slideDurationMs}ms` };
 
   // Determine if current slide is a video
@@ -322,14 +398,24 @@ export function Display() {
       <div className="pointer-events-none absolute -top-24 -left-24 w-[60vw] h-[60vw] rounded-full aurora-blob bg-gradient-to-br from-indigo-500/60 via-fuchsia-500/50 to-rose-500/50" />
       <div className="pointer-events-none absolute -bottom-28 -right-28 w-[55vw] h-[55vw] rounded-full aurora-blob bg-gradient-to-tr from-blue-500/50 via-emerald-500/40 to-cyan-500/40" />
 
+      {/* Date/Time Overlay */}
+      {settings.showDateTimeOnDisplay && (
+        <div className="fixed top-6 right-6 z-50 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-lg">
+          <div className="text-white text-right">
+            <div className="text-2xl font-semibold">{currentTime.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div>
+            <div className="text-sm opacity-80">{currentTime.toLocaleDateString([], {weekday: 'short', month: 'short', day: 'numeric'})}</div>
+          </div>
+        </div>
+      )}
+
       {/* Content */}
       <AnimatePresence mode="wait">
         <motion.div
           key={`${currentItem.type}-${currentItem.id}`}
-          initial={{ opacity: 0, y: 12 }}
+          initial={settings.enableTransitions ? { opacity: 0, y: 12 } : {}}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -10 }}
-          transition={{ duration: 0.5, ease: 'easeOut' }}
+          exit={settings.enableTransitions ? { opacity: 0, y: -10 } : {}}
+          transition={settings.enableTransitions ? { duration: 0.5, ease: 'easeOut' } : { duration: 0 }}
           className="relative min-h-screen"
         >
           {currentItem.type === 'announcement' ? (
@@ -531,18 +617,43 @@ type VideoSlideProps = {
 };
 function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const [volume, setVolume] = useState(() => {
+    const saved = localStorage.getItem('display-volume');
+    return saved ? parseInt(saved) / 100 : 0.5;
+  });
+  const [isMuted, setIsMuted] = useState(() => {
+    const saved = localStorage.getItem('display-muted');
+    return saved === 'true';
+  });
+
+  // Listen for volume changes from LiveDisplay page
+  useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'display-volume' && e.newValue) {
+        setVolume(parseInt(e.newValue) / 100);
+      } else if (e.key === 'display-muted' && e.newValue) {
+        setIsMuted(e.newValue === 'true');
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
+
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
 
     const tryPlay = async () => {
       try {
-        // First try: play with audio enabled (for kiosk environments with user interaction)
-        video.muted = false;
+        // Set volume and mute state from localStorage
+        video.volume = volume;
+        video.muted = isMuted;
         video.currentTime = 0;
         await video.play();
+        console.log(`Playing video with volume: ${volume * 100}%, muted: ${isMuted}`);
       } catch (err) {
-        console.warn('Autoplay with audio failed, trying muted:', err);
+        console.warn('Autoplay with current settings failed, trying muted:', err);
         try {
           // Fallback: play muted (will always succeed even without user interaction)
           video.muted = true;
@@ -572,7 +683,16 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
         }
       }
     };
-  }, [src]);
+  }, [src, volume, isMuted]);
+
+  // Update video element when volume/mute changes
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.volume = volume;
+      video.muted = isMuted;
+    }
+  }, [volume, isMuted]);
 
   return (
     <>
