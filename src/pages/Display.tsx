@@ -3,7 +3,7 @@ import type { CSSProperties } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Clock, MapPin } from 'lucide-react';
+import { Calendar, Clock, MapPin, Volume2, VolumeX } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 
 export function Display() {
@@ -14,6 +14,32 @@ export function Display() {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [audioEnabled, setAudioEnabled] = useState(() => {
+    const saved = localStorage.getItem('display-audio-enabled');
+    return saved === 'true';
+  });
+
+  const toggleAudio = () => {
+    const newState = !audioEnabled;
+    setAudioEnabled(newState);
+    localStorage.setItem('display-audio-enabled', newState.toString());
+    // Dispatch event so VideoSlide can react
+    window.dispatchEvent(new CustomEvent('audio-toggle', { detail: newState }));
+  };
+
+  // Listen for Enter/OK key press from TV remote
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      // Enter key (OK button on TV remote)
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        toggleAudio();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [audioEnabled]);
 
   // Volume control state (synced with LiveDisplay via localStorage)
   const [volume, setVolume] = useState(() => {
@@ -603,6 +629,26 @@ export function Display() {
           )}
         </motion.div>
       </AnimatePresence>
+
+      {/* Audio toggle button - works with TV remote (OK/Enter key) or click */}
+      <button
+        onClick={toggleAudio}
+        className="fixed bottom-6 right-6 z-50 backdrop-blur-sm text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
+        style={{
+          backgroundColor: audioEnabled ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)',
+        }}
+        aria-label={audioEnabled ? 'Disable audio (Press OK/Enter)' : 'Enable audio (Press OK/Enter)'}
+      >
+        {audioEnabled ? (
+          <Volume2 className="w-5 h-5" />
+        ) : (
+          <VolumeX className="w-5 h-5" />
+        )}
+        <span className="text-sm font-medium">
+          {audioEnabled ? 'Audio ON' : 'Audio OFF'}
+        </span>
+        <span className="text-xs opacity-75 ml-1">(Press OK)</span>
+      </button>
     </div>
   );
 }
@@ -617,27 +663,19 @@ type VideoSlideProps = {
 };
 function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [volume, setVolume] = useState(() => {
-    const saved = localStorage.getItem('display-volume');
-    return saved ? parseInt(saved) / 100 : 0.5;
-  });
-  const [isMuted, setIsMuted] = useState(() => {
-    const saved = localStorage.getItem('display-muted');
+  const [audioEnabled, setAudioEnabled] = useState(() => {
+    const saved = localStorage.getItem('display-audio-enabled');
     return saved === 'true';
   });
 
-  // Listen for volume changes from LiveDisplay page
+  // Listen for audio toggle events
   useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'display-volume' && e.newValue) {
-        setVolume(parseInt(e.newValue) / 100);
-      } else if (e.key === 'display-muted' && e.newValue) {
-        setIsMuted(e.newValue === 'true');
-      }
+    const handleAudioToggle = (e: CustomEvent) => {
+      setAudioEnabled(e.detail);
     };
 
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
+    window.addEventListener('audio-toggle', handleAudioToggle as EventListener);
+    return () => window.removeEventListener('audio-toggle', handleAudioToggle as EventListener);
   }, []);
 
   useEffect(() => {
@@ -646,16 +684,16 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
 
     const tryPlay = async () => {
       try {
-        // Set volume and mute state from localStorage
-        video.volume = volume;
-        video.muted = isMuted;
+        // Set audio based on user preference
+        video.muted = !audioEnabled;
+        video.volume = audioEnabled ? 1.0 : 0;
         video.currentTime = 0;
         await video.play();
-        console.log(`Playing video with volume: ${volume * 100}%, muted: ${isMuted}`);
+        console.log(`Playing video with audio: ${audioEnabled ? 'ON' : 'OFF'}`);
       } catch (err) {
-        console.warn('Autoplay with current settings failed, trying muted:', err);
+        console.warn('Autoplay failed, trying muted:', err);
         try {
-          // Fallback: play muted (will always succeed even without user interaction)
+          // Fallback: play muted (will always succeed)
           video.muted = true;
           await video.play();
           console.log('Playing video muted due to browser autoplay policy');
@@ -674,25 +712,25 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
         try {
           video.pause();
         } catch (e) {
-          console.warn('Error pausing video on cleanup', e);
+          // ignore
         }
         try {
           video.currentTime = 0;
         } catch (e) {
-          console.warn('Error resetting video time on cleanup', e);
+          // ignore
         }
       }
     };
-  }, [src, volume, isMuted]);
+  }, [src, audioEnabled]);
 
-  // Update video element when volume/mute changes
+  // Update video element when audio setting changes
   useEffect(() => {
     const video = videoRef.current;
-    if (video) {
-      video.volume = volume;
-      video.muted = isMuted;
+    if (video && !video.paused) {
+      video.muted = !audioEnabled;
+      video.volume = audioEnabled ? 1.0 : 0;
     }
-  }, [volume, isMuted]);
+  }, [audioEnabled]);
 
   return (
     <>

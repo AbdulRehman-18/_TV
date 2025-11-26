@@ -58,6 +58,7 @@ export function LiveDisplay() {
       newValue: newMuted.toString(),
     }));
   };
+
   const [showVolumeDialog, setShowVolumeDialog] = useState(false);
   const [showAdvancedDialog, setShowAdvancedDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
