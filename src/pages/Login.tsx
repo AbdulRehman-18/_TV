@@ -5,7 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, Eye, EyeOff, ArrowRight } from 'lucide-react';
+import { Mail, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
 import loginImage from './assets/images/login.jpg';
 
 export function Login() {
@@ -35,8 +35,8 @@ export function Login() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen flex items-center justify-center bg-black text-white">
+        <Loader2 className="h-8 w-8 animate-spin text-zinc-500" />
       </div>
     );
   }
@@ -139,62 +139,61 @@ export function Login() {
 
 
   return (
-    <div className="min-h-screen h-screen bg-slate-950 text-white flex overflow-hidden">
-      {/* Left Section - Illustration & Branding */}
-      <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-slate-900 via-slate-950 to-slate-900 flex-col items-center justify-center p-12 relative overflow-hidden">
-        {/* Decorative blobs */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-gray-500/20 rounded-full filter blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-cyan-500/10 rounded-full filter blur-3xl animate-pulse" style={{animationDelay: '2s'}}></div>
-        
-        <div className="relative z-10 w-full h-full flex items-center justify-center">
-          {/* Logo area with actual image */}
-          <img 
-            src={loginImage} 
-            alt="Wava AI Login Illustration" 
-            className="w-full h-full object-cover rounded-2xl"
-          />
+    <div className="min-h-screen w-full flex bg-black text-white selection:bg-zinc-800 selection:text-white">
+      {/* Left Section - Visual */}
+      <div className="hidden lg:flex lg:w-1/2 relative bg-zinc-900 overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
+        <img 
+          src={loginImage} 
+          alt="Login Visual" 
+          className="w-full h-full object-cover opacity-60"
+        />
+        <div className="absolute bottom-0 left-0 p-16 z-20 max-w-2xl">
+          <h2 className="text-4xl font-bold mb-6 tracking-tight text-white">
+            Experience the future of digital signage.
+          </h2>
+          <p className="text-zinc-300 text-lg leading-relaxed">
+            Seamlessly manage your content, schedule displays, and engage your audience with our powerful platform.
+          </p>
         </div>
       </div>
 
       {/* Right Section - Form */}
-      <div className="w-full lg:w-1/2 flex flex-col items-center justify-center p-6 sm:p-12 overflow-hidden h-screen">
-        <div className="w-full max-w-sm max-h-screen overflow-y-auto">
-          {/* Welcome Text - Desktop and Mobile */}
-          <div className="mb-8 text-center">
-            <h1 className="text-3xl font-bold mb-2">
-              {isLoginMode ? 'Welcome Back' : 'Create Your Account'}
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-24 bg-black">
+        <div className="w-full max-w-md space-y-8">
+          <div className="space-y-2 text-center lg:text-left">
+            <h1 className="text-3xl font-semibold tracking-tight">
+              {isLoginMode ? 'Welcome back' : 'Create an account'}
             </h1>
-            <p className="text-slate-400">
-              {isLoginMode ? 'Sign in to continue to your dashboard' : 'Join us and start managing your content'}
+            <p className="text-zinc-400">
+              {isLoginMode ? 'Enter your credentials to access your account.' : 'Fill in your details to get started.'}
             </p>
           </div>
 
           {showEmailConfirmation ? (
-            // Email Confirmation Screen
-            <div className="space-y-6">
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center">
-                <div className="w-16 h-16 bg-gray-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Mail className="h-8 w-8 text-gray-400" />
+            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-zinc-900/50 border border-zinc-800 rounded-2xl p-8 text-center">
+                <div className="w-16 h-16 bg-zinc-800 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Mail className="h-8 w-8 text-zinc-400" />
                 </div>
                 <h2 className="text-xl font-semibold mb-2">Check your email</h2>
-                <p className="text-sm text-slate-400 mb-4">
+                <p className="text-sm text-zinc-400 mb-6">
                   We've sent a confirmation link to:
                 </p>
-                <p className="text-sm font-mono bg-slate-950 p-3 rounded-lg text-gray-300 break-all">
-                  {pendingEmail}
-                </p>
-              </div>
-
-              <div className="bg-gray-500/10 border border-gray-500/20 rounded-lg p-4">
-                <p className="text-sm text-blue-300">
-                  <strong>Please verify your email</strong> to complete your account setup.
+                <div className="bg-black border border-zinc-800 rounded-lg p-3 mb-6">
+                  <p className="text-sm font-mono text-zinc-300 break-all">
+                    {pendingEmail}
+                  </p>
+                </div>
+                <p className="text-xs text-zinc-500">
+                  Please verify your email to complete registration.
                 </p>
               </div>
 
               <Button
                 type="button"
                 variant="outline"
-                className="w-full bg-slate-900 border-slate-800 hover:bg-slate-800"
+                className="w-full h-12 bg-transparent border-zinc-800 hover:bg-zinc-900 text-white"
                 onClick={() => {
                   setShowEmailConfirmation(false);
                   setPendingEmail('');
@@ -205,134 +204,134 @@ export function Login() {
               </Button>
             </div>
           ) : (
-            // Login/Signup Form
-            <form onSubmit={isLoginMode ? handleLogin : handleSignUp} className="space-y-5">
+            <form onSubmit={isLoginMode ? handleLogin : handleSignUp} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {error && (
-                <div className="bg-red-500/10 border border-red-500/30 text-red-300 px-4 py-3 rounded-lg text-sm">
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
                   {error}
                 </div>
               )}
 
-              {!isLoginMode && (
-                <>
-                  <div>
-                    <Label htmlFor="name" className="text-slate-300 mb-2 block font-medium">Full Name</Label>
-                    <Input
-                      id="name"
-                      type="text"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="your name"
-                      required
-                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30"
-                    />
-                  </div>
+              <div className="space-y-4">
+                {!isLoginMode && (
+                  <>
+                    <div className="grid grid-cols-1 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="name" className="text-zinc-400">Full Name</Label>
+                        <Input
+                          id="name"
+                          type="text"
+                          value={name}
+                          onChange={(e) => setName(e.target.value)}
+                          placeholder="John Doe"
+                          required
+                          className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11"
+                        />
+                      </div>
+                      
+                      <div className="space-y-2">
+                        <Label htmlFor="phoneNumber" className="text-zinc-400">Phone Number</Label>
+                        <Input
+                          id="phoneNumber"
+                          type="tel"
+                          value={phoneNumber}
+                          onChange={(e) => setPhoneNumber(e.target.value)}
+                          placeholder="+1 (555) 000-0000"
+                          required
+                          className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11"
+                        />
+                      </div>
 
-                  <div>
-                    <Label htmlFor="phoneNumber" className="text-slate-300 mb-2 block font-medium">Phone Number</Label>
-                    <Input
-                      id="phoneNumber"
-                      type="tel"
-                      value={phoneNumber}
-                      onChange={(e) => setPhoneNumber(e.target.value)}
-                      placeholder="+1 (555) 000-0000"
-                      required
-                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30"
-                    />
-                  </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="organization" className="text-zinc-400">Organization</Label>
+                        <Input
+                          id="organization"
+                          type="text"
+                          value={organization}
+                          onChange={(e) => setOrganization(e.target.value)}
+                          placeholder="Company Name"
+                          required
+                          className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
 
-                  <div>
-                    <Label htmlFor="organization" className="text-slate-300 mb-2 block font-medium">Organization</Label>
-                    <Input
-                      id="organization"
-                      type="text"
-                      value={organization}
-                      onChange={(e) => setOrganization(e.target.value)}
-                      placeholder="Aitm Institute"
-                      required
-                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30"
-                    />
-                  </div>
-                </>
-              )}
-
-              <div>
-                <Label htmlFor="email" className="text-slate-300 mb-2 block font-medium">Email Address</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  required
-                  className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="password" className="text-slate-300 mb-2 block font-medium">Password</Label>
-                <div className="relative">
+                <div className="space-y-2">
+                  <Label htmlFor="email" className="text-zinc-400">Email Address</Label>
                   <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="name@example.com"
                     required
-                    className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30 pr-10"
+                    className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
                 </div>
-              </div>
 
-              {!isLoginMode && (
-                <div>
-                  <Label htmlFor="confirmPassword" className="text-slate-300 mb-2 block font-medium">Confirm Password</Label>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password" className="text-zinc-400">Password</Label>
+                    {isLoginMode && (
+                      <button type="button" className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors">
+                        Forgot password?
+                      </button>
+                    )}
+                  </div>
                   <div className="relative">
                     <Input
-                      id="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      id="password"
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
                       placeholder="••••••••"
                       required
-                      className="bg-slate-900 border-slate-800 text-white placeholder-slate-500 focus:border-gray-600 focus:ring-gray-600/30 pr-10"
+                      className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11 pr-10"
                     />
                     <button
                       type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-300"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
                     >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-4 h-4" />
-                      ) : (
-                        <Eye className="w-4 h-4" />
-                      )}
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
                 </div>
-              )}
+
+                {!isLoginMode && (
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword" className="text-zinc-400">Confirm Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? 'text' : 'password'}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="••••••••"
+                        required
+                        className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11 pr-10"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+                      >
+                        {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <Button
                 type="submit"
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-semibold py-3 rounded-lg transition-colors shadow-sm"
+                className="w-full h-12 bg-white text-black hover:bg-zinc-200 font-medium text-base transition-all"
                 disabled={isLoading}
               >
                 {isLoading ? (
-                  <>
-                    <span className="animate-spin mr-2">⟳</span>
-                    {isLoginMode ? 'Signing in...' : 'Creating account...'}
-                  </>
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
                   <>
                     {isLoginMode ? 'Sign In' : 'Create Account'}
@@ -341,18 +340,19 @@ export function Login() {
                 )}
               </Button>
 
-              <div className="relative my-6">
+              <div className="relative">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-slate-800"></div>
+                  <div className="w-full border-t border-zinc-800"></div>
                 </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-slate-950 text-slate-400">or</span>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-black px-2 text-zinc-500">Or continue with</span>
                 </div>
               </div>
 
               <Button
                 type="button"
-                className="w-full bg-slate-900 border border-slate-800 hover:bg-slate-800 text-white font-semibold py-2.5 rounded-lg transition-colors"
+                variant="outline"
+                className="w-full h-11 bg-transparent border-zinc-800 hover:bg-zinc-900 text-zinc-300 hover:text-white transition-colors"
                 onClick={() => {
                   setIsLoginMode(!isLoginMode);
                   setError('');
@@ -362,10 +362,10 @@ export function Login() {
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12.545,10.852v3.608h5.337c-0.676,2.537-2.921,4.3-5.337,4.3c-3.288,0-5.953-2.664-5.953-5.952 c0-3.287,2.665-5.952,5.953-5.952c1.574,0,2.954,0.585,4.041,1.537l2.693-2.589C15.737,2.737,14.146,1.5,12.545,1.5 c-5.848,0-10.545,4.697-10.545,10.545c0,5.848,4.697,10.545,10.545,10.545c5.143,0,9.634-3.625,10.386-8.817h0.024V12.41 H12.545z" />
                 </svg>
-                Continue with Google
+                Google
               </Button>
 
-              <p className="text-center text-slate-400 text-sm mt-4">
+              <p className="text-center text-zinc-500 text-sm">
                 {isLoginMode ? "Don't have an account? " : 'Already have an account? '}
                 <button
                   type="button"
@@ -373,7 +373,7 @@ export function Login() {
                     setIsLoginMode(!isLoginMode);
                     setError('');
                   }}
-                  className="text-white hover:text-gray-300 font-semibold transition-colors underline"
+                  className="text-white hover:underline font-medium transition-all"
                   disabled={isLoading}
                 >
                   {isLoginMode ? 'Sign up' : 'Sign in'}

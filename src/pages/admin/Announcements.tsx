@@ -94,91 +94,99 @@ export function Announcements() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 max-w-7xl mx-auto animate-in fade-in duration-500">
       {/* Header */}
-      <div>
-        <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">Announcements</h1>
-        <p className="text-sm md:text-base text-gray-500 mt-1">Manage and monitor your announcements</p>
-      </div>
-
-      {/* Stats Cards - Horizontal Scroll */}
-      <div className="overflow-x-auto scrollbar-hide">
-        <div className="flex gap-3 md:gap-4 pb-2 min-w-max md:min-w-0 md:grid md:grid-cols-3">
-          {/* Total Announcements */}
-          <div className="bg-blue-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Total Announcements</p>
-                <p className="text-2xl md:text-3xl font-bold text-blue-600 mt-2">{announcements.length}</p>
-              </div>
-              <Megaphone className="w-6 h-6 md:w-8 md:h-8 text-blue-500 opacity-20" />
-            </div>
-          </div>
-
-          {/* Active */}
-          <div className="bg-green-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Active</p>
-                <p className="text-2xl md:text-3xl font-bold text-green-600 mt-2">{announcements.filter(a => a.is_active).length}</p>
-              </div>
-              <CheckCircle2 className="w-6 h-6 md:w-8 md:h-8 text-green-500 opacity-20" />
-            </div>
-          </div>
-
-          {/* Inactive */}
-          <div className="bg-gray-50 rounded-2xl p-4 md:p-6 border border-gray-100 flex-shrink-0 w-64 md:w-auto">
-            <div className="flex items-start justify-between">
-              <div className="flex-1">
-                <p className="text-xs md:text-sm font-medium text-gray-600">Inactive</p>
-                <p className="text-2xl md:text-3xl font-bold text-gray-600 mt-2">{announcements.filter(a => !a.is_active).length}</p>
-              </div>
-              <Circle className="w-6 h-6 md:w-8 md:h-8 text-gray-500 opacity-20" />
-            </div>
-          </div>
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-gray-900">Announcements</h1>
+          <p className="text-gray-500 mt-1">Manage your digital signage announcements</p>
         </div>
-      </div>
-
-      {/* Action Bar */}
-      <div className="flex justify-between items-center">
-        <span></span>
-        <div className="flex items-center space-x-3">
+        <div className="flex items-center gap-3">
           <Button
             variant="outline"
             onClick={loadAnnouncements}
             size="icon"
             title="Refresh"
+            className="h-10 w-10 rounded-full border-gray-200 hover:bg-gray-50 hover:text-gray-900"
           >
             <RefreshCw className="h-4 w-4" />
           </Button>
-          <Button onClick={handleCreateNew} className="flex items-center space-x-2">
-            <Plus className="h-4 w-4" />
-            <span>New Announcement</span>
+          <Button 
+            onClick={handleCreateNew} 
+            className="h-10 rounded-full px-6 bg-gray-900 hover:bg-gray-800 text-white shadow-sm transition-all hover:shadow-md"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            New Announcement
           </Button>
+        </div>
+      </div>
+
+      {/* Stats Cards - Minimal Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Total Announcements */}
+        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Total Announcements</p>
+              <h3 className="text-3xl font-bold text-gray-900 mt-2 tracking-tight">{announcements.length}</h3>
+            </div>
+            <div className="p-3 rounded-full bg-blue-50 text-blue-600">
+              <Megaphone className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Active */}
+        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Active Now</p>
+              <h3 className="text-3xl font-bold text-gray-900 mt-2 tracking-tight">{announcements.filter(a => a.is_active).length}</h3>
+            </div>
+            <div className="p-3 rounded-full bg-emerald-50 text-emerald-600">
+              <CheckCircle2 className="w-5 h-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Inactive */}
+        <div className="bg-white rounded-xl p-6 border border-gray-100 shadow-sm hover:shadow-md transition-all duration-300">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-medium text-gray-500">Inactive</p>
+              <h3 className="text-3xl font-bold text-gray-900 mt-2 tracking-tight">{announcements.filter(a => !a.is_active).length}</h3>
+            </div>
+            <div className="p-3 rounded-full bg-gray-50 text-gray-600">
+              <Circle className="w-5 h-5" />
+            </div>
+          </div>
         </div>
       </div>
 
       {/* Announcements List */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="flex items-center justify-center py-20">
+          <div className="flex flex-col items-center gap-3">
+            <div className="h-8 w-8 animate-spin rounded-full border-b-2 border-gray-900"></div>
+            <p className="text-sm text-gray-500 font-medium">Loading announcements...</p>
+          </div>
         </div>
       ) : announcements.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <MessageSquare className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No announcements yet
-            </h3>
-            <p className="text-gray-500 mb-4">
-              Create your first announcement to get started.
-            </p>
-            <Button onClick={handleCreateNew}>
-              <Plus className="h-4 w-4 mr-2" />
-              Create Announcement
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="bg-white rounded-xl border border-gray-200 border-dashed p-12 text-center">
+          <div className="bg-gray-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+            <MessageSquare className="h-8 w-8 text-gray-400" />
+          </div>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            No announcements yet
+          </h3>
+          <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+            Create your first announcement to start displaying messages on your screens.
+          </p>
+          <Button onClick={handleCreateNew} variant="outline" className="rounded-full">
+            <Plus className="h-4 w-4 mr-2" />
+            Create Announcement
+          </Button>
+        </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {announcements.map((announcement) => (
