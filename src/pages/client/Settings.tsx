@@ -43,7 +43,6 @@ export function Settings({ clientProfile, onUpdate }: SettingsProps) {
           name: profile.name,
           email: profile.email,
           organization: profile.organization,
-          phone_number: profile.phone_number,
         })
         .eq('id', user.id)
         .select()
@@ -86,14 +85,12 @@ export function Settings({ clientProfile, onUpdate }: SettingsProps) {
 
       {/* Messages */}
       {message && (
-        <div className={`p-4 rounded-lg flex items-start gap-3 ${
-          message.type === 'success' 
-            ? 'bg-green-50 border border-green-200' 
+        <div className={`p-4 rounded-lg flex items-start gap-3 ${message.type === 'success'
+            ? 'bg-green-50 border border-green-200'
             : 'bg-red-50 border border-red-200'
-        }`}>
-          <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${
-            message.type === 'success' ? 'text-green-600' : 'text-red-600'
-          }`} />
+          }`}>
+          <AlertCircle className={`w-5 h-5 flex-shrink-0 mt-0.5 ${message.type === 'success' ? 'text-green-600' : 'text-red-600'
+            }`} />
           <p className={message.type === 'success' ? 'text-green-800' : 'text-red-800'}>
             {message.text}
           </p>
@@ -156,19 +153,6 @@ export function Settings({ clientProfile, onUpdate }: SettingsProps) {
               />
             </div>
 
-            {/* Phone */}
-            <div>
-              <Label htmlFor="phone_number" className="text-sm font-medium text-gray-700">Phone Number</Label>
-              <Input
-                id="phone_number"
-                name="phone_number"
-                type="tel"
-                value={profile?.phone_number || ''}
-                onChange={handleInputChange}
-                placeholder="Your phone number"
-                className="mt-2"
-              />
-            </div>
           </div>
 
           {/* Save Button */}

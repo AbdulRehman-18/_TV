@@ -39,7 +39,6 @@ export interface Media {
 export interface Client {
   id: string;
   name: string;
-  phone_number: string;
   email: string;
   organization: string;
   is_approved: boolean;

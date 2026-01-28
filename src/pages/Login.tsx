@@ -1,11 +1,11 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Navigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Mail, Eye, EyeOff, ArrowRight, Loader2 } from 'lucide-react';
+import { Mail, Eye, EyeOff, ArrowRight, Loader2, ArrowLeft } from 'lucide-react';
 import loginImage from './assets/images/login.jpg';
 
 export function Login() {
@@ -24,7 +24,6 @@ export function Login() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [name, setName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
   const [organization, setOrganization] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -105,7 +104,6 @@ export function Login() {
       const { error: profileError } = await supabase.from('clients').insert({
         id: authData.user.id,
         name,
-        phone_number: phoneNumber,
         email,
         organization,
         is_approved: false,
@@ -117,13 +115,12 @@ export function Login() {
       setPendingEmail(email);
       setShowEmailConfirmation(true);
       setError('');
-      
+
       // Reset form
       setEmail('');
       setPassword('');
       setConfirmPassword('');
       setName('');
-      setPhoneNumber('');
       setOrganization('');
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -139,13 +136,13 @@ export function Login() {
 
 
   return (
-    <div className="min-h-screen w-full flex bg-black text-white selection:bg-zinc-800 selection:text-white">
+    <div className="h-screen w-full flex bg-black text-white selection:bg-zinc-800 selection:text-white overflow-hidden">
       {/* Left Section - Visual */}
       <div className="hidden lg:flex lg:w-1/2 relative bg-zinc-900 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent z-10" />
-        <img 
-          src={loginImage} 
-          alt="Login Visual" 
+        <img
+          src={loginImage}
+          alt="Login Visual"
           className="w-full h-full object-cover opacity-60"
         />
         <div className="absolute bottom-0 left-0 p-16 z-20 max-w-2xl">
@@ -159,13 +156,23 @@ export function Login() {
       </div>
 
       {/* Right Section - Form */}
-      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-24 bg-black">
-        <div className="w-full max-w-md space-y-8">
-          <div className="space-y-2 text-center lg:text-left">
-            <h1 className="text-3xl font-semibold tracking-tight">
+      <div className="w-full lg:w-1/2 flex items-center justify-center p-8 sm:p-12 lg:p-16 bg-black relative">
+        {/* Back Button */}
+        <div className="absolute top-8 left-8 sm:left-12 lg:left-16">
+          <Link
+            to="/"
+            className="w-10 h-10 rounded-full bg-zinc-900 border border-zinc-800 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 transition-all group"
+          >
+            <ArrowLeft className="w-5 h-5 group-hover:-translate-x-0.5 transition-transform" />
+          </Link>
+        </div>
+
+        <div className="w-full max-w-md space-y-6">
+          <div className="space-y-1 text-center lg:text-left">
+            <h1 className="text-2xl font-semibold tracking-tight">
               {isLoginMode ? 'Welcome back' : 'Create an account'}
             </h1>
-            <p className="text-zinc-400">
+            <p className="text-zinc-400 text-sm">
               {isLoginMode ? 'Enter your credentials to access your account.' : 'Fill in your details to get started.'}
             </p>
           </div>
@@ -204,74 +211,61 @@ export function Login() {
               </Button>
             </div>
           ) : (
-            <form onSubmit={isLoginMode ? handleLogin : handleSignUp} className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <form onSubmit={isLoginMode ? handleLogin : handleSignUp} className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
               {error && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg text-sm flex items-center gap-2">
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-lg text-sm flex items-center gap-2">
                   <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
                   {error}
                 </div>
               )}
 
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {!isLoginMode && (
                   <>
-                    <div className="grid grid-cols-1 gap-4">
-                      <div className="space-y-2">
+                    <div className="grid grid-cols-1 gap-3">
+                      <div className="space-y-1.5">
                         <Label htmlFor="name" className="text-zinc-400">Full Name</Label>
                         <Input
                           id="name"
                           type="text"
                           value={name}
                           onChange={(e) => setName(e.target.value)}
-                          placeholder="John Doe"
+                          placeholder="Enter your name"
                           required
-                          className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11"
-                        />
-                      </div>
-                      
-                      <div className="space-y-2">
-                        <Label htmlFor="phoneNumber" className="text-zinc-400">Phone Number</Label>
-                        <Input
-                          id="phoneNumber"
-                          type="tel"
-                          value={phoneNumber}
-                          onChange={(e) => setPhoneNumber(e.target.value)}
-                          placeholder="+1 (555) 000-0000"
-                          required
-                          className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11"
-                        />
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="organization" className="text-zinc-400">Organization</Label>
-                        <Input
-                          id="organization"
-                          type="text"
-                          value={organization}
-                          onChange={(e) => setOrganization(e.target.value)}
-                          placeholder="Company Name"
-                          required
-                          className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11"
+                          className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-10"
                         />
                       </div>
                     </div>
                   </>
                 )}
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <Label htmlFor="email" className="text-zinc-400">Email Address</Label>
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@example.com"
+                    placeholder="Enter your email"
                     required
-                    className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11"
+                    className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-10"
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
+                  <Label htmlFor="organization" className="text-zinc-400">Organization</Label>
+                  <Input
+                    id="organization"
+                    type="text"
+                    value={organization}
+                    onChange={(e) => setOrganization(e.target.value)}
+                    placeholder="Company Name"
+                    required
+                    className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-10"
+                  />
+                </div>
+
+                <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="text-zinc-400">Password</Label>
                     {isLoginMode && (
@@ -286,9 +280,9 @@ export function Login() {
                       type={showPassword ? 'text' : 'password'}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder="Enter your password"
                       required
-                      className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11 pr-10"
+                      className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-10 pr-10"
                     />
                     <button
                       type="button"
@@ -301,7 +295,7 @@ export function Login() {
                 </div>
 
                 {!isLoginMode && (
-                  <div className="space-y-2">
+                  <div className="space-y-1.5">
                     <Label htmlFor="confirmPassword" className="text-zinc-400">Confirm Password</Label>
                     <div className="relative">
                       <Input
@@ -309,9 +303,9 @@ export function Login() {
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
-                        placeholder="••••••••"
+                        placeholder="Confirm your password"
                         required
-                        className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-11 pr-10"
+                        className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-10 pr-10"
                       />
                       <button
                         type="button"
@@ -327,7 +321,7 @@ export function Login() {
 
               <Button
                 type="submit"
-                className="w-full h-12 bg-white text-black hover:bg-zinc-200 font-medium text-base transition-all"
+                className="w-full h-11 bg-white text-black hover:bg-zinc-200 font-medium text-base transition-all"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -352,7 +346,7 @@ export function Login() {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full h-11 bg-transparent border-zinc-800 hover:bg-zinc-900 text-zinc-300 hover:text-white transition-colors"
+                className="w-full h-10 bg-transparent border-zinc-800 hover:bg-zinc-900 text-zinc-300 hover:text-white transition-colors"
                 onClick={() => {
                   setIsLoginMode(!isLoginMode);
                   setError('');
