@@ -253,19 +253,6 @@ export function Login() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label htmlFor="organization" className="text-zinc-400">Organization</Label>
-                  <Input
-                    id="organization"
-                    type="text"
-                    value={organization}
-                    onChange={(e) => setOrganization(e.target.value)}
-                    placeholder="Company Name"
-                    required
-                    className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-10"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="password" className="text-zinc-400">Password</Label>
                     {isLoginMode && (
