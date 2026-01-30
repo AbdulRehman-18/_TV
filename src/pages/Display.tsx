@@ -105,7 +105,7 @@ export function Display() {
     loadAnnouncements();
     loadEvents();
     loadMedia();
-    
+
     // Set up real-time subscriptions for announcements
     const announcementsSubscription = supabase
       .channel('announcements')
@@ -256,13 +256,13 @@ export function Display() {
   // Network resilience: poll periodically and refetch on focus/visibility/online
   useEffect(() => {
     // Polling every 20s as a watchdog for cross-device updates
-  const interval = setInterval(() => reloadAllRef.current?.('poll'), 20000);
+    const interval = setInterval(() => reloadAllRef.current?.('poll'), 20000);
 
-  const onFocus = () => reloadAllRef.current?.('window-focus');
+    const onFocus = () => reloadAllRef.current?.('window-focus');
     const onVisible = () => {
-  if (document.visibilityState === 'visible') reloadAllRef.current?.('visibility');
+      if (document.visibilityState === 'visible') reloadAllRef.current?.('visibility');
     };
-  const onOnline = () => reloadAllRef.current?.('online');
+    const onOnline = () => reloadAllRef.current?.('online');
 
     window.addEventListener('focus', onFocus);
     document.addEventListener('visibilitychange', onVisible);
@@ -321,7 +321,7 @@ export function Display() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       setAnnouncements(data || []);
     } catch (error) {
       console.error('Error loading announcements:', error);
@@ -339,7 +339,7 @@ export function Display() {
         .order('start_date', { ascending: true });
 
       if (error) throw error;
-      
+
       setEvents(data || []);
     } catch (error) {
       console.error('Error loading events:', error);
@@ -355,7 +355,7 @@ export function Display() {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      
+
       setMedia(data || []);
     } catch (error) {
       console.error('Error loading media:', error);
@@ -379,7 +379,7 @@ export function Display() {
   // Use ref to avoid stale closure in video onEnded callback
   const totalItemsRef = useRef(allItems.length);
   totalItemsRef.current = allItems.length;
-  
+
   const currentItem: SlideItem = allItems[currentIndex];
 
   if (loading) {
@@ -428,8 +428,8 @@ export function Display() {
       {settings.showDateTimeOnDisplay && (
         <div className="fixed top-6 right-6 z-50 bg-black/30 backdrop-blur-sm px-4 py-2 rounded-lg">
           <div className="text-white text-right">
-            <div className="text-2xl font-semibold">{currentTime.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}</div>
-            <div className="text-sm opacity-80">{currentTime.toLocaleDateString([], {weekday: 'short', month: 'short', day: 'numeric'})}</div>
+            <div className="text-2xl font-semibold">{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+            <div className="text-sm opacity-80">{currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}</div>
           </div>
         </div>
       )}
@@ -450,7 +450,7 @@ export function Display() {
                 <img
                   src={(currentItem as Announcement & { type: 'announcement' }).image_url!}
                   alt={(currentItem as Announcement & { type: 'announcement' }).title}
-                  className="w-full h-screen object-cover edge-fade"
+                  className="w-full h-screen object-contain edge-fade"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-8 md:p-12 lg:p-16">
@@ -488,7 +488,7 @@ export function Display() {
                 <img
                   src={(currentItem as Event & { type: 'event' }).image_url!}
                   alt={(currentItem as Event & { type: 'event' }).title}
-                  className="w-full h-screen object-cover edge-fade"
+                  className="w-full h-screen object-contain edge-fade"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
                 <div className="absolute inset-x-0 bottom-0 p-8 md:p-12 lg:p-16">
@@ -519,8 +519,8 @@ export function Display() {
                         <div>
                           <div className="text-xs text-white/60">Time</div>
                           <div className="text-lg font-medium">
-                            {new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                            {(currentItem as Event & { type: 'event' }).end_date && ` - ${new Date((currentItem as Event & { type: 'event' }).end_date!).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+                            {new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            {(currentItem as Event & { type: 'event' }).end_date && ` - ${new Date((currentItem as Event & { type: 'event' }).end_date!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                           </div>
                         </div>
                       </div>
@@ -559,8 +559,8 @@ export function Display() {
                     <div className="glass bg-white/5 rounded-xl p-6 text-left">
                       <div className="flex items-center gap-3 mb-2"><Clock className="w-5 h-5 text-white/80" /><span className="text-white/70">Time</span></div>
                       <div className="text-xl font-medium">
-                        {new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                        {(currentItem as Event & { type: 'event' }).end_date && ` - ${new Date((currentItem as Event & { type: 'event' }).end_date!).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}`}
+                        {new Date((currentItem as Event & { type: 'event' }).start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {(currentItem as Event & { type: 'event' }).end_date && ` - ${new Date((currentItem as Event & { type: 'event' }).end_date!).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                     </div>
                     {(currentItem as Event & { type: 'event' }).location && (
@@ -580,7 +580,7 @@ export function Display() {
                 <img
                   src={(currentItem as Media & { type: 'media' }).file_url}
                   alt={(currentItem as Media & { type: 'media' }).title || 'Media'}
-                  className="w-full h-screen object-cover"
+                  className="w-full h-screen object-contain"
                 />
                 {(currentItem as Media & { type: 'media' }).description && (
                   <div className="absolute bottom-0 left-0 right-0 p-4 md:p-5">
@@ -609,9 +609,8 @@ export function Display() {
               {allItems.map((_, index) => (
                 <div
                   key={index}
-                  className={`h-1.5 w-6 rounded-full transition-all duration-300 ${
-                    index === currentIndex ? 'bg-white' : 'bg-white/40'
-                  }`}
+                  className={`h-1.5 w-6 rounded-full transition-all duration-300 ${index === currentIndex ? 'bg-white' : 'bg-white/40'
+                    }`}
                 />
               ))}
             </div>
@@ -737,7 +736,7 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
       <video
         ref={videoRef}
         src={src}
-        className="w-full h-screen object-cover"
+        className="w-full h-screen object-contain"
         playsInline
         preload="auto"
         onEnded={onEnded}

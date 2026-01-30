@@ -420,461 +420,461 @@ export function LiveDisplay() {
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Current Playlist</h2>
           </div>
 
-        <div className="flex-1 overflow-y-auto">
-          {/* Currently Playing */}
-          {currentItem && (
-            <div className="p-4 border-b-2 border-gray-200">
-              <div className="flex items-center gap-2 mb-3">
-                <Play className="w-4 h-4 text-green-500 fill-green-500" />
-                <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">Playing Now</span>
-                <span className="ml-auto text-xs text-gray-500">{getItemDuration(currentItem)}</span>
-              </div>
-              <div className="bg-gray-900 rounded-lg overflow-hidden mb-3" style={{ aspectRatio: '16/9' }}>
-                {currentItem.type === 'announcement' && currentItem.image_url ? (
-                  <img src={currentItem.image_url} alt={currentItem.title} className="w-full h-full object-cover" />
-                ) : currentItem.type === 'event' && currentItem.image_url ? (
-                  <img src={currentItem.image_url} alt={currentItem.title} className="w-full h-full object-cover" />
-                ) : currentItem.type === 'media' ? (
-                  <img src={currentItem.file_url} alt={getItemTitle(currentItem)} className="w-full h-full object-cover" />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold">
-                    {getItemTitle(currentItem).slice(0, 2).toUpperCase()}
-                  </div>
-                )}
-              </div>
-              <div className="space-y-1">
-                <h3 className="font-semibold text-gray-900 line-clamp-2">{getItemTitle(currentItem)}</h3>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>{getItemLabel(currentItem)}</span>
-                  <span>{getItemFormat(currentItem)}</span>
+          <div className="flex-1 overflow-y-auto">
+            {/* Currently Playing */}
+            {currentItem && (
+              <div className="p-4 border-b-2 border-gray-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <Play className="w-4 h-4 text-green-500 fill-green-500" />
+                  <span className="text-xs font-semibold text-green-600 uppercase tracking-wider">Playing Now</span>
+                  <span className="ml-auto text-xs text-gray-500">{getItemDuration(currentItem)}</span>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Up Next */}
-          {nextItem && (
-            <div className="p-4 border-b border-gray-200">
-              <div className="flex items-center gap-2 mb-3">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Up Next</span>
-                <span className="ml-auto text-xs text-gray-500">{getItemDuration(nextItem)}</span>
-              </div>
-              <div className="flex gap-3">
-                <div className="w-20 h-14 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                  {nextItem.type === 'announcement' && nextItem.image_url ? (
-                    <img src={nextItem.image_url} alt={nextItem.title} className="w-full h-full object-cover" />
-                  ) : nextItem.type === 'event' && nextItem.image_url ? (
-                    <img src={nextItem.image_url} alt={nextItem.title} className="w-full h-full object-cover" />
-                  ) : nextItem.type === 'media' ? (
-                    <img src={nextItem.file_url} alt={getItemTitle(nextItem)} className="w-full h-full object-cover" />
+                <div className="bg-gray-900 rounded-lg overflow-hidden mb-3" style={{ aspectRatio: '16/9' }}>
+                  {currentItem.type === 'announcement' && currentItem.image_url ? (
+                    <img src={currentItem.image_url} alt={currentItem.title} className="w-full h-full object-contain" />
+                  ) : currentItem.type === 'event' && currentItem.image_url ? (
+                    <img src={currentItem.image_url} alt={currentItem.title} className="w-full h-full object-contain" />
+                  ) : currentItem.type === 'media' ? (
+                    <img src={currentItem.file_url} alt={getItemTitle(currentItem)} className="w-full h-full object-contain" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm font-bold">
-                      {getItemTitle(nextItem).slice(0, 2).toUpperCase()}
+                    <div className="w-full h-full flex items-center justify-center text-white text-2xl font-bold">
+                      {getItemTitle(currentItem).slice(0, 2).toUpperCase()}
                     </div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className="text-sm font-medium text-gray-900 truncate">{getItemTitle(nextItem)}</h4>
-                  <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
-                    <span>{getItemLabel(nextItem)}</span>
-                    <span>{getItemFormat(nextItem)}</span>
+                <div className="space-y-1">
+                  <h3 className="font-semibold text-gray-900 line-clamp-2">{getItemTitle(currentItem)}</h3>
+                  <div className="flex items-center justify-between text-xs text-gray-500">
+                    <span>{getItemLabel(currentItem)}</span>
+                    <span>{getItemFormat(currentItem)}</span>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* In Queue */}
-          <div className="p-4">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">In Queue</h3>
-            <div className="space-y-3">
-              {allItems.slice(currentIndex + 2, currentIndex + 5).map((item, idx) => (
-                <div key={`${item.type}-${item.id}`} className="flex gap-3">
-                  <div className="w-16 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                    {item.type === 'announcement' && item.image_url ? (
-                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
-                    ) : item.type === 'event' && item.image_url ? (
-                      <img src={item.image_url} alt={item.title} className="w-full h-full object-cover" />
-                    ) : item.type === 'media' ? (
-                      <img src={item.file_url} alt={getItemTitle(item)} className="w-full h-full object-cover" />
+            {/* Up Next */}
+            {nextItem && (
+              <div className="p-4 border-b border-gray-200">
+                <div className="flex items-center gap-2 mb-3">
+                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">Up Next</span>
+                  <span className="ml-auto text-xs text-gray-500">{getItemDuration(nextItem)}</span>
+                </div>
+                <div className="flex gap-3">
+                  <div className="w-20 h-14 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                    {nextItem.type === 'announcement' && nextItem.image_url ? (
+                      <img src={nextItem.image_url} alt={nextItem.title} className="w-full h-full object-contain" />
+                    ) : nextItem.type === 'event' && nextItem.image_url ? (
+                      <img src={nextItem.image_url} alt={nextItem.title} className="w-full h-full object-contain" />
+                    ) : nextItem.type === 'media' ? (
+                      <img src={nextItem.file_url} alt={getItemTitle(nextItem)} className="w-full h-full object-contain" />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold">
-                        {getItemTitle(item).slice(0, 2).toUpperCase()}
+                      <div className="w-full h-full flex items-center justify-center text-gray-400 text-sm font-bold">
+                        {getItemTitle(nextItem).slice(0, 2).toUpperCase()}
                       </div>
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="text-sm text-gray-700 truncate">{getItemTitle(item)}</h4>
-                    <p className="text-xs text-gray-500">{getItemLabel(item)} • {getItemDuration(item)}</p>
+                    <h4 className="text-sm font-medium text-gray-900 truncate">{getItemTitle(nextItem)}</h4>
+                    <div className="flex items-center justify-between text-xs text-gray-500 mt-1">
+                      <span>{getItemLabel(nextItem)}</span>
+                      <span>{getItemFormat(nextItem)}</span>
+                    </div>
                   </div>
                 </div>
-              ))}
+              </div>
+            )}
+
+            {/* In Queue */}
+            <div className="p-4">
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">In Queue</h3>
+              <div className="space-y-3">
+                {allItems.slice(currentIndex + 2, currentIndex + 5).map((item, idx) => (
+                  <div key={`${item.type}-${item.id}`} className="flex gap-3">
+                    <div className="w-16 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                      {item.type === 'announcement' && item.image_url ? (
+                        <img src={item.image_url} alt={item.title} className="w-full h-full object-contain" />
+                      ) : item.type === 'event' && item.image_url ? (
+                        <img src={item.image_url} alt={item.title} className="w-full h-full object-contain" />
+                      ) : item.type === 'media' ? (
+                        <img src={item.file_url} alt={getItemTitle(item)} className="w-full h-full object-contain" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold">
+                          {getItemTitle(item).slice(0, 2).toUpperCase()}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="text-sm text-gray-700 truncate">{getItemTitle(item)}</h4>
+                      <p className="text-xs text-gray-500">{getItemLabel(item)} • {getItemDuration(item)}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Center Panel - Display Preview */}
-      <div className="flex-1 bg-black flex items-center justify-center p-8">
-        <div className="w-full max-w-6xl">
-          <div className="mb-4 flex items-center justify-between text-white/60 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-              <span>Main Corridor TV</span>
-              <span className="text-white/40">•</span>
-              <span className="text-green-400">Online</span>
+        {/* Center Panel - Display Preview */}
+        <div className="flex-1 bg-black flex items-center justify-center p-8">
+          <div className="w-full max-w-6xl">
+            <div className="mb-4 flex items-center justify-between text-white/60 text-sm">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                <span>Main Corridor TV</span>
+                <span className="text-white/40">•</span>
+                <span className="text-green-400">Online</span>
+              </div>
+              <span>{currentIndex + 1} / {allItems.length}</span>
             </div>
-            <span>{currentIndex + 1} / {allItems.length}</span>
-          </div>
 
-          <div className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
-            {currentItem ? (
-              <AnimatePresence mode="wait">
-                <motion.div
-                  key={`${currentItem.type}-${currentItem.id}`}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="w-full h-full relative"
-                >
-                  {currentItem.type === 'announcement' ? (
-                    currentItem.image_url ? (
-                      <div className="relative w-full h-full">
-                        <img
-                          src={currentItem.image_url}
-                          alt={currentItem.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
-                        <div className="absolute inset-x-0 bottom-0 p-8">
-                          <div className="glass elevate soft-shadow p-6 rounded-2xl max-w-4xl">
-                            <div className="mb-3">
-                              <span className="px-3 py-1 rounded-full text-xs tracking-wider bg-white/10 text-white/80">ANNOUNCEMENT</span>
+            <div className="bg-gray-900 rounded-lg shadow-2xl overflow-hidden" style={{ aspectRatio: '16/9' }}>
+              {currentItem ? (
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={`${currentItem.type}-${currentItem.id}`}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="w-full h-full relative"
+                  >
+                    {currentItem.type === 'announcement' ? (
+                      currentItem.image_url ? (
+                        <div className="relative w-full h-full">
+                          <img
+                            src={currentItem.image_url}
+                            alt={currentItem.title}
+                            className="w-full h-full object-contain"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
+                          <div className="absolute inset-x-0 bottom-0 p-8">
+                            <div className="glass elevate soft-shadow p-6 rounded-2xl max-w-4xl">
+                              <div className="mb-3">
+                                <span className="px-3 py-1 rounded-full text-xs tracking-wider bg-white/10 text-white/80">ANNOUNCEMENT</span>
+                              </div>
+                              <h1 className="text-4xl font-semibold leading-tight mb-3 text-white">
+                                {currentItem.title}
+                              </h1>
+                              <p className="text-lg text-white/80 leading-relaxed">
+                                {currentItem.body}
+                              </p>
                             </div>
-                            <h1 className="text-4xl font-semibold leading-tight mb-3 text-white">
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 via-black to-black">
+                          <div className="glass elevate soft-shadow text-center max-w-4xl w-full p-8">
+                            <div className="mb-4">
+                              <span className="px-4 py-2 rounded-full text-sm tracking-wider bg-white/10 text-white/80">ANNOUNCEMENT</span>
+                            </div>
+                            <h1 className="text-5xl font-semibold leading-tight mb-4 text-white">
                               {currentItem.title}
                             </h1>
-                            <p className="text-lg text-white/80 leading-relaxed">
+                            <p className="text-2xl text-white/70 leading-relaxed font-light">
                               {currentItem.body}
                             </p>
                           </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 via-black to-black">
-                        <div className="glass elevate soft-shadow text-center max-w-4xl w-full p-8">
-                          <div className="mb-4">
-                            <span className="px-4 py-2 rounded-full text-sm tracking-wider bg-white/10 text-white/80">ANNOUNCEMENT</span>
-                          </div>
-                          <h1 className="text-5xl font-semibold leading-tight mb-4 text-white">
-                            {currentItem.title}
-                          </h1>
-                          <p className="text-2xl text-white/70 leading-relaxed font-light">
-                            {currentItem.body}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  ) : currentItem.type === 'event' ? (
-                    currentItem.image_url ? (
-                      <div className="relative w-full h-full">
-                        <img
-                          src={currentItem.image_url}
-                          alt={currentItem.title}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
-                        <div className="absolute inset-x-0 bottom-0 p-8">
-                          <div className="glass elevate soft-shadow p-6 rounded-2xl max-w-5xl">
-                            <div className="mb-3">
-                              <span className="px-3 py-1 rounded-full text-xs tracking-wider bg-emerald-400/15 text-emerald-200/90">EVENT</span>
-                            </div>
-                            <h1 className="text-4xl font-semibold leading-tight mb-3 text-white">
-                              {currentItem.title}
-                            </h1>
-                            <p className="text-lg text-white/80 leading-relaxed mb-4">
-                              {currentItem.description}
-                            </p>
-                            <div className="grid grid-cols-3 gap-3 text-white/85">
-                              <div className="glass border-white/10 bg-white/5 rounded-xl p-3 flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                                  <Calendar className="w-4 h-4" />
-                                </div>
-                                <div>
-                                  <div className="text-xs text-white/60">Date</div>
-                                  <div className="text-sm font-medium">{new Date(currentItem.start_date).toLocaleDateString()}</div>
-                                </div>
+                      )
+                    ) : currentItem.type === 'event' ? (
+                      currentItem.image_url ? (
+                        <div className="relative w-full h-full">
+                          <img
+                            src={currentItem.image_url}
+                            alt={currentItem.title}
+                            className="w-full h-full object-contain"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/25 to-transparent" />
+                          <div className="absolute inset-x-0 bottom-0 p-8">
+                            <div className="glass elevate soft-shadow p-6 rounded-2xl max-w-5xl">
+                              <div className="mb-3">
+                                <span className="px-3 py-1 rounded-full text-xs tracking-wider bg-emerald-400/15 text-emerald-200/90">EVENT</span>
                               </div>
-                              <div className="glass border-white/10 bg-white/5 rounded-xl p-3 flex items-center gap-2">
-                                <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                                  <Clock className="w-4 h-4" />
-                                </div>
-                                <div>
-                                  <div className="text-xs text-white/60">Time</div>
-                                  <div className="text-sm font-medium">
-                                    {new Date(currentItem.start_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
-                                  </div>
-                                </div>
-                              </div>
-                              {currentItem.location && (
+                              <h1 className="text-4xl font-semibold leading-tight mb-3 text-white">
+                                {currentItem.title}
+                              </h1>
+                              <p className="text-lg text-white/80 leading-relaxed mb-4">
+                                {currentItem.description}
+                              </p>
+                              <div className="grid grid-cols-3 gap-3 text-white/85">
                                 <div className="glass border-white/10 bg-white/5 rounded-xl p-3 flex items-center gap-2">
                                   <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
-                                    <MapPin className="w-4 h-4" />
+                                    <Calendar className="w-4 h-4" />
                                   </div>
                                   <div>
-                                    <div className="text-xs text-white/60">Location</div>
-                                    <div className="text-sm font-medium">{currentItem.location}</div>
+                                    <div className="text-xs text-white/60">Date</div>
+                                    <div className="text-sm font-medium">{new Date(currentItem.start_date).toLocaleDateString()}</div>
                                   </div>
                                 </div>
-                              )}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 via-black to-black">
-                        <div className="glass elevate soft-shadow text-center max-w-5xl w-full p-8">
-                          <div className="mb-4">
-                            <span className="px-4 py-2 rounded-full text-sm tracking-wider bg-emerald-400/15 text-emerald-200/90">EVENT</span>
-                          </div>
-                          <h1 className="text-5xl font-semibold leading-tight mb-4 text-white">
-                            {currentItem.title}
-                          </h1>
-                          <p className="text-2xl text-white/70 leading-relaxed font-light mb-6">
-                            {currentItem.description}
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  ) : (
-                    currentItem.file_type === 'image' ? (
-                      <div className="relative w-full h-full bg-black">
-                        <img
-                          src={currentItem.file_url}
-                          alt={currentItem.title || 'Media'}
-                          className="w-full h-full object-cover"
-                        />
-                        {currentItem.description && (
-                          <div className="absolute bottom-0 left-0 right-0 p-4">
-                            <div className="glass elevate soft-shadow rounded-xl px-4 py-3 bg-black/40">
-                              <div className="text-sm text-white/70">
-                                {currentItem.description}
+                                <div className="glass border-white/10 bg-white/5 rounded-xl p-3 flex items-center gap-2">
+                                  <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                                    <Clock className="w-4 h-4" />
+                                  </div>
+                                  <div>
+                                    <div className="text-xs text-white/60">Time</div>
+                                    <div className="text-sm font-medium">
+                                      {new Date(currentItem.start_date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                    </div>
+                                  </div>
+                                </div>
+                                {currentItem.location && (
+                                  <div className="glass border-white/10 bg-white/5 rounded-xl p-3 flex items-center gap-2">
+                                    <div className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center">
+                                      <MapPin className="w-4 h-4" />
+                                    </div>
+                                    <div>
+                                      <div className="text-xs text-white/60">Location</div>
+                                      <div className="text-sm font-medium">{currentItem.location}</div>
+                                    </div>
+                                  </div>
+                                )}
                               </div>
                             </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-slate-900 via-black to-black">
+                          <div className="glass elevate soft-shadow text-center max-w-5xl w-full p-8">
+                            <div className="mb-4">
+                              <span className="px-4 py-2 rounded-full text-sm tracking-wider bg-emerald-400/15 text-emerald-200/90">EVENT</span>
+                            </div>
+                            <h1 className="text-5xl font-semibold leading-tight mb-4 text-white">
+                              {currentItem.title}
+                            </h1>
+                            <p className="text-2xl text-white/70 leading-relaxed font-light mb-6">
+                              {currentItem.description}
+                            </p>
+                          </div>
+                        </div>
+                      )
                     ) : (
-                      <div className="relative w-full h-full bg-black flex items-center justify-center">
-                        <video
-                          ref={videoRef}
-                          src={currentItem.file_url}
-                          className="w-full h-full object-cover"
-                          autoPlay
-                          loop={false}
-                          onEnded={() => setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current)}
-                        />
-                        {currentItem.description && (
-                          <div className="absolute bottom-0 left-0 right-0 p-4">
-                            <div className="glass elevate soft-shadow rounded-xl px-4 py-3 bg-black/40">
-                              <div className="text-sm text-white/70">
-                                {currentItem.description}
+                      currentItem.file_type === 'image' ? (
+                        <div className="relative w-full h-full bg-black">
+                          <img
+                            src={currentItem.file_url}
+                            alt={currentItem.title || 'Media'}
+                            className="w-full h-full object-contain"
+                          />
+                          {currentItem.description && (
+                            <div className="absolute bottom-0 left-0 right-0 p-4">
+                              <div className="glass elevate soft-shadow rounded-xl px-4 py-3 bg-black/40">
+                                <div className="text-sm text-white/70">
+                                  {currentItem.description}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        )}
-                      </div>
-                    )
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-white/50 bg-gradient-to-br from-slate-900 via-black to-black">
-                <div className="text-center">
-                  <h2 className="text-3xl font-semibold mb-2">No Active Content</h2>
-                  <p className="text-white/40">Add announcements, events, or media to get started</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="relative w-full h-full bg-black flex items-center justify-center">
+                          <video
+                            ref={videoRef}
+                            src={currentItem.file_url}
+                            className="w-full h-full object-contain"
+                            autoPlay
+                            loop={false}
+                            onEnded={() => setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current)}
+                          />
+                          {currentItem.description && (
+                            <div className="absolute bottom-0 left-0 right-0 p-4">
+                              <div className="glass elevate soft-shadow rounded-xl px-4 py-3 bg-black/40">
+                                <div className="text-sm text-white/70">
+                                  {currentItem.description}
+                                </div>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      )
+                    )}
+                  </motion.div>
+                </AnimatePresence>
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white/50 bg-gradient-to-br from-slate-900 via-black to-black">
+                  <div className="text-center">
+                    <h2 className="text-3xl font-semibold mb-2">No Active Content</h2>
+                    <p className="text-white/40">Add announcements, events, or media to get started</p>
+                  </div>
                 </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Right Panel - Device Stats & TV Actions */}
+        <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
+          <div className="p-4 border-b border-gray-200">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Device Stats</h2>
+          </div>
+
+          <div className="p-4 space-y-4">
+            {/* Storage */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-gray-700">Storage</span>
+                <span className="text-sm font-semibold text-gray-900">{deviceStats.storage}% Full</span>
               </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* Right Panel - Device Stats & TV Actions */}
-      <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Device Stats</h2>
-        </div>
-
-        <div className="p-4 space-y-4">
-          {/* Storage */}
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-gray-700">Storage</span>
-              <span className="text-sm font-semibold text-gray-900">{deviceStats.storage}% Full</span>
+              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div
+                  className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                  style={{ width: `${deviceStats.storage}%` }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-              <div
-                className="bg-blue-500 h-full rounded-full transition-all duration-500"
-                style={{ width: `${deviceStats.storage}%` }}
-              />
-            </div>
-          </div>
 
-          {/* Temperature */}
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Temperature</span>
-              <span className="text-2xl font-bold text-gray-900">{deviceStats.temp}°C</span>
+            {/* Temperature */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Temperature</span>
+                <span className="text-2xl font-bold text-gray-900">{deviceStats.temp}°C</span>
+              </div>
+            </div>
+
+            {/* Uptime */}
+            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-medium text-gray-700">Uptime</span>
+                <span className="text-2xl font-bold text-gray-900">{deviceStats.uptime}%</span>
+              </div>
             </div>
           </div>
 
-          {/* Uptime */}
-          <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium text-gray-700">Uptime</span>
-              <span className="text-2xl font-bold text-gray-900">{deviceStats.uptime}%</span>
-            </div>
-          </div>
-        </div>
+          <div className="p-4 border-t border-gray-200 mt-auto">
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">TV Actions</h2>
+            <div className="space-y-2">
+              <Button
+                onClick={handleUpdateTV}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <RefreshCw className="w-4 h-4 mr-3" />
+                Update TV
+              </Button>
+              <Button
+                onClick={handleRestartTV}
+                className="w-full justify-start"
+                variant="outline"
+              >
+                <Power className="w-4 h-4 mr-3" />
+                Restart TV
+              </Button>
 
-        <div className="p-4 border-t border-gray-200 mt-auto">
-          <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">TV Actions</h2>
-          <div className="space-y-2">
-            <Button
-              onClick={handleUpdateTV}
-              className="w-full justify-start"
-              variant="outline"
-            >
-              <RefreshCw className="w-4 h-4 mr-3" />
-              Update TV
-            </Button>
-            <Button
-              onClick={handleRestartTV}
-              className="w-full justify-start"
-              variant="outline"
-            >
-              <Power className="w-4 h-4 mr-3" />
-              Restart TV
-            </Button>
-
-            {/* Volume Control Dialog */}
-            <Dialog open={showVolumeDialog} onOpenChange={setShowVolumeDialog}>
-              <DialogTrigger asChild>
-                <Button
-                  className="w-full justify-start"
-                  variant="outline"
-                >
-                  {isMuted ? <VolumeX className="w-4 h-4 mr-3" /> : <Volume2 className="w-4 h-4 mr-3" />}
-                  Volume Control
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Volume Control</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-6 py-4">
-                  <div className="space-y-2">
+              {/* Volume Control Dialog */}
+              <Dialog open={showVolumeDialog} onOpenChange={setShowVolumeDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    {isMuted ? <VolumeX className="w-4 h-4 mr-3" /> : <Volume2 className="w-4 h-4 mr-3" />}
+                    Volume Control
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Volume Control</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-6 py-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium">Volume</label>
+                        <span className="text-sm text-gray-500">{volume}%</span>
+                      </div>
+                      <Slider
+                        value={[volume]}
+                        onValueChange={(value) => handleVolumeChange(value[0])}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                      />
+                    </div>
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Volume</label>
-                      <span className="text-sm text-gray-500">{volume}%</span>
+                      <label className="text-sm font-medium">Mute</label>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleMuteToggle}
+                      >
+                        {isMuted ? 'Unmute' : 'Mute'}
+                      </Button>
                     </div>
-                    <Slider
-                      value={[volume]}
-                      onValueChange={(value) => handleVolumeChange(value[0])}
-                      max={100}
-                      step={1}
-                      className="w-full"
-                    />
+                    <p className="text-xs text-gray-500 mt-2">
+                      Note: Volume changes will apply to the Main Corridor TV display in real-time.
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium">Mute</label>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={handleMuteToggle}
-                    >
-                      {isMuted ? 'Unmute' : 'Mute'}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    Note: Volume changes will apply to the Main Corridor TV display in real-time.
-                  </p>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
 
-            {/* Advanced Settings Dialog */}
-            <Dialog open={showAdvancedDialog} onOpenChange={setShowAdvancedDialog}>
-              <DialogTrigger asChild>
-                <Button
-                  className="w-full justify-start"
-                  variant="outline"
-                >
-                  <Settings className="w-4 h-4 mr-3" />
-                  Advanced Settings
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Advanced Display Settings</DialogTitle>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div className="grid grid-cols-2 gap-4">
+              {/* Advanced Settings Dialog */}
+              <Dialog open={showAdvancedDialog} onOpenChange={setShowAdvancedDialog}>
+                <DialogTrigger asChild>
+                  <Button
+                    className="w-full justify-start"
+                    variant="outline"
+                  >
+                    <Settings className="w-4 h-4 mr-3" />
+                    Advanced Settings
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Advanced Display Settings</DialogTitle>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Display Brightness</label>
+                        <Slider defaultValue={[80]} max={100} step={1} />
+                      </div>
+                      <div className="space-y-2">
+                        <label className="text-sm font-medium">Contrast</label>
+                        <Slider defaultValue={[50]} max={100} step={1} />
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Display Brightness</label>
-                      <Slider defaultValue={[80]} max={100} step={1} />
+                      <label className="text-sm font-medium">Slide Duration (seconds)</label>
+                      <Slider defaultValue={[5]} min={3} max={30} step={1} />
                     </div>
                     <div className="space-y-2">
-                      <label className="text-sm font-medium">Contrast</label>
-                      <Slider defaultValue={[50]} max={100} step={1} />
+                      <label className="text-sm font-medium">Transition Effect</label>
+                      <Select defaultValue="fade">
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="fade">Fade</SelectItem>
+                          <SelectItem value="slide">Slide</SelectItem>
+                          <SelectItem value="zoom">Zoom</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Slide Duration (seconds)</label>
-                    <Slider defaultValue={[5]} min={3} max={30} step={1} />
-                  </div>
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium">Transition Effect</label>
-                    <Select defaultValue="fade">
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="fade">Fade</SelectItem>
-                        <SelectItem value="slide">Slide</SelectItem>
-                        <SelectItem value="zoom">Zoom</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="pt-4 border-t">
-                    <h4 className="text-sm font-medium mb-3">Device Info</h4>
-                    <div className="grid grid-cols-2 gap-2 text-sm">
-                      <div>
-                        <span className="text-gray-500">Storage:</span>
-                        <span className="ml-2 font-medium">{deviceStats.storage}%</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Temperature:</span>
-                        <span className="ml-2 font-medium">{deviceStats.temp}°C</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Uptime:</span>
-                        <span className="ml-2 font-medium">{Math.floor(deviceStats.uptime / 3600)}h {Math.floor((deviceStats.uptime % 3600) / 60)}m</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Resolution:</span>
-                        <span className="ml-2 font-medium">1920x1080</span>
+                    <div className="pt-4 border-t">
+                      <h4 className="text-sm font-medium mb-3">Device Info</h4>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="text-gray-500">Storage:</span>
+                          <span className="ml-2 font-medium">{deviceStats.storage}%</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Temperature:</span>
+                          <span className="ml-2 font-medium">{deviceStats.temp}°C</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Uptime:</span>
+                          <span className="ml-2 font-medium">{Math.floor(deviceStats.uptime / 3600)}h {Math.floor((deviceStats.uptime % 3600) / 60)}m</span>
+                        </div>
+                        <div>
+                          <span className="text-gray-500">Resolution:</span>
+                          <span className="ml-2 font-medium">1920x1080</span>
+                        </div>
                       </div>
                     </div>
                   </div>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogContent>
+              </Dialog>
+            </div>
           </div>
         </div>
-      </div>
       </div>
     </div>
   );
