@@ -632,21 +632,15 @@ export function Display() {
       {/* Audio toggle button - works with TV remote (OK/Enter key) or click */}
       <button
         onClick={toggleAudio}
-        className="fixed bottom-6 right-6 z-50 backdrop-blur-sm text-white px-4 py-3 rounded-full shadow-lg flex items-center gap-2 transition-all duration-200 hover:scale-105 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent"
-        style={{
-          backgroundColor: audioEnabled ? 'rgba(34, 197, 94, 0.8)' : 'rgba(239, 68, 68, 0.8)',
-        }}
-        aria-label={audioEnabled ? 'Disable audio (Press OK/Enter)' : 'Enable audio (Press OK/Enter)'}
+        className={`fixed bottom-8 right-8 z-50 p-4 rounded-full glass transition-all duration-300 hover:scale-105 active:scale-95 group focus:outline-none focus:ring-2 focus:ring-white/50 ${audioEnabled ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/20 text-white/50 hover:bg-black/40'
+          }`}
+        aria-label={audioEnabled ? 'Mute' : 'Unmute'}
       >
         {audioEnabled ? (
-          <Volume2 className="w-5 h-5" />
+          <Volume2 className="w-6 h-6" />
         ) : (
-          <VolumeX className="w-5 h-5" />
+          <VolumeX className="w-6 h-6" />
         )}
-        <span className="text-sm font-medium">
-          {audioEnabled ? 'Audio ON' : 'Audio OFF'}
-        </span>
-        <span className="text-xs opacity-75 ml-1">(Press OK)</span>
       </button>
     </div>
   );
