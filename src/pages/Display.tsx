@@ -5,6 +5,9 @@ import { Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Volume2, VolumeX } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
+import { useRealtimeSubscription, type ConnectionStatus } from '@/hooks/useRealtimeSubscription';
+import { ConnectionIndicator } from '@/components/display/ConnectionIndicator';
+
 
 export function Display() {
   const { settings } = useSettings();
@@ -18,6 +21,9 @@ export function Display() {
     const saved = localStorage.getItem('display-audio-enabled');
     return saved === 'true';
   });
+
+  // Connection status for realtime subscriptions
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
 
   const toggleAudio = () => {
     const newState = !audioEnabled;
@@ -101,65 +107,45 @@ export function Display() {
     };
   }
 
+  // Initial data load
   useEffect(() => {
     loadAnnouncements();
     loadEvents();
     loadMedia();
-
-    // Set up real-time subscriptions for announcements
-    const announcementsSubscription = supabase
-      .channel('announcements')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'announcements',
-        },
-        () => {
-          loadAnnouncements();
-        }
-      )
-      .subscribe();
-
-    // Set up real-time subscriptions for events
-    const eventsSubscription = supabase
-      .channel('events')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'events',
-        },
-        () => {
-          loadEvents();
-        }
-      )
-      .subscribe();
-
-    // Set up real-time subscriptions for media
-    const mediaSubscription = supabase
-      .channel('media')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'media',
-        },
-        () => {
-          loadMedia();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      announcementsSubscription.unsubscribe();
-      eventsSubscription.unsubscribe();
-      mediaSubscription.unsubscribe();
-    };
   }, []);
+
+  // Set up robust real-time subscriptions with auto-reconnection
+  // These hooks are used for their side effects (subscriptions), not their return values
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const announcementsRealtime = useRealtimeSubscription({
+    table: 'announcements',
+    onAny: () => {
+      console.debug('[Display] Announcements updated via realtime');
+      loadAnnouncements();
+    },
+    onConnectionChange: (status) => {
+      setConnectionStatus(status);
+      console.debug('[Display] Announcements connection:', status);
+    },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const eventsRealtime = useRealtimeSubscription({
+    table: 'events',
+    onAny: () => {
+      console.debug('[Display] Events updated via realtime');
+      loadEvents();
+    },
+  });
+
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const mediaRealtime = useRealtimeSubscription({
+    table: 'media',
+    onAny: () => {
+      console.debug('[Display] Media updated via realtime');
+      loadMedia();
+    },
+  });
 
   // Sync volume with video element and listen for changes from LiveDisplay
   useEffect(() => {
@@ -642,6 +628,9 @@ export function Display() {
           <VolumeX className="w-6 h-6" />
         )}
       </button>
+
+      {/* Connection status indicator */}
+      <ConnectionIndicator status={connectionStatus} position="top-left" autoHideDelay={3000} />
     </div>
   );
 }
