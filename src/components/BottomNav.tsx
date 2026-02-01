@@ -4,7 +4,8 @@ import {
   Users,
   Plus,
   Settings,
-  RotateCw
+  RotateCw,
+  Monitor
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -91,17 +92,20 @@ export function BottomNav({ onRefresh, onForce }: BottomNavProps) {
             <Plus className={`w-5 h-5 transition-transform ${showQuickAdd ? 'rotate-45' : ''}`} />
           </button>
 
-          {/* Force Refresh */}
-          <button
-            onClick={() => {
-              if (onForce) onForce();
-              else onRefresh?.(true);
-            }}
-            className="flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all text-gray-500"
+          {/* Live Display */}
+          <NavLink
+            to="/admin/live-display"
+            className={({ isActive }) => `flex flex-col items-center justify-center px-4 py-2 rounded-lg transition-all ${
+              isActive ? 'text-gray-900' : 'text-gray-500'
+            }`}
           >
-            <RotateCw className="w-5 h-5" />
-            <span className="text-xs mt-1 font-medium">Refresh</span>
-          </button>
+            {({ isActive }) => (
+              <>
+                <Monitor className={`w-5 h-5 ${isActive ? 'text-gray-900' : ''}`} />
+                <span className="text-xs mt-1 font-medium">Display</span>
+              </>
+            )}
+          </NavLink>
 
           {/* Settings */}
           <NavLink
