@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useSettings } from '@/hooks/useSettings';
 import { Switch } from '@/components/ui/switch';
@@ -14,7 +14,13 @@ export function Settings() {
   const [importJson, setImportJson] = useState('');
   const [showImportSection, setShowImportSection] = useState(false);
   const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [localInterval, setLocalInterval] = useState(settings.slideshowInterval);
   const fileRef = useRef<HTMLInputElement | null>(null);
+
+  // Sync local interval when settings change from outside
+  useEffect(() => {
+    setLocalInterval(settings.slideshowInterval);
+  }, [settings.slideshowInterval]);
 
   const showNotification = (type: 'success' | 'error', message: string) => {
     setNotification({ type, message });
@@ -33,9 +39,16 @@ export function Settings() {
   };
 
   const handleIntervalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const val = Number(e.target.value) || 5;
+    const val = Number(e.target.value);
+    setLocalInterval(val);
+  };
+
+  const applyInterval = () => {
+    const val = Number(localInterval) || 5;
     const clamped = Math.max(3, Math.min(60, val));
+    setLocalInterval(clamped); // Update input to show clamped value
     update({ slideshowInterval: clamped });
+    showNotification('success', 'Slideshow interval updated');
   };
 
   const handleExport = () => {
@@ -200,22 +213,35 @@ export function Settings() {
           <div className="p-4 space-y-4">
             <div>
               <label className="text-sm font-medium text-gray-900 block mb-2">Slideshow Interval</label>
-              <div className="flex items-center gap-4">
-                <Input
-                  type="number"
-                  min="3"
-                  max="60"
-                  value={settings.slideshowInterval}
-                  onChange={handleIntervalChange}
-                  className="w-20 text-center"
-                />
-                <span className="text-sm text-gray-600">seconds</span>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Input
+                    type="number"
+                    min="3"
+                    max="60"
+                    value={localInterval}
+                    onChange={handleIntervalChange}
+                    className="w-20 text-center"
+                  />
+                  <span className="text-sm text-gray-600">seconds</span>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={applyInterval}
+                  disabled={localInterval === settings.slideshowInterval}
+                  variant="outline"
+                  className={
+                    `text-sm ${localInterval !== settings.slideshowInterval ? 'border-green-500 text-green-700 hover:bg-green-50' : ''}`
+                  }
+                >
+                  Apply
+                </Button>
               </div>
               <input
                 type="range"
                 min="3"
                 max="60"
-                value={settings.slideshowInterval}
+                value={localInterval}
                 onChange={handleIntervalChange}
                 className="w-full mt-3"
               />
@@ -310,11 +336,11 @@ export function Settings() {
 
           <div className="p-4 space-y-2">
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleExport} className="flex-1 text-sm">
+              <Button variant="outline" onClick={handleExport} className="text-sm">
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
-              <Button variant="outline" onClick={() => setShowImportSection(!showImportSection)} className="flex-1 text-sm">
+              <Button variant="outline" onClick={() => setShowImportSection(!showImportSection)} className="text-sm">
                 <Upload className="w-4 h-4 mr-2" />
                 Import
               </Button>
