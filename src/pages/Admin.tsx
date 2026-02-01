@@ -1,4 +1,4 @@
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
+import { Routes, Route, useLocation } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { BottomNav } from '@/components/BottomNav';
@@ -10,7 +10,7 @@ import { Clients } from '@/pages/admin/Clients';
 import { CalendarView } from '@/pages/admin/Calendar';
 import { Settings } from '@/pages/admin/Settings';
 import { LiveDisplay } from '@/pages/admin/LiveDisplay';
-import { Menu, PanelLeftClose, PanelLeftOpen, RotateCw } from 'lucide-react';
+import { PanelLeftClose, PanelLeftOpen, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabase';
 
@@ -74,16 +74,7 @@ export function Admin() {
     }
   };
 
-  const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      await supabase.auth.signOut();
-    } catch {
-      // ignore
-    }
-    navigate('/login');
-  };
 
   // If on live display route, render full screen without layout
   if (isLiveDisplayRoute) {
@@ -166,7 +157,7 @@ export function Admin() {
       </div>
 
       {/* Bottom Navigation - Visible only on mobile */}
-      <BottomNav onRefresh={broadcastReload} onForce={() => broadcastReload(true)} onLogout={handleLogout} />
+      <BottomNav />
     </div>
   );
 }

@@ -4,16 +4,10 @@ import {
   Users,
   Plus,
   Settings,
-  RotateCw,
   Monitor
 } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-
-interface BottomNavProps {
-  onRefresh?: (hard: boolean) => void;
-  onForce?: () => void;
-}
 
 const quickAddItems = [
   { name: 'Announcements', href: '/admin/announcements', label: 'Announcement' },
@@ -21,7 +15,7 @@ const quickAddItems = [
   { name: 'Media', href: '/admin/media', label: 'Media' },
 ];
 
-export function BottomNav({ onRefresh, onForce }: BottomNavProps) {
+export function BottomNav() {
   const [showQuickAdd, setShowQuickAdd] = useState(false);
 
   const handleQuickAdd = (href: string) => {
