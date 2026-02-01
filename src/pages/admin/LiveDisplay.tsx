@@ -3,12 +3,12 @@ import type { CSSProperties } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Clock, MapPin, Play, Power, RefreshCw, Settings, Volume2, VolumeX, ArrowLeft, Home, ChevronDown } from 'lucide-react';
+import { Calendar, Clock, MapPin, Play, Power, RefreshCw, Volume2, VolumeX, ArrowLeft, Home, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Slider } from '@/components/ui/slider';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Slider } from '@/components/ui/slider';
+import { useSettings } from '@/hooks/useSettings';
 
 // TV display type
 interface TVDisplay {
@@ -23,7 +23,11 @@ export function LiveDisplay() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [media, setMedia] = useState<Media[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Sync currentIndex with Display page via localStorage
+  const [currentIndex, setCurrentIndex] = useState(() => {
+    const saved = localStorage.getItem('display-current-index');
+    return saved ? parseInt(saved) : 0;
+  });
   const [loading, setLoading] = useState(true);
   const [selectedTV] = useState<string>('main-corridor');
 
@@ -60,7 +64,6 @@ export function LiveDisplay() {
   };
 
   const [showVolumeDialog, setShowVolumeDialog] = useState(false);
-  const [showAdvancedDialog, setShowAdvancedDialog] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Available TV displays (only Main Corridor TV for now)
@@ -68,42 +71,21 @@ export function LiveDisplay() {
     { id: 'main-corridor', name: 'Main Corridor TV', location: 'Main Corridor', status: 'online' },
   ];
 
-  const [deviceStats, setDeviceStats] = useState({
-    storage: 0,
-    temp: 0,
-    uptime: 0
-  });
+  // Get settings for slideshow interval
+  const { settings } = useSettings();
 
-  // Get real device stats
+  // Listen for currentIndex changes from Display page
   useEffect(() => {
-    const calculateStats = () => {
-      // Calculate storage based on media count
-      const totalMedia = media.length;
-      const storageUsed = Math.min(Math.round((totalMedia / 100) * 100), 95);
-
-      // Simulate temperature (would be from actual hardware in production)
-      const temp = Math.round(22 + Math.random() * 4); // 22-26°C range
-
-      // Calculate uptime based on when the session started
-      const sessionStart = sessionStorage.getItem('displayStartTime');
-      if (!sessionStart) {
-        sessionStorage.setItem('displayStartTime', Date.now().toString());
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'display-current-index' && e.newValue) {
+        setCurrentIndex(parseInt(e.newValue));
       }
-      const startTime = parseInt(sessionStart || Date.now().toString());
-      const uptime = Math.floor((Date.now() - startTime) / 1000); // seconds
-
-      setDeviceStats({
-        storage: storageUsed,
-        temp,
-        uptime
-      });
     };
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
+  }, []);
 
-    calculateStats();
-    const interval = setInterval(calculateStats, 5000); // Update every 5 seconds
 
-    return () => clearInterval(interval);
-  }, [media]);
 
   // Update video volume when volume state changes
   useEffect(() => {
@@ -247,9 +229,9 @@ export function LiveDisplay() {
 
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current);
-    }, 12000);
+    }, settings.slideshowInterval * 1000);
     return () => clearInterval(timer);
-  }, [announcements, events, media, currentIndex]);
+  }, [announcements, events, media, currentIndex, settings.slideshowInterval]);
 
   const loadAnnouncements = async () => {
     try {
@@ -335,7 +317,11 @@ export function LiveDisplay() {
   const getItemDuration = (item: SlideItem) => {
     if (!item) return '00:00';
     if (item.type === 'media' && item.file_type === 'video') return '02:30';
-    return '00:12';
+    // Use settings.slideshowInterval for non-video items
+    const seconds = settings.slideshowInterval;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
   const getItemFormat = (item: SlideItem) => {
@@ -488,27 +474,31 @@ export function LiveDisplay() {
             <div className="p-4">
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">In Queue</h3>
               <div className="space-y-3">
-                {allItems.slice(currentIndex + 2, currentIndex + 5).map((item, idx) => (
-                  <div key={`${item.type}-${item.id}`} className="flex gap-3">
-                    <div className="w-16 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
-                      {item.type === 'announcement' && item.image_url ? (
-                        <img src={item.image_url} alt={item.title} className="w-full h-full object-contain" />
-                      ) : item.type === 'event' && item.image_url ? (
-                        <img src={item.image_url} alt={item.title} className="w-full h-full object-contain" />
-                      ) : item.type === 'media' ? (
-                        <img src={item.file_url} alt={getItemTitle(item)} className="w-full h-full object-contain" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold">
-                          {getItemTitle(item).slice(0, 2).toUpperCase()}
-                        </div>
-                      )}
+                {Array.from({ length: Math.min(3, allItems.length - 2) }, (_, i) => {
+                  const queueIndex = (currentIndex + 2 + i) % allItems.length;
+                  const item = allItems[queueIndex];
+                  return (
+                    <div key={`${item.type}-${item.id}-${queueIndex}`} className="flex gap-3">
+                      <div className="w-16 h-12 bg-gray-100 rounded overflow-hidden flex-shrink-0">
+                        {item.type === 'announcement' && item.image_url ? (
+                          <img src={item.image_url} alt={item.title} className="w-full h-full object-contain" />
+                        ) : item.type === 'event' && item.image_url ? (
+                          <img src={item.image_url} alt={item.title} className="w-full h-full object-contain" />
+                        ) : item.type === 'media' ? (
+                          <img src={item.file_url} alt={getItemTitle(item)} className="w-full h-full object-contain" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold">
+                            {getItemTitle(item).slice(0, 2).toUpperCase()}
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="text-sm text-gray-700 truncate">{getItemTitle(item)}</h4>
+                        <p className="text-xs text-gray-500">{getItemLabel(item)} • {getItemDuration(item)}</p>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm text-gray-700 truncate">{getItemTitle(item)}</h4>
-                      <p className="text-xs text-gray-500">{getItemLabel(item)} • {getItemDuration(item)}</p>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           </div>
@@ -701,178 +691,77 @@ export function LiveDisplay() {
           </div>
         </div>
 
-        {/* Right Panel - Device Stats & TV Actions */}
+        {/* Right Panel - TV Actions */}
         <div className="w-80 bg-white border-l border-gray-200 flex flex-col">
           <div className="p-4 border-b border-gray-200">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Device Stats</h2>
+            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">TV Actions</h2>
           </div>
 
-          <div className="p-4 space-y-4">
-            {/* Storage */}
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-gray-700">Storage</span>
-                <span className="text-sm font-semibold text-gray-900">{deviceStats.storage}% Full</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                <div
-                  className="bg-blue-500 h-full rounded-full transition-all duration-500"
-                  style={{ width: `${deviceStats.storage}%` }}
-                />
-              </div>
-            </div>
+          <div className="p-4 space-y-2">
+            <Button
+              onClick={handleUpdateTV}
+              className="w-full justify-start"
+              variant="outline"
+            >
+              <RefreshCw className="w-4 h-4 mr-3" />
+              Update TV
+            </Button>
+            <Button
+              onClick={handleRestartTV}
+              className="w-full justify-start"
+              variant="outline"
+            >
+              <Power className="w-4 h-4 mr-3" />
+              Restart TV
+            </Button>
 
-            {/* Temperature */}
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Temperature</span>
-                <span className="text-2xl font-bold text-gray-900">{deviceStats.temp}°C</span>
-              </div>
-            </div>
-
-            {/* Uptime */}
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-700">Uptime</span>
-                <span className="text-2xl font-bold text-gray-900">{deviceStats.uptime}%</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-4 border-t border-gray-200 mt-auto">
-            <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wider mb-4">TV Actions</h2>
-            <div className="space-y-2">
-              <Button
-                onClick={handleUpdateTV}
-                className="w-full justify-start"
-                variant="outline"
-              >
-                <RefreshCw className="w-4 h-4 mr-3" />
-                Update TV
-              </Button>
-              <Button
-                onClick={handleRestartTV}
-                className="w-full justify-start"
-                variant="outline"
-              >
-                <Power className="w-4 h-4 mr-3" />
-                Restart TV
-              </Button>
-
-              {/* Volume Control Dialog */}
-              <Dialog open={showVolumeDialog} onOpenChange={setShowVolumeDialog}>
-                <DialogTrigger asChild>
-                  <Button
-                    className="w-full justify-start"
-                    variant="outline"
-                  >
-                    {isMuted ? <VolumeX className="w-4 h-4 mr-3" /> : <Volume2 className="w-4 h-4 mr-3" />}
-                    Volume Control
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Volume Control</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-6 py-4">
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between">
-                        <label className="text-sm font-medium">Volume</label>
-                        <span className="text-sm text-gray-500">{volume}%</span>
-                      </div>
-                      <Slider
-                        value={[volume]}
-                        onValueChange={(value) => handleVolumeChange(value[0])}
-                        max={100}
-                        step={1}
-                        className="w-full"
-                      />
-                    </div>
+            {/* Volume Control Dialog */}
+            <Dialog open={showVolumeDialog} onOpenChange={setShowVolumeDialog}>
+              <DialogTrigger asChild>
+                <Button
+                  className="w-full justify-start"
+                  variant="outline"
+                >
+                  {isMuted ? <VolumeX className="w-4 h-4 mr-3" /> : <Volume2 className="w-4 h-4 mr-3" />}
+                  Volume Control
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Volume Control</DialogTitle>
+                </DialogHeader>
+                <div className="space-y-6 py-4">
+                  <div className="space-y-2">
                     <div className="flex items-center justify-between">
-                      <label className="text-sm font-medium">Mute</label>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleMuteToggle}
-                      >
-                        {isMuted ? 'Unmute' : 'Mute'}
-                      </Button>
+                      <label className="text-sm font-medium">Volume</label>
+                      <span className="text-sm text-gray-500">{volume}%</span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Note: Volume changes will apply to the Main Corridor TV display in real-time.
-                    </p>
+                    <Slider
+                      value={[volume]}
+                      onValueChange={(value) => handleVolumeChange(value[0])}
+                      max={100}
+                      step={1}
+                      className="w-full"
+                    />
                   </div>
-                </DialogContent>
-              </Dialog>
+                  <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium">Mute</label>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleMuteToggle}
+                    >
+                      {isMuted ? 'Unmute' : 'Mute'}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Note: Volume changes will apply to the Main Corridor TV display in real-time.
+                  </p>
+                </div>
+              </DialogContent>
+            </Dialog>
 
-              {/* Advanced Settings Dialog */}
-              <Dialog open={showAdvancedDialog} onOpenChange={setShowAdvancedDialog}>
-                <DialogTrigger asChild>
-                  <Button
-                    className="w-full justify-start"
-                    variant="outline"
-                  >
-                    <Settings className="w-4 h-4 mr-3" />
-                    Advanced Settings
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle>Advanced Display Settings</DialogTitle>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Display Brightness</label>
-                        <Slider defaultValue={[80]} max={100} step={1} />
-                      </div>
-                      <div className="space-y-2">
-                        <label className="text-sm font-medium">Contrast</label>
-                        <Slider defaultValue={[50]} max={100} step={1} />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Slide Duration (seconds)</label>
-                      <Slider defaultValue={[5]} min={3} max={30} step={1} />
-                    </div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Transition Effect</label>
-                      <Select defaultValue="fade">
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="fade">Fade</SelectItem>
-                          <SelectItem value="slide">Slide</SelectItem>
-                          <SelectItem value="zoom">Zoom</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                    <div className="pt-4 border-t">
-                      <h4 className="text-sm font-medium mb-3">Device Info</h4>
-                      <div className="grid grid-cols-2 gap-2 text-sm">
-                        <div>
-                          <span className="text-gray-500">Storage:</span>
-                          <span className="ml-2 font-medium">{deviceStats.storage}%</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Temperature:</span>
-                          <span className="ml-2 font-medium">{deviceStats.temp}°C</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Uptime:</span>
-                          <span className="ml-2 font-medium">{Math.floor(deviceStats.uptime / 3600)}h {Math.floor((deviceStats.uptime % 3600) / 60)}m</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-500">Resolution:</span>
-                          <span className="ml-2 font-medium">1920x1080</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
-            </div>
+
           </div>
         </div>
       </div>

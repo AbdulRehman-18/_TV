@@ -5,6 +5,7 @@ import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Upload, RotateCcw, Trash2, CheckCircle2, X, LogOut } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -13,7 +14,7 @@ export function Settings() {
   const { settings, update, reset, exportSettings, importSettings } = useSettings();
   const [importJson, setImportJson] = useState('');
   const [showImportSection, setShowImportSection] = useState(false);
-  const [notification, setNotification] = useState<{type: 'success' | 'error', message: string} | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error', message: string } | null>(null);
   const [localInterval, setLocalInterval] = useState(settings.slideshowInterval);
   const fileRef = useRef<HTMLInputElement | null>(null);
 
@@ -118,9 +119,8 @@ export function Settings() {
 
       {/* Notification */}
       {notification && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${
-          notification.type === 'success' ? 'bg-green-50 text-green-900 border border-green-200' : 'bg-red-50 text-red-900 border border-red-200'
-        }`}>
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg ${notification.type === 'success' ? 'bg-green-50 text-green-900 border border-green-200' : 'bg-red-50 text-red-900 border border-red-200'
+          }`}>
           {notification.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <X className="w-4 h-4" />}
           <span className="text-sm font-medium">{notification.message}</span>
         </div>
@@ -268,6 +268,27 @@ export function Settings() {
                 onCheckedChange={(v) => update({ enableTransitions: Boolean(v) })}
               />
             </div>
+
+            {settings.enableTransitions && (
+              <div>
+                <label className="text-sm font-medium text-gray-900 block mb-2">Transition Effect</label>
+                <Select
+                  value={settings.transitionEffect}
+                  onValueChange={(value) => update({ transitionEffect: value as typeof settings.transitionEffect })}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="fade">Fade</SelectItem>
+                    <SelectItem value="slide">Slide</SelectItem>
+                    <SelectItem value="zoom">Zoom</SelectItem>
+                    <SelectItem value="none">None</SelectItem>
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">Choose the animation style for slide transitions</p>
+              </div>
+            )}
           </div>
         </div>
 
