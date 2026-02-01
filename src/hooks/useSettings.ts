@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 export type Theme = "light" | "dark";
+export type TransitionEffect = "fade" | "slide" | "zoom" | "none";
 
 export interface SettingsState {
   theme: Theme;
@@ -12,6 +13,7 @@ export interface SettingsState {
   notifyOnUpload: boolean;
   displayName: string;
   enableTransitions: boolean;
+  transitionEffect: TransitionEffect;
   showDateTimeOnDisplay: boolean;
 }
 
@@ -25,6 +27,7 @@ const DEFAULT_SETTINGS: SettingsState = {
   notifyOnUpload: true,
   displayName: "Main Corridor TV",
   enableTransitions: true,
+  transitionEffect: "fade",
   showDateTimeOnDisplay: true,
 };
 

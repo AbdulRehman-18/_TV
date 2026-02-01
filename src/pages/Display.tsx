@@ -269,6 +269,11 @@ export function Display() {
     return () => clearInterval(timer);
   }, [settings.showDateTimeOnDisplay]);
 
+  // Sync currentIndex to localStorage for LiveDisplay preview
+  useEffect(() => {
+    localStorage.setItem('display-current-index', currentIndex.toString());
+  }, [currentIndex]);
+
   // Slideshow timer logic: pause for video, use settings interval for others
   useEffect(() => {
     const activeAnnouncements = settings.showAnnouncementsOnDisplay ? announcements.filter(a => a.is_active) : [];
@@ -424,10 +429,34 @@ export function Display() {
       <AnimatePresence mode="wait">
         <motion.div
           key={`${currentItem.type}-${currentItem.id}`}
-          initial={settings.enableTransitions ? { opacity: 0, y: 12 } : {}}
-          animate={{ opacity: 1, y: 0 }}
-          exit={settings.enableTransitions ? { opacity: 0, y: -10 } : {}}
-          transition={settings.enableTransitions ? { duration: 0.5, ease: 'easeOut' } : { duration: 0 }}
+          initial={
+            !settings.enableTransitions || settings.transitionEffect === 'none'
+              ? {}
+              : settings.transitionEffect === 'fade'
+                ? { opacity: 0 }
+                : settings.transitionEffect === 'slide'
+                  ? { opacity: 0, x: 100 }
+                  : settings.transitionEffect === 'zoom'
+                    ? { opacity: 0, scale: 0.8 }
+                    : {}
+          }
+          animate={{ opacity: 1, x: 0, y: 0, scale: 1 }}
+          exit={
+            !settings.enableTransitions || settings.transitionEffect === 'none'
+              ? {}
+              : settings.transitionEffect === 'fade'
+                ? { opacity: 0 }
+                : settings.transitionEffect === 'slide'
+                  ? { opacity: 0, x: -100 }
+                  : settings.transitionEffect === 'zoom'
+                    ? { opacity: 0, scale: 1.2 }
+                    : {}
+          }
+          transition={
+            !settings.enableTransitions || settings.transitionEffect === 'none'
+              ? { duration: 0 }
+              : { duration: 0.5, ease: 'easeInOut' }
+          }
           className="relative min-h-screen"
         >
           {currentItem.type === 'announcement' ? (
