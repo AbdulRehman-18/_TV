@@ -90,8 +90,7 @@ export function Display() {
 
   // Set up robust real-time subscriptions with auto-reconnection
   // These hooks are used for their side effects (subscriptions), not their return values
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const announcementsRealtime = useRealtimeSubscription({
+  useRealtimeSubscription({
     table: 'announcements',
     onAny: () => {
       console.debug('[Display] Announcements updated via realtime');
@@ -103,8 +102,7 @@ export function Display() {
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const eventsRealtime = useRealtimeSubscription({
+  useRealtimeSubscription({
     table: 'events',
     onAny: () => {
       console.debug('[Display] Events updated via realtime');
@@ -112,8 +110,7 @@ export function Display() {
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const mediaRealtime = useRealtimeSubscription({
+  useRealtimeSubscription({
     table: 'media',
     onAny: () => {
       console.debug('[Display] Media updated via realtime');
