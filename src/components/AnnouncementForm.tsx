@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
-import { Announcement } from '@/types';
+import { Announcement, Priority, RecurrenceType } from '@/types';
+import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface AnnouncementFormProps {
   announcement?: Announcement;
@@ -21,11 +22,20 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
   const [imageUrl, setImageUrl] = useState(announcement?.image_url || '');
   const [loading, setLoading] = useState(false);
 
+  // Scheduling state
+  const [scheduleStartDate, setScheduleStartDate] = useState(announcement?.schedule_start_date || '');
+  const [scheduleEndDate, setScheduleEndDate] = useState(announcement?.schedule_end_date || '');
+  const [scheduleTimeStart, setScheduleTimeStart] = useState(announcement?.schedule_time_start || '');
+  const [scheduleTimeEnd, setScheduleTimeEnd] = useState(announcement?.schedule_time_end || '');
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(announcement?.recurrence_type || 'none');
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>(announcement?.recurrence_days || []);
+  const [priority, setPriority] = useState<Priority>(announcement?.priority || 'normal');
+
   const handleImageUpload = async (file: File): Promise<string | null> => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      
+
       const { error: uploadError } = await supabase.storage
         .from(ANNOUNCEMENTS_BUCKET)
         .upload(fileName, file);
@@ -66,10 +76,18 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
         body,
         image_url: finalImageUrl || null,
         is_active: true,
+        // Scheduling fields
+        schedule_start_date: scheduleStartDate || null,
+        schedule_end_date: scheduleEndDate || null,
+        schedule_time_start: scheduleTimeStart || null,
+        schedule_time_end: scheduleTimeEnd || null,
+        recurrence_type: recurrenceType,
+        recurrence_days: recurrenceDays.length > 0 ? recurrenceDays : null,
+        priority,
       };
 
       let result;
-      
+
       if (announcement) {
         // Update existing announcement
         result = await supabase
@@ -160,7 +178,7 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
 
           <div className="space-y-2">
             <Label>Image (Optional)</Label>
-            
+
             {imageUrl ? (
               <div className="relative">
                 <img
@@ -196,6 +214,25 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
               </div>
             )}
           </div>
+
+          {/* Scheduling Options */}
+          <ScheduleForm
+            scheduleStartDate={scheduleStartDate}
+            scheduleEndDate={scheduleEndDate}
+            onStartDateChange={setScheduleStartDate}
+            onEndDateChange={setScheduleEndDate}
+            scheduleTimeStart={scheduleTimeStart}
+            scheduleTimeEnd={scheduleTimeEnd}
+            onTimeStartChange={setScheduleTimeStart}
+            onTimeEndChange={setScheduleTimeEnd}
+            recurrenceType={recurrenceType}
+            recurrenceDays={recurrenceDays}
+            onRecurrenceTypeChange={setRecurrenceType}
+            onRecurrenceDaysChange={setRecurrenceDays}
+            priority={priority}
+            onPriorityChange={setPriority}
+            showFallbackOption={false}
+          />
 
           <div className="flex space-x-4">
             <Button type="submit" disabled={loading} className="flex-1">

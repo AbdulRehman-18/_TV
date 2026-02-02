@@ -7,10 +7,12 @@ import { Calendar, Clock, MapPin, Volume2, VolumeX } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
 import { useRealtimeSubscription, type ConnectionStatus } from '@/hooks/useRealtimeSubscription';
 import { ConnectionIndicator } from '@/components/display/ConnectionIndicator';
+import { useScheduler } from '@/hooks/useScheduler';
 
 
 export function Display() {
   const { settings } = useSettings();
+  const { getContentToDisplay } = useScheduler();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [media, setMedia] = useState<Media[]>([]);
@@ -62,35 +64,7 @@ export function Display() {
   const lastReloadRef = useRef(0);
   const reloadAllRef = useRef<null | ((reason?: string) => Promise<void>)>(null);
 
-  // Helper function to check if media is within scheduled dates
-  const isMediaScheduledForNow = (mediaItem: Media) => {
-    const now = new Date();
-
-    // If no schedule dates, media is always shown (when active)
-    if (!mediaItem.schedule_start_date && !mediaItem.schedule_end_date) {
-      return true;
-    }
-
-    // Check start date
-    if (mediaItem.schedule_start_date) {
-      const startDate = new Date(mediaItem.schedule_start_date);
-      startDate.setHours(0, 0, 0, 0);
-      if (now < startDate) {
-        return false; // Not yet started
-      }
-    }
-
-    // Check end date
-    if (mediaItem.schedule_end_date) {
-      const endDate = new Date(mediaItem.schedule_end_date);
-      endDate.setHours(23, 59, 59, 999);
-      if (now > endDate) {
-        return false; // Already ended
-      }
-    }
-
-    return true;
-  };
+  // Note: Scheduling logic is now handled by useScheduler hook
   if (!reloadAllRef.current) {
     reloadAllRef.current = async (reason?: string) => {
       const now = Date.now();
@@ -274,34 +248,6 @@ export function Display() {
     localStorage.setItem('display-current-index', currentIndex.toString());
   }, [currentIndex]);
 
-  // Slideshow timer logic: pause for video, use settings interval for others
-  useEffect(() => {
-    const activeAnnouncements = settings.showAnnouncementsOnDisplay ? announcements.filter(a => a.is_active) : [];
-    const activeEvents = settings.showEventsOnDisplay ? events.filter(e => e.is_active) : [];
-    const activeMedia = settings.showMediaOnDisplay ? media.filter(m => m.is_active && isMediaScheduledForNow(m)) : [];
-    const totalItems = activeAnnouncements.length + activeEvents.length + activeMedia.length;
-    if (totalItems === 0) return;
-
-    // Determine if current slide is a video
-    const allItems = [
-      ...activeAnnouncements.map(item => ({ ...item, type: 'announcement' as const })),
-      ...activeEvents.map(item => ({ ...item, type: 'event' as const })),
-      ...activeMedia.map(item => ({ ...item, type: 'media' as const }))
-    ];
-    const currentItem = allItems[currentIndex];
-
-    // If current slide is a video, do not auto-advance
-    if (currentItem && currentItem.type === 'media' && currentItem.file_type === 'video') {
-      // Do nothing: video will advance onEnded
-      return;
-    }
-
-    // Otherwise, auto-advance based on settings
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current);
-    }, settings.slideshowInterval * 1000);
-    return () => clearInterval(timer);
-  }, [announcements, events, media, currentIndex, settings]);
 
   const loadAnnouncements = async () => {
     try {
@@ -353,25 +299,57 @@ export function Display() {
     }
   };
 
-  const activeAnnouncements = settings.showAnnouncementsOnDisplay ? announcements.filter(a => a.is_active) : [];
-  const activeEvents = settings.showEventsOnDisplay ? events.filter(e => e.is_active) : [];
-  const activeMedia = settings.showMediaOnDisplay
-    ? media.filter(m => m.is_active && isMediaScheduledForNow(m))
-    : [];
 
-  // Combine announcements, events, and media into a single array for slideshow
+  // Use scheduler to get content to display (handles emergency, scheduled, and fallback)
+  const { items: scheduledContent } = getContentToDisplay(
+    announcements,
+    events,
+    media
+  );
+
+  // Apply settings filters (user can toggle announcement/event/media display)
+  const filteredContent = scheduledContent.filter(item => {
+    if ('body' in item) return settings.showAnnouncementsOnDisplay; // Announcement
+    if ('location' in item) return settings.showEventsOnDisplay; // Event
+    if ('file_url' in item) return settings.showMediaOnDisplay; // Media
+    return true;
+  });
+
+  // Combine into slideshow items with type tags
   type SlideItem = (Announcement & { type: 'announcement' }) | (Event & { type: 'event' }) | (Media & { type: 'media' });
-  const allItems: SlideItem[] = [
-    ...activeAnnouncements.map(item => ({ ...item, type: 'announcement' as const })),
-    ...activeEvents.map(item => ({ ...item, type: 'event' as const })),
-    ...activeMedia.map(item => ({ ...item, type: 'media' as const }))
-  ];
+  const allItems: SlideItem[] = filteredContent.map(item => {
+    if ('body' in item) return { ...item as Announcement, type: 'announcement' as const };
+    if ('location' in item) return { ...item as Event, type: 'event' as const };
+    return { ...item as Media, type: 'media' as const };
+  });
+
 
   // Use ref to avoid stale closure in video onEnded callback
   const totalItemsRef = useRef(allItems.length);
   totalItemsRef.current = allItems.length;
 
   const currentItem: SlideItem = allItems[currentIndex];
+
+  // Slideshow timer logic: pause for video, use settings interval for others
+  useEffect(() => {
+    if (allItems.length === 0) return;
+
+    // Determine if current slide is a video
+    const currentItem = allItems[currentIndex];
+
+    // If current slide is a video, do not auto-advance
+    if (currentItem && currentItem.type === 'media' && currentItem.file_type === 'video') {
+      // Do nothing: video will advance onEnded
+      return;
+    }
+
+    // Otherwise, auto-advance based on settings
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current);
+    }, settings.slideshowInterval * 1000);
+    return () => clearInterval(timer);
+  }, [allItems, currentIndex, settings.slideshowInterval]);
+
 
   if (loading) {
     return (

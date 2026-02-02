@@ -8,9 +8,11 @@ import { useNavigate } from 'react-router-dom';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
 import { useSettings } from '@/hooks/useSettings';
+import { useScheduler } from '@/hooks/useScheduler';
 
 export function LiveDisplay() {
   const navigate = useNavigate();
+  const { getContentToDisplay } = useScheduler();
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [media, setMedia] = useState<Media[]>([]);
@@ -193,30 +195,6 @@ export function LiveDisplay() {
     };
   }, []);
 
-  // Slideshow timer logic
-  useEffect(() => {
-    const activeAnnouncements = announcements.filter(a => a.is_active);
-    const activeEvents = events.filter(e => e.is_active);
-    const activeMedia = media.filter(m => m.is_active);
-    const totalItems = activeAnnouncements.length + activeEvents.length + activeMedia.length;
-    if (totalItems === 0) return;
-
-    const allItems = [
-      ...activeAnnouncements.map(item => ({ ...item, type: 'announcement' as const })),
-      ...activeEvents.map(item => ({ ...item, type: 'event' as const })),
-      ...activeMedia.map(item => ({ ...item, type: 'media' as const }))
-    ];
-    const currentItem = allItems[currentIndex];
-
-    if (currentItem && currentItem.type === 'media' && currentItem.file_type === 'video') {
-      return;
-    }
-
-    const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current);
-    }, settings.slideshowInterval * 1000);
-    return () => clearInterval(timer);
-  }, [announcements, events, media, currentIndex, settings.slideshowInterval]);
 
   const loadAnnouncements = async () => {
     try {
@@ -268,22 +246,53 @@ export function LiveDisplay() {
     }
   };
 
-  const activeAnnouncements = announcements.filter(a => a.is_active);
-  const activeEvents = events.filter(e => e.is_active);
-  const activeMedia = media.filter(m => m.is_active);
 
+  // Use scheduler to get content to display (handles emergency, scheduled, and fallback)
+  const { items: scheduledContent } = getContentToDisplay(
+    announcements,
+    events,
+    media
+  );
+
+  // Apply settings filters (user can toggle announcement/event/media display)
+  const filteredContent = scheduledContent.filter(item => {
+    if ('body' in item) return settings.showAnnouncementsOnDisplay; // Announcement
+    if ('location' in item) return settings.showEventsOnDisplay; // Event
+    if ('file_url' in item) return settings.showMediaOnDisplay; // Media
+    return true;
+  });
+
+  // Combine into slideshow items with type tags
   type SlideItem = (Announcement & { type: 'announcement' }) | (Event & { type: 'event' }) | (Media & { type: 'media' });
-  const allItems: SlideItem[] = [
-    ...activeAnnouncements.map(item => ({ ...item, type: 'announcement' as const })),
-    ...activeEvents.map(item => ({ ...item, type: 'event' as const })),
-    ...activeMedia.map(item => ({ ...item, type: 'media' as const }))
-  ];
+  const allItems: SlideItem[] = filteredContent.map(item => {
+    if ('body' in item) return { ...item as Announcement, type: 'announcement' as const };
+    if ('location' in item) return { ...item as Event, type: 'event' as const };
+    return { ...item as Media, type: 'media' as const };
+  });
+
 
   const totalItemsRef = useRef(allItems.length);
   totalItemsRef.current = allItems.length;
 
   const currentItem: SlideItem = allItems[currentIndex];
   const nextItem: SlideItem = allItems[(currentIndex + 1) % allItems.length];
+
+  // Slideshow timer logic
+  useEffect(() => {
+    if (allItems.length === 0) return;
+
+    const currentItem = allItems[currentIndex];
+
+    if (currentItem && currentItem.type === 'media' && currentItem.file_type === 'video') {
+      return;
+    }
+
+    const timer = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current);
+    }, settings.slideshowInterval * 1000);
+    return () => clearInterval(timer);
+  }, [allItems, currentIndex, settings.slideshowInterval]);
+
 
   const getItemLabel = (item: SlideItem) => {
     if (item.type === 'announcement') return 'ANNOUNCEMENT';
@@ -387,7 +396,7 @@ export function LiveDisplay() {
       {/* Main Content Area */}
       <div className="flex-1 overflow-hidden">
         <div className="h-full flex flex-col lg:grid lg:grid-cols-[380px_1fr_320px] overflow-y-auto lg:overflow-hidden">
-          
+
           {/* Left Panel - Current Playlist */}
           {/* On Mobile: Order 3 (Bottom) */}
           <div className="order-3 lg:order-1 w-full bg-white border-t lg:border-t-0 lg:border-r border-gray-200 flex flex-col h-[500px] lg:h-full lg:overflow-hidden shadow-sm lg:shadow-none z-10">
@@ -410,7 +419,7 @@ export function LiveDisplay() {
                     <span className="text-[10px] lg:text-xs font-bold text-green-700 uppercase tracking-wider">Playing Now</span>
                     <span className="ml-auto text-[10px] lg:text-xs font-mono text-gray-500 bg-white px-1.5 py-0.5 lg:px-2 lg:py-1 rounded-md border border-gray-200 shadow-sm">{getItemDuration(currentItem)}</span>
                   </div>
-                  
+
                   {/* Compact Mobile Row / Full Card Desktop */}
                   <div className="flex lg:block gap-3">
                     <div className="w-20 h-14 lg:w-full lg:h-auto lg:aspect-video bg-gray-900 rounded-md lg:rounded-lg overflow-hidden lg:mb-3 shadow-sm lg:shadow-md ring-1 ring-black/5 flex-shrink-0">
@@ -471,32 +480,32 @@ export function LiveDisplay() {
               {/* Up Next - Mobile List Item (Matches Queue style) */}
               {nextItem && (
                 <div className="lg:hidden p-3 border-b border-gray-100 bg-gray-50/50">
-                    <div className="flex items-center gap-2 mb-2">
-                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Up Next</span>
-                    </div>
-                    <div className="flex gap-3">
-                        <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-black/5">
-                            {nextItem.type === 'announcement' && nextItem.image_url ? (
-                                <img src={nextItem.image_url} alt={nextItem.title} className="w-full h-full object-cover" />
-                            ) : nextItem.type === 'event' && nextItem.image_url ? (
-                                <img src={nextItem.image_url} alt={nextItem.title} className="w-full h-full object-cover" />
-                            ) : nextItem.type === 'media' ? (
-                                <img src={nextItem.file_url} alt={getItemTitle(nextItem)} className="w-full h-full object-cover" />
-                            ) : (
-                                <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-white">
-                                {getItemTitle(nextItem).slice(0, 2).toUpperCase()}
-                                </div>
-                            )}
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Up Next</span>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="w-12 h-12 bg-gray-100 rounded-md overflow-hidden flex-shrink-0 ring-1 ring-black/5">
+                      {nextItem.type === 'announcement' && nextItem.image_url ? (
+                        <img src={nextItem.image_url} alt={nextItem.title} className="w-full h-full object-cover" />
+                      ) : nextItem.type === 'event' && nextItem.image_url ? (
+                        <img src={nextItem.image_url} alt={nextItem.title} className="w-full h-full object-cover" />
+                      ) : nextItem.type === 'media' ? (
+                        <img src={nextItem.file_url} alt={getItemTitle(nextItem)} className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs font-bold bg-white">
+                          {getItemTitle(nextItem).slice(0, 2).toUpperCase()}
                         </div>
-                        <div className="flex-1 min-w-0 flex flex-col justify-center">
-                            <h4 className="text-sm font-medium text-gray-900 truncate">{getItemTitle(nextItem)}</h4>
-                            <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-0.5">
-                                <span className="capitalize">{getItemLabel(nextItem).toLowerCase()}</span>
-                                <span>•</span>
-                                <span className="font-mono">{getItemDuration(nextItem)}</span>
-                            </div>
-                        </div>
+                      )}
                     </div>
+                    <div className="flex-1 min-w-0 flex flex-col justify-center">
+                      <h4 className="text-sm font-medium text-gray-900 truncate">{getItemTitle(nextItem)}</h4>
+                      <div className="flex items-center gap-2 text-[10px] text-gray-400 mt-0.5">
+                        <span className="capitalize">{getItemLabel(nextItem).toLowerCase()}</span>
+                        <span>•</span>
+                        <span className="font-mono">{getItemDuration(nextItem)}</span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
 
@@ -543,9 +552,9 @@ export function LiveDisplay() {
           {/* Center Panel - Display Preview */}
           {/* On Mobile: Order 1 (Top) */}
           <div className="order-1 lg:order-2 flex-1 bg-black flex items-center justify-center p-4 lg:p-8 relative min-h-[300px] lg:min-h-0">
-             {/* Background decorative elements */}
-             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-900 via-black to-black opacity-50 pointer-events-none" />
-             
+            {/* Background decorative elements */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-gray-900 via-black to-black opacity-50 pointer-events-none" />
+
             <div className="w-full max-w-6xl relative z-10">
               <div className="mb-4 flex items-center justify-between text-white/60 text-sm px-1">
                 <div className="flex items-center gap-2.5">
@@ -560,14 +569,14 @@ export function LiveDisplay() {
               <div className="bg-gray-900 rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/10 relative group" style={{ aspectRatio: '16/9' }}>
                 {/* Background - Matches Display.tsx */}
                 <div className="absolute inset-0 bg-gradient-to-b from-slate-900 via-black to-black w-full h-full" />
-                
+
                 {/* Ambient background blobs - Matches Display.tsx */}
                 <div className="pointer-events-none absolute -top-[20%] -left-[20%] w-[60%] h-[60%] rounded-full aurora-blob bg-gradient-to-br from-indigo-500/60 via-fuchsia-500/50 to-rose-500/50" />
                 <div className="pointer-events-none absolute -bottom-[20%] -right-[20%] w-[55%] h-[55%] rounded-full aurora-blob bg-gradient-to-tr from-blue-500/50 via-emerald-500/40 to-cyan-500/40" />
 
                 {/* Screen Glare Effect */}
                 <div className="absolute inset-0 bg-gradient-to-tr from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50"></div>
-                
+
                 {currentItem ? (
                   <AnimatePresence mode="wait">
                     <motion.div
@@ -773,7 +782,7 @@ export function LiveDisplay() {
             <div className="p-4 border-b border-gray-200 bg-gray-50/50">
               <h2 className="text-sm font-bold text-gray-500 uppercase tracking-widest">TV Control</h2>
             </div>
-            
+
             <div className="p-4 flex-1">
               <div className="grid grid-cols-2 lg:grid-cols-1 gap-3">
                 <Button
@@ -789,7 +798,7 @@ export function LiveDisplay() {
                     <div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Sync Content</div>
                   </div>
                 </Button>
-                
+
                 <Button
                   onClick={handleRestartTV}
                   className="w-full justify-start h-12 lg:h-14 text-left px-4 border-gray-200 hover:border-gray-300 hover:bg-gray-50 group transition-all"
@@ -817,8 +826,8 @@ export function LiveDisplay() {
                       <div className="flex-1">
                         <div className="font-semibold text-gray-900">Volume Control</div>
                         <div className="flex items-center justify-between">
-                           <div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Sound Settings</div>
-                           <div className="text-xs font-bold text-gray-900 bg-gray-100 px-1.5 rounded">{volume}%</div>
+                          <div className="text-[10px] text-gray-500 uppercase tracking-wider font-medium">Sound Settings</div>
+                          <div className="text-xs font-bold text-gray-900 bg-gray-100 px-1.5 rounded">{volume}%</div>
                         </div>
                       </div>
                       <ChevronDown className="w-4 h-4 text-gray-400 ml-2" />
@@ -828,7 +837,7 @@ export function LiveDisplay() {
                     <DialogHeader>
                       <DialogTitle className="text-xl font-bold flex items-center gap-2">
                         <div className="bg-gray-100 p-2 rounded-lg">
-                           <Volume2 className="w-5 h-5 text-gray-900" />
+                          <Volume2 className="w-5 h-5 text-gray-900" />
                         </div>
                         Volume Control
                       </DialogTitle>
@@ -847,21 +856,21 @@ export function LiveDisplay() {
                           className="w-full"
                         />
                         <div className="flex justify-between text-xs text-gray-400 font-medium px-1">
-                           <span>0%</span>
-                           <span>50%</span>
-                           <span>100%</span>
+                          <span>0%</span>
+                          <span>50%</span>
+                          <span>100%</span>
                         </div>
                       </div>
-                      
+
                       <div className="p-4 bg-gray-50 rounded-xl border border-gray-200 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                           <div className={`p-2 rounded-lg ${isMuted ? 'bg-gray-200 text-gray-600' : 'bg-gray-200 text-gray-900'}`}>
-                             {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
-                           </div>
-                           <div>
-                              <div className="font-semibold text-gray-900">Mute Audio</div>
-                              <div className="text-xs text-gray-500">Temporarily silence displays</div>
-                           </div>
+                          <div className={`p-2 rounded-lg ${isMuted ? 'bg-gray-200 text-gray-600' : 'bg-gray-200 text-gray-900'}`}>
+                            {isMuted ? <VolumeX className="w-5 h-5" /> : <Volume2 className="w-5 h-5" />}
+                          </div>
+                          <div>
+                            <div className="font-semibold text-gray-900">Mute Audio</div>
+                            <div className="text-xs text-gray-500">Temporarily silence displays</div>
+                          </div>
                         </div>
                         <Button
                           variant={isMuted ? "destructive" : "outline"}
@@ -875,7 +884,7 @@ export function LiveDisplay() {
 
                       <div className="flex items-start gap-3 p-3 bg-gray-50 text-gray-600 rounded-lg text-xs leading-relaxed">
                         <div className="mt-0.5 min-w-[16px]">
-                           <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-bold">i</div>
+                          <div className="w-4 h-4 rounded-full bg-gray-200 flex items-center justify-center text-gray-700 font-bold">i</div>
                         </div>
                         Note: Volume changes will apply to the Main Corridor TV display in real-time. There may be a slight delay depending on network conditions.
                       </div>
@@ -884,10 +893,10 @@ export function LiveDisplay() {
                 </Dialog>
               </div>
             </div>
-            
+
             {/* Footer */}
             <div className="p-4 border-t border-gray-200 bg-gray-50 text-center lg:text-left mt-auto">
-               <p className="text-xs text-gray-400">System Version 2.0.4</p>
+              <p className="text-xs text-gray-400">System Version 2.0.4</p>
             </div>
           </div>
         </div>
