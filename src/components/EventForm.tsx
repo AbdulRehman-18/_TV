@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
-import { Event } from '@/types';
+import { Event, Priority, RecurrenceType } from '@/types';
+import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface EventFormProps {
   event?: Event;
@@ -31,6 +32,13 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(event?.image_url || '');
   const [loading, setLoading] = useState(false);
+
+  // Scheduling state
+  const [scheduleTimeStart, setScheduleTimeStart] = useState(event?.schedule_time_start || '');
+  const [scheduleTimeEnd, setScheduleTimeEnd] = useState(event?.schedule_time_end || '');
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(event?.recurrence_type || 'none');
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>(event?.recurrence_days || []);
+  const [priority, setPriority] = useState<Priority>(event?.priority || 'normal');
 
   const handleImageUpload = async (file: File): Promise<string | null> => {
     try {
@@ -80,6 +88,12 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
         end_date: endDate ? new Date(endDate).toISOString() : null,
         image_url: finalImageUrl || null,
         is_active: true,
+        // Scheduling fields (events use start_date/end_date for event timing, not schedule dates)
+        schedule_time_start: scheduleTimeStart || null,
+        schedule_time_end: scheduleTimeEnd || null,
+        recurrence_type: recurrenceType,
+        recurrence_days: recurrenceDays.length > 0 ? recurrenceDays : null,
+        priority,
       };
 
       let result;
@@ -243,6 +257,28 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
               </div>
             )}
           </div>
+
+          {/* Scheduling Options */}
+          <ScheduleForm
+            scheduleStartDate="" // Events use start_date/end_date fields instead
+            scheduleEndDate=""
+            onStartDateChange={() => { }} // No-op for events
+            onEndDateChange={() => { }}
+            scheduleTimeStart={scheduleTimeStart}
+            scheduleTimeEnd={scheduleTimeEnd}
+            onTimeStartChange={setScheduleTimeStart}
+            onTimeEndChange={setScheduleTimeEnd}
+            recurrenceType={recurrenceType}
+            recurrenceDays={recurrenceDays}
+            onRecurrenceTypeChange={setRecurrenceType}
+            onRecurrenceDaysChange={setRecurrenceDays}
+            priority={priority}
+            onPriorityChange={setPriority}
+            showFallbackOption={false}
+          />
+          <p className="text-xs text-gray-500 -mt-4">
+            Note: Events use the Start/End Date fields above for scheduling. Time slots and recurrence control when the event announcement displays.
+          </p>
 
           <div className="flex space-x-4">
             <Button type="submit" disabled={loading} className="flex-1">

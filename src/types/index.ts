@@ -1,4 +1,19 @@
-export interface Announcement {
+// Scheduling types
+export type Priority = 'normal' | 'high' | 'emergency';
+export type RecurrenceType = 'none' | 'daily' | 'weekly';
+
+// Shared scheduling fields for all content types
+export interface ScheduleFields {
+  schedule_start_date?: string;
+  schedule_end_date?: string;
+  schedule_time_start?: string;  // HH:MM format (e.g., '09:00')
+  schedule_time_end?: string;    // HH:MM format (e.g., '17:00')
+  recurrence_type?: RecurrenceType;
+  recurrence_days?: number[];    // 0=Sunday, 1=Monday, ..., 6=Saturday
+  priority?: Priority;
+}
+
+export interface Announcement extends ScheduleFields {
   id: string;
   title: string;
   body: string;
@@ -7,7 +22,8 @@ export interface Announcement {
   is_active: boolean;
 }
 
-export interface Event {
+
+export interface Event extends ScheduleFields {
   id: string;
   title: string;
   description: string;
@@ -19,7 +35,8 @@ export interface Event {
   is_active: boolean;
 }
 
-export interface Media {
+
+export interface Media extends ScheduleFields {
   id: string;
   title?: string;
   description?: string;
@@ -34,7 +51,9 @@ export interface Media {
   admin_notes?: string;
   schedule_start_date?: string;
   schedule_end_date?: string;
+  is_fallback?: boolean;  // Mark as fallback content when no scheduled content is available
 }
+
 
 export interface Client {
   id: string;
