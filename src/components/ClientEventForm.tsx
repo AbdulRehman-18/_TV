@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, AlertCircle, Calendar, X, MapPin } from 'lucide-react';
 import { Event } from '@/types';
+import { ClientScheduleForm } from '@/components/ClientScheduleForm';
 
 interface ClientEventFormProps {
     clientId: string;
@@ -25,6 +26,8 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
     const [error, setError] = useState('');
     const [scheduleStartDate, setScheduleStartDate] = useState('');
     const [scheduleEndDate, setScheduleEndDate] = useState('');
+    const [scheduleTimeStart, setScheduleTimeStart] = useState('');
+    const [scheduleTimeEnd, setScheduleTimeEnd] = useState('');
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -120,6 +123,8 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
                     is_active: false,
                     schedule_start_date: scheduleStartDate || null,
                     schedule_end_date: scheduleEndDate || null,
+                    schedule_time_start: scheduleTimeStart || null,
+                    schedule_time_end: scheduleTimeEnd || null,
                 })
                 .select()
                 .single();
@@ -138,6 +143,8 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
             setImagePreview(null);
             setScheduleStartDate('');
             setScheduleEndDate('');
+            setScheduleTimeStart('');
+            setScheduleTimeEnd('');
         } catch (err) {
             console.error('Error submitting event:', err);
             setError(err instanceof Error ? err.message : 'Failed to submit event');
@@ -256,44 +263,16 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
                         )}
                     </div>
 
-                    <div className="border border-gray-200 rounded-lg p-4 space-y-4 bg-gray-50">
-                        <div className="flex items-center gap-2">
-                            <div className="w-1 h-4 bg-gray-500 rounded"></div>
-                            <h3 className="text-sm font-semibold text-gray-900">Display Schedule (Optional)</h3>
-                        </div>
-                        <p className="text-xs text-gray-600">Set when this event should be displayed on screens</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="schedule-start" className="text-sm">Display Start Date</Label>
-                                <Input
-                                    id="schedule-start"
-                                    type="date"
-                                    value={scheduleStartDate}
-                                    onChange={(e) => setScheduleStartDate(e.target.value)}
-                                    className="bg-white"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="schedule-end" className="text-sm">Display End Date</Label>
-                                <Input
-                                    id="schedule-end"
-                                    type="date"
-                                    value={scheduleEndDate}
-                                    onChange={(e) => setScheduleEndDate(e.target.value)}
-                                    min={scheduleStartDate || undefined}
-                                    className="bg-white"
-                                />
-                            </div>
-                        </div>
-
-                        {scheduleStartDate && scheduleEndDate && (
-                            <div className="bg-gray-100 border border-gray-300 rounded p-2 text-xs text-gray-800">
-                                <span className="font-medium">Scheduled:</span> Will display from {new Date(scheduleStartDate).toLocaleDateString()} to {new Date(scheduleEndDate).toLocaleDateString()}
-                            </div>
-                        )}
-                    </div>
+                    <ClientScheduleForm
+                        scheduleStartDate={scheduleStartDate}
+                        scheduleEndDate={scheduleEndDate}
+                        onStartDateChange={setScheduleStartDate}
+                        onEndDateChange={setScheduleEndDate}
+                        scheduleTimeStart={scheduleTimeStart}
+                        scheduleTimeEnd={scheduleTimeEnd}
+                        onTimeStartChange={setScheduleTimeStart}
+                        onTimeEndChange={setScheduleTimeEnd}
+                    />
 
                     <div className="bg-gray-50 border border-gray-200 text-gray-800 px-4 py-3 rounded-md text-sm">
                         <p className="font-medium mb-1">Note:</p>
