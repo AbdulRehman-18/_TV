@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Menu, X } from 'lucide-react';
 import { Logo } from './ui/Icons';
+import { useAuth } from '@/hooks/useAuth';
 
 const Navbar: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user } = useAuth();
 
   return (
     <nav className="w-full bg-[#FFFDF9] py-4 px-6 md:px-12 flex justify-between items-center sticky top-0 z-50 transition-all duration-300 border-b border-transparent shadow-sm">
@@ -16,15 +18,22 @@ const Navbar: React.FC = () => {
         <a href="#features" className="hover:text-black transition">Features</a>
         <a href="#how-it-works" className="hover:text-black transition">How it works</a>
         <a href="#solutions" className="hover:text-black transition">Use Cases</a>
-        <a href="#get-started" className="hover:text-black transition">Pricing</a>
         <a href="#contact" className="hover:text-black transition">Support</a>
       </div>
 
       <div className="hidden lg:flex items-center gap-4">
-        <a href="/login" className="font-bold text-sm hover:underline">Login</a>
-        <a href="/login?signup=true" className="border-2 border-black rounded px-5 py-2 text-sm font-bold hover:bg-black hover:text-white transition-colors">
-          Get Started
-        </a>
+        {user ? (
+          <a href={`/${user.role}`} className="bg-black text-white rounded px-5 py-2 text-sm font-bold hover:bg-gray-800 transition-colors">
+            Dashboard
+          </a>
+        ) : (
+          <>
+            <a href="/login" className="font-bold text-sm hover:underline">Login</a>
+            <a href="/login?signup=true" className="border-2 border-black rounded px-5 py-2 text-sm font-bold hover:bg-black hover:text-white transition-colors">
+              Get Started
+            </a>
+          </>
+        )}
       </div>
 
       {/* Mobile Menu Toggle */}
@@ -38,13 +47,20 @@ const Navbar: React.FC = () => {
            <a href="#features" className="font-medium" onClick={() => setIsOpen(false)}>Features</a>
            <a href="#how-it-works" className="font-medium" onClick={() => setIsOpen(false)}>How it works</a>
            <a href="#solutions" className="font-medium" onClick={() => setIsOpen(false)}>Use Cases</a>
-           <a href="#get-started" className="font-medium" onClick={() => setIsOpen(false)}>Pricing</a>
            <a href="#contact" className="font-medium" onClick={() => setIsOpen(false)}>Support</a>
            <hr className="my-2"/>
-           <a href="/login" className="font-bold text-left">Login</a>
-           <a href="/login?signup=true" className="bg-black text-white rounded px-5 py-3 text-sm font-bold text-center" onClick={() => setIsOpen(false)}>
-             Get Started
-           </a>
+           {user ? (
+             <a href={`/${user.role}`} className="bg-black text-white rounded px-5 py-3 text-sm font-bold text-center" onClick={() => setIsOpen(false)}>
+               Dashboard
+             </a>
+           ) : (
+             <>
+               <a href="/login" className="font-bold text-left">Login</a>
+               <a href="/login?signup=true" className="bg-black text-white rounded px-5 py-3 text-sm font-bold text-center" onClick={() => setIsOpen(false)}>
+                 Get Started
+               </a>
+             </>
+           )}
         </div>
       )}
     </nav>
