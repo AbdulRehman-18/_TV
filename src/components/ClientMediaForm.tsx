@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, AlertCircle } from 'lucide-react';
 import { Media } from '@/types';
+import { ClientScheduleForm } from '@/components/ClientScheduleForm';
 
 interface ClientMediaFormProps {
   clientId: string;
@@ -23,6 +24,8 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
   const [fileName, setFileName] = useState('');
   const [scheduleStartDate, setScheduleStartDate] = useState('');
   const [scheduleEndDate, setScheduleEndDate] = useState('');
+  const [scheduleTimeStart, setScheduleTimeStart] = useState('');
+  const [scheduleTimeEnd, setScheduleTimeEnd] = useState('');
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -105,6 +108,8 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
           is_active: false,
           schedule_start_date: scheduleStartDate || null,
           schedule_end_date: scheduleEndDate || null,
+          schedule_time_start: scheduleTimeStart || null,
+          schedule_time_end: scheduleTimeEnd || null,
         })
         .select()
         .single();
@@ -121,6 +126,8 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
       setPreview(null);
       setScheduleStartDate('');
       setScheduleEndDate('');
+      setScheduleTimeStart('');
+      setScheduleTimeEnd('');
     } catch (err) {
       console.error('Error uploading media:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload media');
@@ -165,44 +172,16 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
             />
           </div>
 
-          <div className="border border-gray-200 rounded-lg p-4 space-y-4 bg-gray-50">
-            <div className="flex items-center gap-2">
-              <div className="w-1 h-4 bg-gray-500 rounded"></div>
-              <h3 className="text-sm font-semibold text-gray-900">Schedule Display (Optional)</h3>
-            </div>
-            <p className="text-xs text-gray-600">Set when this media should automatically activate and deactivate on the display</p>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="scheduleStartDate" className="text-sm">Start Date</Label>
-                <Input
-                  id="scheduleStartDate"
-                  type="date"
-                  value={scheduleStartDate}
-                  onChange={(e) => setScheduleStartDate(e.target.value)}
-                  className="bg-white"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="scheduleEndDate" className="text-sm">End Date</Label>
-                <Input
-                  id="scheduleEndDate"
-                  type="date"
-                  value={scheduleEndDate}
-                  onChange={(e) => setScheduleEndDate(e.target.value)}
-                  min={scheduleStartDate || undefined}
-                  className="bg-white"
-                />
-              </div>
-            </div>
-
-            {scheduleStartDate && scheduleEndDate && (
-              <div className="bg-gray-100 border border-gray-300 rounded p-2 text-xs text-gray-800">
-                <span className="font-medium">Scheduled:</span> Will be active from {new Date(scheduleStartDate).toLocaleDateString()} to {new Date(scheduleEndDate).toLocaleDateString()}
-              </div>
-            )}
-          </div>
+          <ClientScheduleForm
+            scheduleStartDate={scheduleStartDate}
+            scheduleEndDate={scheduleEndDate}
+            onStartDateChange={setScheduleStartDate}
+            onEndDateChange={setScheduleEndDate}
+            scheduleTimeStart={scheduleTimeStart}
+            scheduleTimeEnd={scheduleTimeEnd}
+            onTimeStartChange={setScheduleTimeStart}
+            onTimeEndChange={setScheduleTimeEnd}
+          />
 
           <div className="space-y-2">
             <Label htmlFor="file">File *</Label>

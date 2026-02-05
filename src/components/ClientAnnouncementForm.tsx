@@ -7,6 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, AlertCircle, Megaphone, X } from 'lucide-react';
 import { Announcement } from '@/types';
+import { ClientScheduleForm } from '@/components/ClientScheduleForm';
 
 interface ClientAnnouncementFormProps {
     clientId: string;
@@ -22,6 +23,8 @@ export function ClientAnnouncementForm({ clientId, onAnnouncementSubmit }: Clien
     const [error, setError] = useState('');
     const [scheduleStartDate, setScheduleStartDate] = useState('');
     const [scheduleEndDate, setScheduleEndDate] = useState('');
+    const [scheduleTimeStart, setScheduleTimeStart] = useState('');
+    const [scheduleTimeEnd, setScheduleTimeEnd] = useState('');
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -108,6 +111,8 @@ export function ClientAnnouncementForm({ clientId, onAnnouncementSubmit }: Clien
                     is_active: false,
                     schedule_start_date: scheduleStartDate || null,
                     schedule_end_date: scheduleEndDate || null,
+                    schedule_time_start: scheduleTimeStart || null,
+                    schedule_time_end: scheduleTimeEnd || null,
                 })
                 .select()
                 .single();
@@ -123,6 +128,8 @@ export function ClientAnnouncementForm({ clientId, onAnnouncementSubmit }: Clien
             setImagePreview(null);
             setScheduleStartDate('');
             setScheduleEndDate('');
+            setScheduleTimeStart('');
+            setScheduleTimeEnd('');
         } catch (err) {
             console.error('Error submitting announcement:', err);
             setError(err instanceof Error ? err.message : 'Failed to submit announcement');
@@ -203,44 +210,16 @@ export function ClientAnnouncementForm({ clientId, onAnnouncementSubmit }: Clien
                         )}
                     </div>
 
-                    <div className="border border-gray-200 rounded-lg p-4 space-y-4 bg-gray-50">
-                        <div className="flex items-center gap-2">
-                            <div className="w-1 h-4 bg-gray-500 rounded"></div>
-                            <h3 className="text-sm font-semibold text-gray-900">Schedule Display (Optional)</h3>
-                        </div>
-                        <p className="text-xs text-gray-600">Set when this announcement should automatically activate</p>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="scheduleStartDate" className="text-sm">Start Date</Label>
-                                <Input
-                                    id="scheduleStartDate"
-                                    type="date"
-                                    value={scheduleStartDate}
-                                    onChange={(e) => setScheduleStartDate(e.target.value)}
-                                    className="bg-white"
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="scheduleEndDate" className="text-sm">End Date</Label>
-                                <Input
-                                    id="scheduleEndDate"
-                                    type="date"
-                                    value={scheduleEndDate}
-                                    onChange={(e) => setScheduleEndDate(e.target.value)}
-                                    min={scheduleStartDate || undefined}
-                                    className="bg-white"
-                                />
-                            </div>
-                        </div>
-
-                        {scheduleStartDate && scheduleEndDate && (
-                            <div className="bg-gray-100 border border-gray-300 rounded p-2 text-xs text-gray-800">
-                                <span className="font-medium">Scheduled:</span> Will be active from {new Date(scheduleStartDate).toLocaleDateString()} to {new Date(scheduleEndDate).toLocaleDateString()}
-                            </div>
-                        )}
-                    </div>
+                    <ClientScheduleForm
+                        scheduleStartDate={scheduleStartDate}
+                        scheduleEndDate={scheduleEndDate}
+                        onStartDateChange={setScheduleStartDate}
+                        onEndDateChange={setScheduleEndDate}
+                        scheduleTimeStart={scheduleTimeStart}
+                        scheduleTimeEnd={scheduleTimeEnd}
+                        onTimeStartChange={setScheduleTimeStart}
+                        onTimeEndChange={setScheduleTimeEnd}
+                    />
 
                     <div className="bg-gray-50 border border-gray-200 text-gray-800 px-4 py-3 rounded-md text-sm">
                         <p className="font-medium mb-1">Note:</p>
