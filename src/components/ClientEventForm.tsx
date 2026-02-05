@@ -24,8 +24,7 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
     const [imagePreview, setImagePreview] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
-    const [scheduleStartDate, setScheduleStartDate] = useState('');
-    const [scheduleEndDate, setScheduleEndDate] = useState('');
+
     const [scheduleTimeStart, setScheduleTimeStart] = useState('');
     const [scheduleTimeEnd, setScheduleTimeEnd] = useState('');
 
@@ -109,6 +108,8 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
             }
 
             // Create event record with 'pending' status
+            // Note: Events table uses start_date/end_date for event timing, not schedule_start_date/schedule_end_date
+            // Events table only has schedule_time_start/schedule_time_end for daily time slots
             const { data, error: insertError } = await supabase
                 .from('events')
                 .insert({
@@ -121,8 +122,6 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
                     client_id: clientId,
                     status: 'pending',
                     is_active: false,
-                    schedule_start_date: scheduleStartDate || null,
-                    schedule_end_date: scheduleEndDate || null,
                     schedule_time_start: scheduleTimeStart || null,
                     schedule_time_end: scheduleTimeEnd || null,
                 })
@@ -141,8 +140,6 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
             setEndDate('');
             setImageFile(null);
             setImagePreview(null);
-            setScheduleStartDate('');
-            setScheduleEndDate('');
             setScheduleTimeStart('');
             setScheduleTimeEnd('');
         } catch (err) {
@@ -263,15 +260,17 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
                         )}
                     </div>
 
+                    {/* Events use their start_date/end_date for scheduling, so hide date range picker */}
                     <ClientScheduleForm
-                        scheduleStartDate={scheduleStartDate}
-                        scheduleEndDate={scheduleEndDate}
-                        onStartDateChange={setScheduleStartDate}
-                        onEndDateChange={setScheduleEndDate}
+                        scheduleStartDate=""
+                        scheduleEndDate=""
+                        onStartDateChange={() => {}}
+                        onEndDateChange={() => {}}
                         scheduleTimeStart={scheduleTimeStart}
                         scheduleTimeEnd={scheduleTimeEnd}
                         onTimeStartChange={setScheduleTimeStart}
                         onTimeEndChange={setScheduleTimeEnd}
+                        hideDateRange={true}
                     />
 
                     <div className="bg-gray-50 border border-gray-200 text-gray-800 px-4 py-3 rounded-md text-sm">

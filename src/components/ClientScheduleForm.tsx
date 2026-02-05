@@ -15,6 +15,9 @@ interface ClientScheduleFormProps {
     scheduleTimeEnd?: string;
     onTimeStartChange: (time: string) => void;
     onTimeEndChange: (time: string) => void;
+
+    // Hide date range section (for events which use start_date/end_date instead)
+    hideDateRange?: boolean;
 }
 
 export function ClientScheduleForm({
@@ -26,6 +29,7 @@ export function ClientScheduleForm({
     scheduleTimeEnd,
     onTimeStartChange,
     onTimeEndChange,
+    hideDateRange = false,
 }: ClientScheduleFormProps) {
     return (
         <Card className="border-gray-200">
@@ -39,34 +43,36 @@ export function ClientScheduleForm({
                 </p>
             </CardHeader>
             <CardContent className="space-y-6">
-                {/* Date Range */}
-                <div className="space-y-4">
-                    <Label className="flex items-center gap-2">
-                        <Calendar className="w-4 h-4 text-gray-500" />
-                        Date Range
-                    </Label>
-                    <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="start-date" className="text-xs text-gray-600">Start Date</Label>
-                            <Input
-                                id="start-date"
-                                type="date"
-                                value={scheduleStartDate || ''}
-                                onChange={(e) => onStartDateChange(e.target.value)}
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="end-date" className="text-xs text-gray-600">End Date</Label>
-                            <Input
-                                id="end-date"
-                                type="date"
-                                value={scheduleEndDate || ''}
-                                onChange={(e) => onEndDateChange(e.target.value)}
-                                min={scheduleStartDate || undefined}
-                            />
+                {/* Date Range - hidden for events which use their own start_date/end_date */}
+                {!hideDateRange && (
+                    <div className="space-y-4">
+                        <Label className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4 text-gray-500" />
+                            Date Range
+                        </Label>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                                <Label htmlFor="start-date" className="text-xs text-gray-600">Start Date</Label>
+                                <Input
+                                    id="start-date"
+                                    type="date"
+                                    value={scheduleStartDate || ''}
+                                    onChange={(e) => onStartDateChange(e.target.value)}
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="end-date" className="text-xs text-gray-600">End Date</Label>
+                                <Input
+                                    id="end-date"
+                                    type="date"
+                                    value={scheduleEndDate || ''}
+                                    onChange={(e) => onEndDateChange(e.target.value)}
+                                    min={scheduleStartDate || undefined}
+                                />
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* Time Slot */}
                 <div className="space-y-4">
