@@ -16,11 +16,18 @@ import {
   CheckCircle2,
   XCircle,
   Filter,
-  MoreHorizontal
+  MoreHorizontal,
+  Image as ImageIcon,
+  Megaphone,
+  Calendar,
+  MapPin
 } from 'lucide-react';
-import { Media } from '@/types';
+import { Media, Announcement, Event } from '@/types';
 
-interface ClientWithMedia {
+type ContentType = 'media' | 'announcement' | 'event';
+type ContentItem = (Media | Announcement | Event) & { content_type: ContentType };
+
+interface ClientWithContent {
   id: string;
   email: string;
   name?: string;
@@ -28,15 +35,15 @@ interface ClientWithMedia {
   pending_count: number;
   approved_count: number;
   rejected_count: number;
-  media_items: Media[];
+  content_items: ContentItem[];
 }
 
 export function Clients() {
-  const [clients, setClients] = useState<ClientWithMedia[]>([]);
+  const [clients, setClients] = useState<ClientWithContent[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedClientId, setExpandedClientId] = useState<string | null>(null);
-  const [selectedMedia, setSelectedMedia] = useState<Media | null>(null);
+  const [selectedContent, setSelectedContent] = useState<ContentItem | null>(null);
   const [reviewNotes, setReviewNotes] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'pending' | 'approved' | 'rejected'>('all');
 
@@ -48,9 +55,8 @@ export function Clients() {
     try {
       setLoading(true);
       const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
-      console.log('Admin email:', adminEmail);
 
-      // Fetch all clients (including those without media)
+      // Fetch all clients
       const { data: clientsData, error: clientsError } = await supabase
         .from('clients')
         .select('*')
@@ -58,7 +64,6 @@ export function Clients() {
 
       if (clientsError) throw clientsError;
 
-      // Filter out admin user in app logic
       const filteredClients = (clientsData || []).filter(c => c.email !== adminEmail);
 
       // Fetch all media
@@ -69,25 +74,50 @@ export function Clients() {
 
       if (mediaError) throw mediaError;
 
-      // Filter media to only client uploads
-      const clientMediaData = (mediaData || []).filter(m => m.client_id !== null);
+      // Fetch all announcements
+      const { data: announcementsData, error: announcementsError } = await supabase
+        .from('announcements')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-      // Build client-media relationship
-      const clientsWithMedia: ClientWithMedia[] = filteredClients.map((client) => {
-        const clientMedia = (clientMediaData || []).filter((m) => m.client_id === client.id);
+      if (announcementsError) throw announcementsError;
+
+      // Fetch all events
+      const { data: eventsData, error: eventsError } = await supabase
+        .from('events')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (eventsError) throw eventsError;
+
+      // Filter to only client uploads
+      const clientMedia = (mediaData || []).filter(m => m.client_id !== null);
+      const clientAnnouncements = (announcementsData || []).filter(a => a.client_id !== null);
+      const clientEvents = (eventsData || []).filter(e => e.client_id !== null);
+
+      // Build client-content relationship
+      const clientsWithContent: ClientWithContent[] = filteredClients.map((client) => {
+        const media = clientMedia.filter(m => m.client_id === client.id).map(m => ({ ...m, content_type: 'media' as ContentType }));
+        const announcements = clientAnnouncements.filter(a => a.client_id === client.id).map(a => ({ ...a, content_type: 'announcement' as ContentType }));
+        const events = clientEvents.filter(e => e.client_id === client.id).map(e => ({ ...e, content_type: 'event' as ContentType }));
+
+        const allContent = [...media, ...announcements, ...events].sort((a, b) =>
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+
         return {
           id: client.id,
           email: client.email,
           name: client.name || client.email,
-          total_uploads: clientMedia.length,
-          pending_count: clientMedia.filter((m) => m.status === 'pending').length,
-          approved_count: clientMedia.filter((m) => m.status === 'approved').length,
-          rejected_count: clientMedia.filter((m) => m.status === 'rejected').length,
-          media_items: clientMedia,
+          total_uploads: allContent.length,
+          pending_count: allContent.filter(c => c.status === 'pending').length,
+          approved_count: allContent.filter(c => c.status === 'approved').length,
+          rejected_count: allContent.filter(c => c.status === 'rejected').length,
+          content_items: allContent,
         };
       });
 
-      setClients(clientsWithMedia);
+      setClients(clientsWithContent);
     } catch (error) {
       console.error('Error loading clients:', error);
     } finally {
@@ -95,46 +125,50 @@ export function Clients() {
     }
   };
 
-  const handleApproveMedia = async (media: Media) => {
+  const handleApproveContent = async (content: ContentItem) => {
     try {
+      const table = content.content_type === 'media' ? 'media' : content.content_type === 'announcement' ? 'announcements' : 'events';
+
       const { error } = await supabase
-        .from('media')
+        .from(table)
         .update({
           status: 'approved',
           admin_notes: reviewNotes,
           is_active: true,
         })
-        .eq('id', media.id);
+        .eq('id', content.id);
 
       if (error) throw error;
 
       setReviewNotes('');
-      setSelectedMedia(null);
+      setSelectedContent(null);
       await loadClients();
     } catch (error) {
-      console.error('Error approving media:', error);
-      alert('Error approving media. Please try again.');
+      console.error('Error approving content:', error);
+      alert('Error approving content. Please try again.');
     }
   };
 
-  const handleRejectMedia = async (media: Media) => {
+  const handleRejectContent = async (content: ContentItem) => {
     try {
+      const table = content.content_type === 'media' ? 'media' : content.content_type === 'announcement' ? 'announcements' : 'events';
+
       const { error } = await supabase
-        .from('media')
+        .from(table)
         .update({
           status: 'rejected',
           admin_notes: reviewNotes,
         })
-        .eq('id', media.id);
+        .eq('id', content.id);
 
       if (error) throw error;
 
       setReviewNotes('');
-      setSelectedMedia(null);
+      setSelectedContent(null);
       await loadClients();
     } catch (error) {
-      console.error('Error rejecting media:', error);
-      alert('Error rejecting media. Please try again.');
+      console.error('Error rejecting content:', error);
+      alert('Error rejecting content. Please try again.');
     }
   };
 
@@ -151,9 +185,9 @@ export function Clients() {
     return matchesSearch;
   });
 
-  const filteredMediaByStatus = (media: Media[]) => {
-    if (filterStatus === 'all') return media;
-    return media.filter((m) => m.status === filterStatus);
+  const filteredContentByStatus = (content: ContentItem[]) => {
+    if (filterStatus === 'all') return content;
+    return content.filter((c) => c.status === filterStatus);
   };
 
   const getStatusButtonClass = (status: string) => {
@@ -162,6 +196,60 @@ export function Clients() {
       return `${base} bg-white text-gray-900 shadow-sm ring-1 ring-gray-200`;
     }
     return `${base} text-gray-500 hover:text-gray-900 hover:bg-gray-100/50`;
+  };
+
+  const getContentIcon = (type: ContentType) => {
+    switch (type) {
+      case 'media': return ImageIcon;
+      case 'announcement': return Megaphone;
+      case 'event': return Calendar;
+    }
+  };
+
+  const getContentTypeLabel = (type: ContentType) => {
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
+  const renderContentPreview = (content: ContentItem) => {
+    if (content.content_type === 'media') {
+      const media = content as Media;
+      return (
+        <div className="w-24 h-16 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden border border-gray-200 relative">
+          {media.file_type === 'image' ? (
+            <img src={media.file_url} alt={media.title} className="w-full h-full object-cover" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center bg-gray-900">
+              <video src={media.file_url} className="w-full h-full object-cover opacity-60" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
+                  <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5"></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    } else if (content.content_type === 'announcement') {
+      const announcement = content as Announcement;
+      return (
+        <div className="w-24 h-16 flex-shrink-0 bg-purple-50 rounded-md border border-purple-100 flex items-center justify-center">
+          <Megaphone className="w-8 h-8 text-purple-400" />
+        </div>
+      );
+    } else {
+      const event = content as Event;
+      return (
+        <div className="w-24 h-16 flex-shrink-0 bg-green-50 rounded-md border border-green-100 flex items-center justify-center">
+          <Calendar className="w-8 h-8 text-green-400" />
+        </div>
+      );
+    }
+  };
+
+  const getContentTitle = (content: ContentItem) => {
+    if (content.content_type === 'media') return (content as Media).title || 'Untitled';
+    if (content.content_type === 'announcement') return (content as Announcement).title;
+    return (content as Event).title;
   };
 
   if (loading) {
@@ -185,7 +273,6 @@ export function Clients() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {/* Stat Card Component */}
           {[
             { label: 'Total Clients', value: clients.length, icon: Users, color: 'text-blue-600', bg: 'bg-blue-50' },
             { label: 'Pending Review', value: clients.reduce((sum, c) => sum + c.pending_count, 0), icon: Clock, color: 'text-yellow-600', bg: 'bg-yellow-50' },
@@ -243,7 +330,7 @@ export function Clients() {
         ) : (
           filteredClients.map((client) => {
             const isExpanded = expandedClientId === client.id;
-            const clientMediaFiltered = filteredMediaByStatus(client.media_items);
+            const clientContentFiltered = filteredContentByStatus(client.content_items);
 
             return (
               <div
@@ -305,87 +392,75 @@ export function Clients() {
                 {/* Expanded Content */}
                 {isExpanded && (
                   <div className="border-t border-gray-100 bg-gray-50/50 p-4 md:p-6">
-                    {clientMediaFiltered.length === 0 ? (
-                      <div className="text-center py-8 text-gray-400 text-sm">No media items match the current filter</div>
+                    {clientContentFiltered.length === 0 ? (
+                      <div className="text-center py-8 text-gray-400 text-sm">No content items match the current filter</div>
                     ) : (
                       <div className="space-y-3">
-                        {clientMediaFiltered.map((media) => (
-                          <div
-                            key={media.id}
-                            className="bg-white rounded-lg p-3 border border-gray-100 flex gap-4 hover:border-gray-300 transition-colors group/item"
-                          >
-                            {/* Thumbnail */}
-                            <div className="w-24 h-16 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden border border-gray-200 relative">
-                              {media.file_type === 'image' ? (
-                                <img
-                                  src={media.file_url}
-                                  alt={media.title}
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                                  <video src={media.file_url} className="w-full h-full object-cover opacity-60" />
-                                  <div className="absolute inset-0 flex items-center justify-center">
-                                    <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm">
-                                      <div className="w-0 h-0 border-t-[4px] border-t-transparent border-l-[6px] border-l-white border-b-[4px] border-b-transparent ml-0.5"></div>
+                        {clientContentFiltered.map((content) => {
+                          const Icon = getContentIcon(content.content_type);
+                          return (
+                            <div
+                              key={content.id}
+                              className="bg-white rounded-lg p-3 border border-gray-100 flex gap-4 hover:border-gray-300 transition-colors group/item"
+                            >
+                              {/* Preview */}
+                              {renderContentPreview(content)}
+
+                              <div className="flex-1 min-w-0 flex flex-col justify-center">
+                                <div className="flex items-start justify-between">
+                                  <div>
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Icon className="w-3.5 h-3.5 text-gray-400" />
+                                      <span className="text-xs text-gray-500 uppercase font-medium">{getContentTypeLabel(content.content_type)}</span>
                                     </div>
+                                    <h4 className="text-sm font-medium text-gray-900 truncate pr-4">{getContentTitle(content)}</h4>
+                                    <p className="text-xs text-gray-500 mt-0.5">
+                                      {new Date(content.created_at).toLocaleDateString()}
+                                    </p>
+                                  </div>
+
+                                  {/* Status Badge */}
+                                  <div className="flex-shrink-0">
+                                    {content.status === 'pending' && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-100/50">Pending</span>
+                                    )}
+                                    {content.status === 'approved' && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100/50">Approved</span>
+                                    )}
+                                    {content.status === 'rejected' && (
+                                      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700 border border-red-100/50">Rejected</span>
+                                    )}
                                   </div>
                                 </div>
-                              )}
-                            </div>
 
-                            <div className="flex-1 min-w-0 flex flex-col justify-center">
-                              <div className="flex items-start justify-between">
-                                <div>
-                                  <h4 className="text-sm font-medium text-gray-900 truncate pr-4">{media.title}</h4>
-                                  <p className="text-xs text-gray-500 mt-0.5 flex items-center gap-2">
-                                    <span className="uppercase">{media.file_type}</span>
-                                    <span className="w-0.5 h-0.5 rounded-full bg-gray-300"></span>
-                                    <span>{new Date(media.created_at).toLocaleDateString()}</span>
-                                  </p>
-                                </div>
-
-                                {/* Status Badge */}
-                                <div className="flex-shrink-0">
-                                  {media.status === 'pending' && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-50 text-yellow-700 border border-yellow-100/50">Pending</span>
-                                  )}
-                                  {media.status === 'approved' && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-100/50">Approved</span>
-                                  )}
-                                  {media.status === 'rejected' && (
-                                    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-700 border border-red-100/50">Rejected</span>
-                                  )}
-                                </div>
+                                {/* Admin Note Preview */}
+                                {content.admin_notes && (
+                                  <div className="mt-2 text-xs text-gray-500 bg-gray-50 p-1.5 rounded flex items-start gap-1.5">
+                                    <MoreHorizontal className="w-3 h-3 mt-0.5 flex-shrink-0 opacity-50" />
+                                    <span className="line-clamp-1">{content.admin_notes}</span>
+                                  </div>
+                                )}
                               </div>
 
-                              {/* Admin Note Preview */}
-                              {media.admin_notes && (
-                                <div className="mt-2 text-xs text-gray-500 bg-gray-50 p-1.5 rounded flex items-start gap-1.5">
-                                  <MoreHorizontal className="w-3 h-3 mt-0.5 flex-shrink-0 opacity-50" />
-                                  <span className="line-clamp-1">{media.admin_notes}</span>
+                              {/* Action Button */}
+                              {content.status === 'pending' && (
+                                <div className="flex items-center self-center pl-2">
+                                  <Button
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setSelectedContent(content);
+                                    }}
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-normal text-xs"
+                                  >
+                                    Review
+                                  </Button>
                                 </div>
                               )}
                             </div>
-
-                            {/* Action Button */}
-                            {media.status === 'pending' && (
-                              <div className="flex items-center self-center pl-2">
-                                <Button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setSelectedMedia(media);
-                                  }}
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-normal text-xs"
-                                >
-                                  Review
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                     )}
                   </div>
@@ -397,29 +472,68 @@ export function Clients() {
       </div>
 
       {/* Review Modal */}
-      {selectedMedia && (
+      {selectedContent && (
         <div className="fixed inset-0 bg-gray-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in duration-200">
           <div className="bg-white w-full max-w-4xl max-h-[90vh] rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
 
-            {/* Left: Media Preview */}
+            {/* Left: Content Preview */}
             <div className="w-full md:w-3/5 bg-gray-950 flex items-center justify-center p-4 md:p-8 relative">
-              <div className="absolute top-4 left-4 z-10">
+              <div className="absolute top-4 left-4 z-10 flex gap-2">
                 <span className="px-2 py-1 bg-black/50 text-white text-xs font-medium rounded backdrop-blur-md uppercase tracking-wide">
-                  {selectedMedia.file_type}
+                  {getContentTypeLabel(selectedContent.content_type)}
                 </span>
               </div>
-              {selectedMedia.file_type === 'image' ? (
-                <img
-                  src={selectedMedia.file_url}
-                  alt={selectedMedia.title}
-                  className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
-                />
+
+              {selectedContent.content_type === 'media' ? (
+                (selectedContent as Media).file_type === 'image' ? (
+                  <img
+                    src={(selectedContent as Media).file_url}
+                    alt={getContentTitle(selectedContent)}
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-lg"
+                  />
+                ) : (
+                  <video
+                    src={(selectedContent as Media).file_url}
+                    controls
+                    className="max-w-full max-h-full rounded-lg shadow-lg"
+                  />
+                )
+              ) : selectedContent.content_type === 'announcement' ? (
+                <div className="w-full max-w-lg bg-white rounded-lg p-8 text-left">
+                  {(selectedContent as Announcement).image_url && (
+                    <img
+                      src={(selectedContent as Announcement).image_url}
+                      alt={(selectedContent as Announcement).title}
+                      className="w-full h-48 object-cover rounded-lg mb-4"
+                    />
+                  )}
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">{(selectedContent as Announcement).title}</h3>
+                  <p className="text-gray-600 whitespace-pre-wrap">{(selectedContent as Announcement).body}</p>
+                </div>
               ) : (
-                <video
-                  src={selectedMedia.file_url}
-                  controls
-                  className="max-w-full max-h-full rounded-lg shadow-lg"
-                />
+                <div className="w-full max-w-lg bg-white rounded-lg p-8 text-left">
+                  {(selectedContent as Event).image_url && (
+                    <img
+                      src={(selectedContent as Event).image_url}
+                      alt={(selectedContent as Event).title}
+                      className="w-full h-48 object-cover rounded-lg mb-4"
+                    />
+                  )}
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4">{(selectedContent as Event).title}</h3>
+                  <p className="text-gray-600 mb-4 whitespace-pre-wrap">{(selectedContent as Event).description}</p>
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2 text-gray-500">
+                      <Calendar className="w-4 h-4" />
+                      <span>{new Date((selectedContent as Event).start_date).toLocaleString()}</span>
+                    </div>
+                    {(selectedContent as Event).location && (
+                      <div className="flex items-center gap-2 text-gray-500">
+                        <MapPin className="w-4 h-4" />
+                        <span>{(selectedContent as Event).location}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               )}
             </div>
 
@@ -427,11 +541,9 @@ export function Clients() {
             <div className="w-full md:w-2/5 flex flex-col h-full bg-white">
               <div className="p-6 flex-1 overflow-y-auto">
                 <div className="mb-6">
-                  <h2 className="text-xl font-bold text-gray-900">{selectedMedia.title}</h2>
-                  {selectedMedia.description ? (
-                    <p className="text-gray-600 mt-2 text-sm leading-relaxed">{selectedMedia.description}</p>
-                  ) : (
-                    <p className="text-gray-400 mt-2 text-sm italic">No description provided.</p>
+                  <h2 className="text-xl font-bold text-gray-900">{getContentTitle(selectedContent)}</h2>
+                  {selectedContent.content_type === 'media' && (selectedContent as Media).description && (
+                    <p className="text-gray-600 mt-2 text-sm leading-relaxed">{(selectedContent as Media).description}</p>
                   )}
                 </div>
 
@@ -439,11 +551,11 @@ export function Clients() {
                   <div className="bg-gray-50 rounded-lg p-3 text-xs text-gray-500 space-y-1">
                     <div className="flex justify-between">
                       <span>Uploaded</span>
-                      <span className="font-medium text-gray-900">{new Date(selectedMedia.created_at).toLocaleDateString()}</span>
+                      <span className="font-medium text-gray-900">{new Date(selectedContent.created_at).toLocaleDateString()}</span>
                     </div>
                     <div className="flex justify-between">
                       <span>Time</span>
-                      <span className="font-medium text-gray-900">{new Date(selectedMedia.created_at).toLocaleTimeString()}</span>
+                      <span className="font-medium text-gray-900">{new Date(selectedContent.created_at).toLocaleTimeString()}</span>
                     </div>
                   </div>
 
@@ -463,7 +575,7 @@ export function Clients() {
                 <Button
                   variant="ghost"
                   onClick={() => {
-                    setSelectedMedia(null);
+                    setSelectedContent(null);
                     setReviewNotes('');
                   }}
                 >
@@ -471,14 +583,14 @@ export function Clients() {
                 </Button>
                 <Button
                   variant="destructive"
-                  onClick={() => handleRejectMedia(selectedMedia)}
+                  onClick={() => handleRejectContent(selectedContent)}
                   className="bg-white border border-red-200 text-red-600 hover:bg-red-50 hover:border-red-300"
                 >
                   <ThumbsDown className="w-4 h-4 mr-2" />
                   Reject
                 </Button>
                 <Button
-                  onClick={() => handleApproveMedia(selectedMedia)}
+                  onClick={() => handleApproveContent(selectedContent)}
                   className="bg-gray-900 hover:bg-gray-800 text-white"
                 >
                   <ThumbsUp className="w-4 h-4 mr-2" />
