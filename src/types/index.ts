@@ -20,6 +20,9 @@ export interface Announcement extends ScheduleFields {
   image_url?: string;
   created_at: string;
   is_active: boolean;
+  client_id?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  admin_notes?: string;
 }
 
 
@@ -33,6 +36,9 @@ export interface Event extends ScheduleFields {
   image_url?: string;
   created_at: string;
   is_active: boolean;
+  client_id?: string;
+  status?: 'pending' | 'approved' | 'rejected';
+  admin_notes?: string;
 }
 
 
