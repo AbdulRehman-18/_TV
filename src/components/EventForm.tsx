@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
-import { Event, Priority, RecurrenceType } from '@/types';
+import { Event } from '@/types';
 import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface EventFormProps {
@@ -29,7 +29,6 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
       ? new Date(event.end_date).toISOString().slice(0, 16)
       : ''
   );
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(event?.image_url || '');
   const [loading, setLoading] = useState(false);
 
@@ -84,7 +83,6 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setImageUrl(previewUrl);
@@ -92,7 +90,6 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
   };
 
   const removeImage = () => {
-    setImageFile(null);
     setImageUrl('');
   };
 

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
-import { Announcement, Priority, RecurrenceType } from '@/types';
+import { Announcement } from '@/types';
 import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface AnnouncementFormProps {
@@ -18,7 +18,6 @@ interface AnnouncementFormProps {
 export function AnnouncementForm({ announcement, onSubmit, onCancel }: AnnouncementFormProps) {
   const [title, setTitle] = useState(announcement?.title || '');
   const [body, setBody] = useState(announcement?.body || '');
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(announcement?.image_url || '');
   const [loading, setLoading] = useState(false);
 
@@ -75,7 +74,6 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setImageUrl(previewUrl);
@@ -83,7 +81,6 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
   };
 
   const removeImage = () => {
-    setImageFile(null);
     setImageUrl('');
   };
 

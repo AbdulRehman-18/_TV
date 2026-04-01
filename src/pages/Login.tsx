@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Navigate, useNavigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -10,16 +10,14 @@ import loginImage from './assets/images/login.jpg';
 
 export function Login() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
-  const [username, setUsername] = useState('admin'); // Changed to username as DRF uses username
+  const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [organization, setOrganization] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState('');
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [showEmailConfirmation] = useState(false);
+  const [pendingEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -115,9 +113,16 @@ export function Login() {
                   Please verify your email to complete registration.
                 </p>
               </div>
-            )}
-            
-            <div className="space-y-2">
+            </div>
+          ) : (
+            <form onSubmit={handleLogin} className="space-y-6">
+              {error && (
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-lg">
+                  {error}
+                </div>
+              )}
+              <div className="space-y-4">
+              <div className="space-y-2">
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"

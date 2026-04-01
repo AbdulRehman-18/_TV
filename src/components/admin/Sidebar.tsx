@@ -27,7 +27,7 @@ interface SidebarProps {
   onToggle?: () => void;
 }
 
-export function Sidebar({ collapsed, onToggle }: SidebarProps) {
+export function Sidebar({ collapsed }: SidebarProps) {
   const navigate = useNavigate();
 
   const handleLogout = async () => {

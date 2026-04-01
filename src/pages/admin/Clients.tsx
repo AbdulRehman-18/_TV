@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -10,12 +9,10 @@ import {
   Search,
   ChevronDown,
   ChevronUp,
-  Eye,
   ThumbsUp,
   ThumbsDown,
   CheckCircle2,
   XCircle,
-  Filter,
   MoreHorizontal,
   Image as ImageIcon,
   Megaphone,
@@ -230,14 +227,12 @@ export function Clients() {
         </div>
       );
     } else if (content.content_type === 'announcement') {
-      const announcement = content as Announcement;
       return (
         <div className="w-24 h-16 flex-shrink-0 bg-purple-50 rounded-md border border-purple-100 flex items-center justify-center">
           <Megaphone className="w-8 h-8 text-purple-400" />
         </div>
       );
     } else {
-      const event = content as Event;
       return (
         <div className="w-24 h-16 flex-shrink-0 bg-green-50 rounded-md border border-green-100 flex items-center justify-center">
           <Calendar className="w-8 h-8 text-green-400" />
@@ -308,7 +303,7 @@ export function Clients() {
           {['all', 'pending', 'approved', 'rejected'].map((status) => (
             <button
               key={status}
-              onClick={() => setFilterStatus(status as any)}
+            onClick={() => setFilterStatus(status as 'all' | 'pending' | 'approved' | 'rejected')}
               className={getStatusButtonClass(status)}
             >
               {status}

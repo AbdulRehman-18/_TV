@@ -5,7 +5,7 @@ import { Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Volume2, VolumeX } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
-import { useRealtimeSubscription, type ConnectionStatus } from '@/hooks/useRealtimeSubscription';
+import type { ConnectionStatus } from '@/hooks/useRealtimeSubscription';
 import { ConnectionIndicator } from '@/components/display/ConnectionIndicator';
 import { useScheduler } from '@/hooks/useScheduler';
 
@@ -25,7 +25,7 @@ export function Display() {
   });
 
   // Connection status for realtime subscriptions
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [connectionStatus] = useState<ConnectionStatus>('disconnected');
 
   const toggleAudio = () => {
     const newState = !audioEnabled;
@@ -47,20 +47,10 @@ export function Display() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioEnabled]);
 
-  // Volume control state (synced with LiveDisplay via localStorage)
-  const [volume, setVolume] = useState(() => {
-    const saved = localStorage.getItem('display-volume');
-    return saved ? parseInt(saved) / 100 : 0.5;
-  });
-  const [isMuted, setIsMuted] = useState(() => {
-    const saved = localStorage.getItem('display-muted');
-    return saved === 'true';
-  });
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // simple throttle using ref to avoid over-fetching
+  // simple throttle
   const lastReloadRef = useRef(0);
   const reloadAllRef = useRef<null | ((reason?: string) => Promise<void>)>(null);
 
@@ -594,12 +584,12 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
       if (video) {
         try {
           video.pause();
-        } catch (e) {
+        } catch {
           // ignore
         }
         try {
           video.currentTime = 0;
-        } catch (e) {
+        } catch {
           // ignore
         }
       }

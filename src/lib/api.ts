@@ -12,7 +12,7 @@ export const api = {
     return response.json();
   },
 
-  async post(endpoint: string, data: any) {
+  async post(endpoint: string, data: Record<string, unknown>) {
     const token = localStorage.getItem('auth_token');
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -45,7 +45,7 @@ export const api = {
     return response.json();
   },
 
-  async patch(endpoint: string, data: any) {
+  async patch(endpoint: string, data: Record<string, unknown>) {
     const token = localStorage.getItem('auth_token');
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ export const api = {
   },
 
   auth: {
-    async login(credentials: any) {
+    async login(credentials: { username: string; password: string }) {
       const response = await fetch(`${API_URL}/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
