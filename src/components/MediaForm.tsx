@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X, Image as ImageIcon, Video } from 'lucide-react';
-import { Media } from '@/types';
+import { Media, Priority, RecurrenceType } from '@/types';
+import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface MediaFormProps {
   media?: Media;
@@ -21,6 +22,16 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
   const [filePreview, setFilePreview] = useState<string | null>(media?.file_url || null);
   const [fileType, setFileType] = useState<'image' | 'video' | null>(media?.file_type || null);
   const [loading, setLoading] = useState(false);
+
+  // Scheduling state
+  const [scheduleStartDate, setScheduleStartDate] = useState(media?.schedule_start_date || '');
+  const [scheduleEndDate, setScheduleEndDate] = useState(media?.schedule_end_date || '');
+  const [scheduleTimeStart, setScheduleTimeStart] = useState(media?.schedule_time_start || '');
+  const [scheduleTimeEnd, setScheduleTimeEnd] = useState(media?.schedule_time_end || '');
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(media?.recurrence_type || 'none');
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>(media?.recurrence_days || []);
+  const [priority, setPriority] = useState<Priority>(media?.priority || 'normal');
+  const [isFallback, setIsFallback] = useState(media?.is_fallback || false);
 
   const handleFileUpload = async (file: File): Promise<{ url: string; fileName: string; fileSize: number }> => {
     try {
@@ -79,6 +90,17 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
         description: description || null,
         ...fileData,
         is_active: true,
+        client_id: null, // Admin uploads don't have a client
+        status: 'approved', // Admin uploads are pre-approved
+        // Scheduling fields
+        schedule_start_date: scheduleStartDate || null,
+        schedule_end_date: scheduleEndDate || null,
+        schedule_time_start: scheduleTimeStart || null,
+        schedule_time_end: scheduleTimeEnd || null,
+        recurrence_type: recurrenceType,
+        recurrence_days: recurrenceDays.length > 0 ? recurrenceDays : null,
+        priority,
+        is_fallback: isFallback,
       };
 
       let result;
@@ -167,13 +189,12 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="title">Media Title</Label>
+            <Label htmlFor="title">Media Title (Optional)</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter media title"
-              required
             />
           </div>
 
@@ -273,6 +294,27 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
               </div>
             )}
           </div>
+
+          {/* Scheduling Options */}
+          <ScheduleForm
+            scheduleStartDate={scheduleStartDate}
+            scheduleEndDate={scheduleEndDate}
+            onStartDateChange={setScheduleStartDate}
+            onEndDateChange={setScheduleEndDate}
+            scheduleTimeStart={scheduleTimeStart}
+            scheduleTimeEnd={scheduleTimeEnd}
+            onTimeStartChange={setScheduleTimeStart}
+            onTimeEndChange={setScheduleTimeEnd}
+            recurrenceType={recurrenceType}
+            recurrenceDays={recurrenceDays}
+            onRecurrenceTypeChange={setRecurrenceType}
+            onRecurrenceDaysChange={setRecurrenceDays}
+            priority={priority}
+            onPriorityChange={setPriority}
+            isFallback={isFallback}
+            onFallbackChange={setIsFallback}
+            showFallbackOption={true}
+          />
 
           <div className="flex space-x-4">
             <Button type="submit" disabled={loading} className="flex-1">

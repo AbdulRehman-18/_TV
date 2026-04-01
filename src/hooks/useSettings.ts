@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-export type Theme = 'light' | 'dark';
+export type Theme = "light" | "dark";
+export type TransitionEffect = "fade" | "slide" | "zoom" | "none";
 
 export interface SettingsState {
   theme: Theme;
@@ -8,19 +9,29 @@ export interface SettingsState {
   autoplayVideos: boolean;
   showAnnouncementsOnDisplay: boolean;
   showEventsOnDisplay: boolean;
+  showMediaOnDisplay: boolean;
   notifyOnUpload: boolean;
+  displayName: string;
+  enableTransitions: boolean;
+  transitionEffect: TransitionEffect;
+  showDateTimeOnDisplay: boolean;
 }
 
 const DEFAULT_SETTINGS: SettingsState = {
-  theme: 'light',
+  theme: "light",
   slideshowInterval: 12,
   autoplayVideos: true,
   showAnnouncementsOnDisplay: true,
   showEventsOnDisplay: true,
+  showMediaOnDisplay: true,
   notifyOnUpload: true,
+  displayName: "Main Corridor TV",
+  enableTransitions: true,
+  transitionEffect: "fade",
+  showDateTimeOnDisplay: true,
 };
 
-const STORAGE_KEY = 'smart-tv-settings-v1';
+const STORAGE_KEY = "smart-tv-settings-v1";
 
 export function useSettings() {
   const [settings, setSettings] = useState<SettingsState>(() => {
@@ -41,8 +52,25 @@ export function useSettings() {
     }
   }, [settings]);
 
+  // Sync across tabs
+  useEffect(() => {
+    const handleStorage = (e: StorageEvent) => {
+      if (e.key === STORAGE_KEY && e.newValue) {
+        try {
+          const newSettings = JSON.parse(e.newValue);
+          setSettings(newSettings);
+        } catch {
+          // ignore
+        }
+      }
+    };
+
+    window.addEventListener("storage", handleStorage);
+    return () => window.removeEventListener("storage", handleStorage);
+  }, []);
+
   const update = (patch: Partial<SettingsState>) => {
-    setSettings(prev => ({ ...prev, ...patch }));
+    setSettings((prev) => ({ ...prev, ...patch }));
   };
 
   const reset = () => setSettings(DEFAULT_SETTINGS);

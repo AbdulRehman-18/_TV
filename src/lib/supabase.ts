@@ -7,7 +7,13 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('Missing Supabase environment variables');
 }
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  realtime: {
+    params: {
+      eventsPerSecond: 10, // Rate limiting to prevent overwhelming the client
+    },
+  },
+});
 
 // Storage bucket for announcement images
 export const ANNOUNCEMENTS_BUCKET = 'announcements';

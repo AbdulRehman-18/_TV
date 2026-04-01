@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
-import { Event } from '@/types';
+import { Event, Priority, RecurrenceType } from '@/types';
+import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface EventFormProps {
   event?: Event;
@@ -44,6 +45,12 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
         start_date: new Date(startDate).toISOString(),
         end_date: endDate ? new Date(endDate).toISOString() : null,
         is_active: true,
+        // Scheduling fields (events use start_date/end_date for event timing, not schedule dates)
+        schedule_time_start: scheduleTimeStart || null,
+        schedule_time_end: scheduleTimeEnd || null,
+        recurrence_type: recurrenceType,
+        recurrence_days: recurrenceDays.length > 0 ? recurrenceDays : null,
+        priority,
       };
 
       let result;
@@ -192,6 +199,28 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
               </div>
             )}
           </div>
+
+          {/* Scheduling Options */}
+          <ScheduleForm
+            scheduleStartDate="" // Events use start_date/end_date fields instead
+            scheduleEndDate=""
+            onStartDateChange={() => { }} // No-op for events
+            onEndDateChange={() => { }}
+            scheduleTimeStart={scheduleTimeStart}
+            scheduleTimeEnd={scheduleTimeEnd}
+            onTimeStartChange={setScheduleTimeStart}
+            onTimeEndChange={setScheduleTimeEnd}
+            recurrenceType={recurrenceType}
+            recurrenceDays={recurrenceDays}
+            onRecurrenceTypeChange={setRecurrenceType}
+            onRecurrenceDaysChange={setRecurrenceDays}
+            priority={priority}
+            onPriorityChange={setPriority}
+            showFallbackOption={false}
+          />
+          <p className="text-xs text-gray-500 -mt-4">
+            Note: Events use the Start/End Date fields above for scheduling. Time slots and recurrence control when the event announcement displays.
+          </p>
 
           <div className="flex space-x-4">
             <Button type="submit" disabled={loading} className="flex-1">

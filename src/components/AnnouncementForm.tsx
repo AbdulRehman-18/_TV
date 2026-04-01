@@ -6,7 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
-import { Announcement } from '@/types';
+import { Announcement, Priority, RecurrenceType } from '@/types';
+import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface AnnouncementFormProps {
   announcement?: Announcement;
@@ -31,6 +32,14 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
         title,
         body,
         is_active: true,
+        // Scheduling fields
+        schedule_start_date: scheduleStartDate || null,
+        schedule_end_date: scheduleEndDate || null,
+        schedule_time_start: scheduleTimeStart || null,
+        schedule_time_end: scheduleTimeEnd || null,
+        recurrence_type: recurrenceType,
+        recurrence_days: recurrenceDays.length > 0 ? recurrenceDays : null,
+        priority,
       };
 
       if (announcement) {
@@ -46,10 +55,10 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
       // Notify other tabs/windows (same origin) that announcements changed.
       try {
         const bc = new BroadcastChannel('tv-updates');
-        bc.postMessage({ 
-          channel: 'announcements', 
-          action: announcement ? 'update' : 'create', 
-          payload: result 
+        bc.postMessage({
+          channel: 'announcements',
+          action: announcement ? 'update' : 'create',
+          payload: result
         });
         bc.close();
       } catch {
@@ -112,7 +121,7 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
 
           <div className="space-y-2">
             <Label>Image (Optional)</Label>
-            
+
             {imageUrl ? (
               <div className="relative">
                 <img
@@ -148,6 +157,25 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
               </div>
             )}
           </div>
+
+          {/* Scheduling Options */}
+          <ScheduleForm
+            scheduleStartDate={scheduleStartDate}
+            scheduleEndDate={scheduleEndDate}
+            onStartDateChange={setScheduleStartDate}
+            onEndDateChange={setScheduleEndDate}
+            scheduleTimeStart={scheduleTimeStart}
+            scheduleTimeEnd={scheduleTimeEnd}
+            onTimeStartChange={setScheduleTimeStart}
+            onTimeEndChange={setScheduleTimeEnd}
+            recurrenceType={recurrenceType}
+            recurrenceDays={recurrenceDays}
+            onRecurrenceTypeChange={setRecurrenceType}
+            onRecurrenceDaysChange={setRecurrenceDays}
+            priority={priority}
+            onPriorityChange={setPriority}
+            showFallbackOption={false}
+          />
 
           <div className="flex space-x-4">
             <Button type="submit" disabled={loading} className="flex-1">
