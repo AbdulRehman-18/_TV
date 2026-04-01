@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Clock, MapPin } from 'lucide-react';
@@ -35,95 +35,11 @@ export function Display() {
     loadEvents();
     loadMedia();
     
-    // Set up real-time subscriptions for announcements
-    const announcementsSubscription = supabase
-      .channel('announcements')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'announcements',
-        },
-        () => {
-          loadAnnouncements();
-        }
-      )
-      .subscribe();
-
-    // Set up real-time subscriptions for events
-    const eventsSubscription = supabase
-      .channel('events')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'events',
-        },
-        () => {
-          loadEvents();
-        }
-      )
-      .subscribe();
-
-    // Set up real-time subscriptions for media
-    const mediaSubscription = supabase
-      .channel('media')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'media',
-        },
-        () => {
-          loadMedia();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      announcementsSubscription.unsubscribe();
-      eventsSubscription.unsubscribe();
-      mediaSubscription.unsubscribe();
-    };
+    // Real-time via Supabase removed. 
+    // Using polling fallback logic already present in the component.
   }, []);
 
-  // Listen for remote reload requests from the Admin via Supabase Realtime Broadcast
-  useEffect(() => {
-    const controlChannel = supabase
-      .channel('display-control')
-      .on('broadcast', { event: 'reload' }, (payload) => {
-        type ControlPayload = { hard?: boolean; reason?: string };
-        const raw = (payload && typeof payload === 'object' && 'payload' in payload)
-          ? (payload as { payload?: unknown }).payload
-          : undefined;
-        const msg: ControlPayload | undefined = (raw && typeof raw === 'object')
-          ? (raw as ControlPayload)
-          : undefined;
-        const hard = msg?.hard;
-        const reason = msg?.reason;
-        if (hard) {
-          // Hard reload if explicitly requested
-          window.location.reload();
-        } else {
-          // Soft reload: refetch data without page refresh
-          reloadAllRef.current?.(reason || 'remote-broadcast');
-        }
-      })
-      .subscribe((status) => {
-        console.debug('[Display] control channel status:', status);
-      });
-
-    return () => {
-      try {
-        controlChannel.unsubscribe();
-      } catch {
-        // ignore
-      }
-    };
-  }, []);
+  // Listen for remote reload requests - removed as it depends on Supabase Realtime Broadcast
 
   // BroadcastChannel fallback: listen for changes from admin UI in other tabs
   useEffect(() => {
@@ -204,14 +120,7 @@ export function Display() {
 
   const loadAnnouncements = async () => {
     try {
-      const { data, error } = await supabase
-        .from('announcements')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
+      const data = await api.get('/announcements/');
       setAnnouncements(data || []);
     } catch (error) {
       console.error('Error loading announcements:', error);
@@ -222,14 +131,7 @@ export function Display() {
 
   const loadEvents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('is_active', true)
-        .order('start_date', { ascending: true });
-
-      if (error) throw error;
-      
+      const data = await api.get('/events/');
       setEvents(data || []);
     } catch (error) {
       console.error('Error loading events:', error);
@@ -238,14 +140,7 @@ export function Display() {
 
   const loadMedia = async () => {
     try {
-      const { data, error } = await supabase
-        .from('media')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
+      const data = await api.get('/media/');
       setMedia(data || []);
     } catch (error) {
       console.error('Error loading media:', error);

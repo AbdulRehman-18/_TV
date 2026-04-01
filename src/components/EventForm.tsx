@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase, EVENTS_BUCKET } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -32,53 +32,17 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
   const [imageUrl, setImageUrl] = useState(event?.image_url || '');
   const [loading, setLoading] = useState(false);
 
-  const handleImageUpload = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(EVENTS_BUCKET)
-        .upload(fileName, file);
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        return null;
-      }
-
-      const { data } = supabase.storage
-        .from(EVENTS_BUCKET)
-        .getPublicUrl(fileName);
-
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      return null;
-    }
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      let finalImageUrl = imageUrl;
-
-      // Upload new image if provided
-      if (imageFile) {
-        const uploadedUrl = await handleImageUpload(imageFile);
-        if (uploadedUrl) {
-          finalImageUrl = uploadedUrl;
-        }
-      }
-
       const eventData = {
         title,
         description,
         location: location || null,
         start_date: new Date(startDate).toISOString(),
         end_date: endDate ? new Date(endDate).toISOString() : null,
-        image_url: finalImageUrl || null,
         is_active: true,
       };
 
@@ -86,33 +50,18 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
 
       if (event) {
         // Update existing event
-        result = await supabase
-          .from('events')
-          .update(eventData)
-          .eq('id', event.id)
-          .select()
-          .single();
+        result = await api.patch(`/events/${event.id}/`, eventData);
       } else {
         // Create new event
-        result = await supabase
-          .from('events')
-          .insert(eventData)
-          .select()
-          .single();
+        result = await api.post('/events/', eventData);
       }
 
-      if (result.error) {
-        throw result.error;
-      }
-
-      onSubmit(result.data);
+      onSubmit(result);
 
       // Notify other tabs/windows (same origin) that events changed.
       try {
         const bc = new BroadcastChannel('tv-updates');
-        const msg = { channel: 'events', action: event ? 'update' : 'create', payload: result.data };
-        console.debug('[EventForm] broadcasting', msg);
-        bc.postMessage(msg);
+        bc.postMessage({ channel: 'events', action: event ? 'update' : 'create', payload: result });
         bc.close();
       } catch {
         // ignore

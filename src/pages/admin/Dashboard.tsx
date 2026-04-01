@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { 
   Megaphone, 
   Calendar, 
@@ -20,29 +20,12 @@ export function Dashboard() {
 
   const loadData = async () => {
     try {
-      // Fetch announcements
-      const { data: announcementsData, error: announcementsError } = await supabase
-        .from('announcements')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (announcementsError) throw announcementsError;
-
-      // Fetch events
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (eventsError) throw eventsError;
-
-      // Fetch media
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('media')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (mediaError) throw mediaError;
+      // Fetch all from DRF
+      const [announcementsData, eventsData, mediaData] = await Promise.all([
+        api.get('/announcements/'),
+        api.get('/events/'),
+        api.get('/media/')
+      ]);
 
       setAnnouncements(announcementsData || []);
       setEvents(eventsData || []);

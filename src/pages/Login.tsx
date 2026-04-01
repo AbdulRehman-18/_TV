@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Navigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { Navigate, useNavigate } from 'react-router-dom';
+import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,8 @@ import { Monitor } from 'lucide-react';
 
 export function Login() {
   const { user, loading } = useAuth();
-  const [email, setEmail] = useState('');
+  const navigate = useNavigate();
+  const [username, setUsername] = useState('admin'); // Changed to username as DRF uses username
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -33,20 +34,14 @@ export function Login() {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      await api.auth.login({
+        username,
         password,
       });
-
-      if (error) {
-        throw error;
-      }
+      // Force page reload or Navigate manually to refresh useAuth state
+      window.location.reload(); 
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message || 'An error occurred during login');
-      } else {
-        setError('An error occurred during login');
-      }
+      setError(error instanceof Error ? error.message : 'Invalid credentials');
     } finally {
       setIsLoading(false);
     }
@@ -73,13 +68,13 @@ export function Login() {
             )}
             
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="email"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@example.com"
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="admin"
                 required
               />
             </div>

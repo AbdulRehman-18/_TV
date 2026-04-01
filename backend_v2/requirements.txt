@@ -1,0 +1,6 @@
+django>=5.0
+djangorestframework>=3.15
+django-cors-headers>=4.3
+Pillow>=11.1
+django-filter>=25.1
+psycopg2-binary>=2.9 # for production use with postgres if needed
