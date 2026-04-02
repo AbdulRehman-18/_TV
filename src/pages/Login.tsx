@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import React, { useState } from 'react';
+import { Navigate, Link } from 'react-router-dom';
+import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,25 +10,14 @@ import loginImage from './assets/images/login.jpg';
 
 export function Login() {
   const { user, loading } = useAuth();
-  const [searchParams] = useSearchParams();
-  const [isLoginMode, setIsLoginMode] = useState(true);
-
-  // Check if signup query parameter exists
-  useEffect(() => {
-    const signupParam = searchParams.get('signup');
-    if (signupParam === 'true') {
-      setIsLoginMode(false);
-    }
-  }, [searchParams]);
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [organization, setOrganization] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
-  const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState('');
+  const [isLoginMode, setIsLoginMode] = useState(true);
+  const [showEmailConfirmation] = useState(false);
+  const [pendingEmail] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
@@ -50,90 +39,18 @@ export function Login() {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
+      await api.auth.login({
+        username,
         password,
       });
-
-      if (error) {
-        throw error;
-      }
+      // Force page reload or Navigate manually to refresh useAuth state
+      window.location.reload();
     } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message || 'An error occurred during login');
-      } else {
-        setError('An error occurred during login');
-      }
+      setError(error instanceof Error ? error.message : 'Invalid credentials');
     } finally {
       setIsLoading(false);
     }
   };
-
-  const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
-
-    // Validation
-    if (password !== confirmPassword) {
-      setError('Passwords do not match');
-      setIsLoading(false);
-      return;
-    }
-
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      // Create auth user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      });
-
-      if (authError) throw authError;
-
-      if (!authData.user) {
-        throw new Error('Failed to create user');
-      }
-
-      // Create client profile
-      const { error: profileError } = await supabase.from('clients').insert({
-        id: authData.user.id,
-        name,
-        email,
-        organization,
-        is_approved: false,
-      });
-
-      if (profileError) throw profileError;
-
-      // Show email confirmation screen
-      setPendingEmail(email);
-      setShowEmailConfirmation(true);
-      setError('');
-
-      // Reset form
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setName('');
-      setOrganization('');
-    } catch (error: unknown) {
-      if (error instanceof Error) {
-        setError(error.message || 'An error occurred during sign up');
-      } else {
-        setError('An error occurred during sign up');
-      }
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-
 
   return (
     <div className="h-screen w-full flex bg-black text-white selection:bg-zinc-800 selection:text-white overflow-hidden">
@@ -196,61 +113,26 @@ export function Login() {
                   Please verify your email to complete registration.
                 </p>
               </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                className="w-full h-12 bg-transparent border-zinc-800 hover:bg-zinc-900 text-white"
-                onClick={() => {
-                  setShowEmailConfirmation(false);
-                  setPendingEmail('');
-                  setError('');
-                }}
-              >
-                Back to Sign In
-              </Button>
             </div>
           ) : (
-            <form onSubmit={isLoginMode ? handleLogin : handleSignUp} className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <form onSubmit={handleLogin} className="space-y-6">
               {error && (
-                <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-lg text-sm flex items-center gap-2">
-                  <div className="w-1.5 h-1.5 rounded-full bg-red-500" />
+                <div className="bg-red-500/10 border border-red-500/20 text-red-400 text-sm px-4 py-3 rounded-lg">
                   {error}
                 </div>
               )}
-
-              <div className="space-y-3">
-                {!isLoginMode && (
-                  <>
-                    <div className="grid grid-cols-1 gap-3">
-                      <div className="space-y-1.5">
-                        <Label htmlFor="name" className="text-zinc-400">Full Name</Label>
-                        <Input
-                          id="name"
-                          type="text"
-                          value={name}
-                          onChange={(e) => setName(e.target.value)}
-                          placeholder="Enter your name"
-                          required
-                          className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-10"
-                        />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                <div className="space-y-1.5">
-                  <Label htmlFor="email" className="text-zinc-400">Email Address</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    required
-                    className="bg-zinc-900/50 border-zinc-800 focus:border-zinc-600 focus:ring-zinc-600/20 h-10"
-                  />
-                </div>
+              <div className="space-y-4">
+              <div className="space-y-2">
+              <Label htmlFor="username">Username</Label>
+              <Input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="admin"
+                required
+              />
+            </div>
 
                 <div className="space-y-1.5">
                   <div className="flex items-center justify-between">
@@ -362,8 +244,8 @@ export function Login() {
               </p>
             </form>
           )}
-        </div>
       </div>
     </div>
+    </div >
   );
 }

@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Event, Announcement, Media } from '@/types';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, MapPin, MoreHorizontal, Image, Video, X, ExternalLink } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, MapPin, MoreHorizontal, Image, Video, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-
 interface CalendarEvent {
   id: string;
   title: string;
@@ -364,7 +362,7 @@ export function CalendarView() {
                 .filter(event => event.date >= new Date())
                 .sort((a, b) => a.date.getTime() - b.date.getTime())
                 .slice(0, 10)
-                .map((event, idx) => (
+.map((event) => (
                   <button
                     key={event.id}
                     onClick={() => setSelectedEvent(event)}

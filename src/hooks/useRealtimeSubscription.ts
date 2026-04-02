@@ -6,8 +6,8 @@ export type ConnectionStatus = 'connected' | 'disconnected' | 'reconnecting';
 
 export interface RealtimePayload {
     eventType: 'INSERT' | 'UPDATE' | 'DELETE';
-    new: Record<string, any>;
-    old: Record<string, any>;
+    new: Record<string, unknown>;
+    old: Record<string, unknown>;
     errors: string[] | null;
 }
 
@@ -97,6 +97,7 @@ export function useRealtimeSubscription(
                 reconnect();
             }
         }, heartbeatInterval);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [enableHeartbeat, heartbeatInterval, table]);
 
     // Stop heartbeat
@@ -124,6 +125,7 @@ export function useRealtimeSubscription(
         const channel = supabase.channel(channelName);
 
         // Set up postgres changes listener
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (channel as any).on(
             'postgres_changes',
             {
@@ -175,6 +177,7 @@ export function useRealtimeSubscription(
         });
 
         channelRef.current = channel;
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [table, schema, event, onInsert, onUpdate, onDelete, onAny, updateStatus, startHeartbeat, stopHeartbeat]);
 
     // Schedule reconnection with exponential backoff

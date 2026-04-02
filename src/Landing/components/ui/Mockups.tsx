@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, Play, Clock, Monitor, Bell, Settings, Upload, FileVideo, FileImage, Mic } from 'lucide-react';
+import { Image, Monitor, Bell, Upload, FileVideo, Mic } from 'lucide-react';
 
 export const MainDashboardMockup = () => (
   <img 

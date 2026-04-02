@@ -1,11 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Volume2, VolumeX } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
-import { useRealtimeSubscription, type ConnectionStatus } from '@/hooks/useRealtimeSubscription';
+import type { ConnectionStatus } from '@/hooks/useRealtimeSubscription';
 import { ConnectionIndicator } from '@/components/display/ConnectionIndicator';
 import { useScheduler } from '@/hooks/useScheduler';
 
@@ -25,7 +25,7 @@ export function Display() {
   });
 
   // Connection status for realtime subscriptions
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [connectionStatus] = useState<ConnectionStatus>('disconnected');
 
   const toggleAudio = () => {
     const newState = !audioEnabled;
@@ -47,20 +47,10 @@ export function Display() {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [audioEnabled]);
 
-  // Volume control state (synced with LiveDisplay via localStorage)
-  const [volume, setVolume] = useState(() => {
-    const saved = localStorage.getItem('display-volume');
-    return saved ? parseInt(saved) / 100 : 0.5;
-  });
-  const [isMuted, setIsMuted] = useState(() => {
-    const saved = localStorage.getItem('display-muted');
-    return saved === 'true';
-  });
-  const videoRef = useRef<HTMLVideoElement>(null);
-
-  // simple throttle using ref to avoid over-fetching
+  // simple throttle
   const lastReloadRef = useRef(0);
   const reloadAllRef = useRef<null | ((reason?: string) => Promise<void>)>(null);
 
@@ -86,94 +76,12 @@ export function Display() {
     loadAnnouncements();
     loadEvents();
     loadMedia();
+
+    // Real-time via Supabase removed. 
+    // Using polling fallback logic already present in the component.
   }, []);
 
-  // Set up robust real-time subscriptions with auto-reconnection
-  // These hooks are used for their side effects (subscriptions), not their return values
-  useRealtimeSubscription({
-    table: 'announcements',
-    onAny: () => {
-      console.debug('[Display] Announcements updated via realtime');
-      loadAnnouncements();
-    },
-    onConnectionChange: (status) => {
-      setConnectionStatus(status);
-      console.debug('[Display] Announcements connection:', status);
-    },
-  });
-
-  useRealtimeSubscription({
-    table: 'events',
-    onAny: () => {
-      console.debug('[Display] Events updated via realtime');
-      loadEvents();
-    },
-  });
-
-  useRealtimeSubscription({
-    table: 'media',
-    onAny: () => {
-      console.debug('[Display] Media updated via realtime');
-      loadMedia();
-    },
-  });
-
-  // Sync volume with video element and listen for changes from LiveDisplay
-  useEffect(() => {
-    if (videoRef.current) {
-      videoRef.current.volume = volume;
-      videoRef.current.muted = isMuted;
-    }
-  }, [volume, isMuted]);
-
-  // Listen for volume changes from LiveDisplay page via localStorage
-  useEffect(() => {
-    const handleStorageChange = (e: StorageEvent) => {
-      if (e.key === 'display-volume' && e.newValue) {
-        setVolume(parseInt(e.newValue) / 100);
-      } else if (e.key === 'display-muted' && e.newValue) {
-        setIsMuted(e.newValue === 'true');
-      }
-    };
-
-    window.addEventListener('storage', handleStorageChange);
-    return () => window.removeEventListener('storage', handleStorageChange);
-  }, []);
-
-  // Listen for remote reload requests from the Admin via Supabase Realtime Broadcast
-  useEffect(() => {
-    const controlChannel = supabase
-      .channel('display-control')
-      .on('broadcast', { event: 'reload' }, (payload) => {
-        type ControlPayload = { hard?: boolean; reason?: string };
-        const raw = (payload && typeof payload === 'object' && 'payload' in payload)
-          ? (payload as { payload?: unknown }).payload
-          : undefined;
-        const msg: ControlPayload | undefined = (raw && typeof raw === 'object')
-          ? (raw as ControlPayload)
-          : undefined;
-        const hard = msg?.hard;
-        const reason = msg?.reason;
-        if (hard) {
-          // Hard reload if explicitly requested
-          window.location.reload();
-        } else {
-          // Soft reload: refetch data without page refresh
-          reloadAllRef.current?.(reason || 'remote-broadcast');
-        }
-      })
-      .subscribe((status) => {
-        console.debug('[Display] control channel status:', status);
-      });
-
-    return () => {
-      try {
-        controlChannel.unsubscribe();
-      } catch {
-        // ignore
-      }
-    };
-  }, []);
+  // Listen for remote reload requests - removed as it depends on Supabase Realtime Broadcast
 
   // BroadcastChannel fallback: listen for changes from admin UI in other tabs
   useEffect(() => {
@@ -248,14 +156,7 @@ export function Display() {
 
   const loadAnnouncements = async () => {
     try {
-      const { data, error } = await supabase
-        .from('announcements')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
+      const data = await api.get('/announcements/');
       setAnnouncements(data || []);
     } catch (error) {
       console.error('Error loading announcements:', error);
@@ -266,14 +167,7 @@ export function Display() {
 
   const loadEvents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('is_active', true)
-        .order('start_date', { ascending: true });
-
-      if (error) throw error;
-
+      const data = await api.get('/events/');
       setEvents(data || []);
     } catch (error) {
       console.error('Error loading events:', error);
@@ -282,14 +176,7 @@ export function Display() {
 
   const loadMedia = async () => {
     try {
-      const { data, error } = await supabase
-        .from('media')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
+      const data = await api.get('/media/');
       setMedia(data || []);
     } catch (error) {
       console.error('Error loading media:', error);
@@ -697,12 +584,12 @@ function VideoSlide({ src, onEnded, description }: VideoSlideProps) {
       if (video) {
         try {
           video.pause();
-        } catch (e) {
+        } catch {
           // ignore
         }
         try {
           video.currentTime = 0;
-        } catch (e) {
+        } catch {
           // ignore
         }
       }

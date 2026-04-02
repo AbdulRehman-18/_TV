@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { supabase, ANNOUNCEMENTS_BUCKET } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
-import { Announcement, Priority, RecurrenceType } from '@/types';
+import { Announcement } from '@/types';
 import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface AnnouncementFormProps {
@@ -18,63 +18,18 @@ interface AnnouncementFormProps {
 export function AnnouncementForm({ announcement, onSubmit, onCancel }: AnnouncementFormProps) {
   const [title, setTitle] = useState(announcement?.title || '');
   const [body, setBody] = useState(announcement?.body || '');
-  const [imageFile, setImageFile] = useState<File | null>(null);
   const [imageUrl, setImageUrl] = useState(announcement?.image_url || '');
   const [loading, setLoading] = useState(false);
-
-  // Scheduling state
-  const [scheduleStartDate, setScheduleStartDate] = useState(announcement?.schedule_start_date || '');
-  const [scheduleEndDate, setScheduleEndDate] = useState(announcement?.schedule_end_date || '');
-  const [scheduleTimeStart, setScheduleTimeStart] = useState(announcement?.schedule_time_start || '');
-  const [scheduleTimeEnd, setScheduleTimeEnd] = useState(announcement?.schedule_time_end || '');
-  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(announcement?.recurrence_type || 'none');
-  const [recurrenceDays, setRecurrenceDays] = useState<number[]>(announcement?.recurrence_days || []);
-  const [priority, setPriority] = useState<Priority>(announcement?.priority || 'normal');
-
-  const handleImageUpload = async (file: File): Promise<string | null> => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(ANNOUNCEMENTS_BUCKET)
-        .upload(fileName, file);
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        return null;
-      }
-
-      const { data } = supabase.storage
-        .from(ANNOUNCEMENTS_BUCKET)
-        .getPublicUrl(fileName);
-
-      return data.publicUrl;
-    } catch (error) {
-      console.error('Error uploading image:', error);
-      return null;
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      let finalImageUrl = imageUrl;
-
-      // Upload new image if provided
-      if (imageFile) {
-        const uploadedUrl = await handleImageUpload(imageFile);
-        if (uploadedUrl) {
-          finalImageUrl = uploadedUrl;
-        }
-      }
-
-      const announcementData = {
+      let result;
+      const data = {
         title,
         body,
-        image_url: finalImageUrl || null,
         is_active: true,
         // Scheduling fields
         schedule_start_date: scheduleStartDate || null,
@@ -86,40 +41,27 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
         priority,
       };
 
-      let result;
-
       if (announcement) {
-        // Update existing announcement
-        result = await supabase
-          .from('announcements')
-          .update(announcementData)
-          .eq('id', announcement.id)
-          .select()
-          .single();
+        // DRF update
+        result = await api.patch(`/announcements/${announcement.id}/`, data);
       } else {
-        // Create new announcement
-        result = await supabase
-          .from('announcements')
-          .insert(announcementData)
-          .select()
-          .single();
+        // DRF create
+        result = await api.post('/announcements/', data);
       }
 
-      if (result.error) {
-        throw result.error;
-      }
-
-      onSubmit(result.data);
+      onSubmit(result);
 
       // Notify other tabs/windows (same origin) that announcements changed.
       try {
         const bc = new BroadcastChannel('tv-updates');
-        const msg = { channel: 'announcements', action: announcement ? 'update' : 'create', payload: result.data };
-        console.debug('[AnnouncementForm] broadcasting', msg);
-        bc.postMessage(msg);
+        bc.postMessage({
+          channel: 'announcements',
+          action: announcement ? 'update' : 'create',
+          payload: result
+        });
         bc.close();
       } catch {
-        // BroadcastChannel may not be available in some environments; ignore silently
+        // ignore silently
       }
     } catch (error) {
       console.error('Error saving announcement:', error);
@@ -132,7 +74,6 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setImageFile(file);
       // Create preview URL
       const previewUrl = URL.createObjectURL(file);
       setImageUrl(previewUrl);
@@ -140,7 +81,6 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
   };
 
   const removeImage = () => {
-    setImageFile(null);
     setImageUrl('');
   };
 

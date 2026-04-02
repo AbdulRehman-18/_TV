@@ -1,8 +1,7 @@
-import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
-import { 
+import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -23,37 +22,26 @@ interface AnnouncementCardProps {
   onToggleActive: (id: string, isActive: boolean) => void;
 }
 
-export function AnnouncementCard({ 
-  announcement, 
-  onEdit, 
-  onDelete, 
-  onToggleActive 
+export function AnnouncementCard({
+  announcement,
+  onEdit,
+  onDelete,
+  onToggleActive
 }: AnnouncementCardProps) {
   const [isActive, setIsActive] = useState(announcement.is_active);
 
   const handleToggleActive = async (checked: boolean) => {
     // Optimistic update
     setIsActive(checked);
-    
-    try {
-      const { error } = await supabase
-        .from('announcements')
-        .update({ is_active: checked })
-        .eq('id', announcement.id);
 
-      if (error) {
-        // Revert on error
-        setIsActive(!checked);
-        throw error;
-      }
-      
+    try {
+      await api.patch(`/announcements/${announcement.id}/`, { is_active: checked });
+
       onToggleActive(announcement.id, checked);
 
       try {
         const bc = new BroadcastChannel('tv-updates');
-        const msg = { channel: 'announcements', action: 'update', payload: { id: announcement.id, is_active: checked } };
-        console.debug('[AnnouncementCard] broadcasting', msg);
-        bc.postMessage(msg);
+        bc.postMessage({ channel: 'announcements', action: 'update', payload: { id: announcement.id, is_active: checked } });
         bc.close();
       } catch {
         // ignore
@@ -67,20 +55,13 @@ export function AnnouncementCard({
 
   const handleDelete = async () => {
     try {
-      const { error } = await supabase
-        .from('announcements')
-        .delete()
-        .eq('id', announcement.id);
+      await api.delete(`/announcements/${announcement.id}/`);
 
-      if (error) throw error;
-      
       onDelete(announcement.id);
 
       try {
         const bc = new BroadcastChannel('tv-updates');
-        const msg = { channel: 'announcements', action: 'delete', payload: { id: announcement.id } };
-        console.debug('[AnnouncementCard] broadcasting', msg);
-        bc.postMessage(msg);
+        bc.postMessage({ channel: 'announcements', action: 'delete', payload: { id: announcement.id } });
         bc.close();
       } catch {
         // ignore
@@ -123,7 +104,7 @@ export function AnnouncementCard({
             className="data-[state=checked]:bg-gray-900"
           />
         </div>
-        
+
         <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">
           {announcement.body}
         </p>
@@ -137,20 +118,20 @@ export function AnnouncementCard({
       </div>
 
       <div className="mt-4 flex items-center justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
-        <Button 
-          variant="ghost" 
-          size="icon" 
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={() => onEdit(announcement)}
           className="h-8 w-8 text-gray-400 hover:text-gray-900 hover:bg-gray-100 rounded-full"
           title="Edit"
         >
           <Edit className="h-4 w-4" />
         </Button>
-        
+
         <AlertDialog>
           <AlertDialogTrigger asChild>
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full"
               title="Delete"
