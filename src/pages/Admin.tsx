@@ -9,6 +9,7 @@ import { Media } from '@/pages/admin/Media';
 import { Clients } from '@/pages/admin/Clients';
 import { CalendarView } from '@/pages/admin/Calendar';
 import { Settings } from '@/pages/admin/Settings';
+import { Gallery } from '@/pages/admin/Gallery';
 import { LiveDisplay } from '@/pages/admin/LiveDisplay';
 import { PanelLeftClose, PanelLeftOpen, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -149,7 +150,7 @@ export function Admin() {
             <Route path="/events" element={<Events />} />
             <Route path="/media" element={<Media />} />
             <Route path="/clients" element={<Clients />} />
-            <Route path="/gallery" element={<div className="text-center py-12"><h2 className="text-xl text-gray-500">Gallery page coming soon</h2></div>} />
+            <Route path="/gallery" element={<Gallery />} />
             <Route path="/calendar" element={<CalendarView />} />
             <Route path="/settings" element={<Settings />} />
           </Routes>

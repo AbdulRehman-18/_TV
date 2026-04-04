@@ -98,7 +98,7 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
         schedule_time_start: scheduleTimeStart || null,
         schedule_time_end: scheduleTimeEnd || null,
         recurrence_type: recurrenceType,
-        recurrence_days: recurrenceDays.length > 0 ? recurrenceDays : null,
+        recurrence_days: recurrenceDays,
         priority,
         is_fallback: isFallback,
       };

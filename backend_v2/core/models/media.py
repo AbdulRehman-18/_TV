@@ -1,7 +1,9 @@
 from django.db import models
 import uuid
+from .scheduling import ScheduleMixin
 
-class Media(models.Model):
+
+class Media(ScheduleMixin, models.Model):
     MEDIA_TYPES = (
         ("image", "Image"),
         ("video", "Video"),
@@ -15,6 +17,13 @@ class Media(models.Model):
     file_size = models.BigIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
+    is_fallback = models.BooleanField(
+        default=False,
+        help_text='Fallback content displays when no other content is scheduled.',
+    )
+
+    class Meta:
+        ordering = ['-created_at']
 
     def __str__(self):
         return self.title

@@ -1,39 +1,35 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { AuthState, User } from '@/types';
-
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || 'admin@example.com';
+import { api } from '@/lib/api';
+import type { AuthState, User } from '@/types';
 
 export function useAuth(): AuthState {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      const supaUser = session?.user;
-      if (supaUser) {
-        const role = supaUser.email === ADMIN_EMAIL ? 'admin' : 'client';
-        setUser({ id: supaUser.id, email: supaUser.email ?? '', role });
-      } else {
+    // Check if we have a token and fetch the user profile
+    const checkAuth = async () => {
+      if (!api.auth.isLoggedIn()) {
         setUser(null);
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    });
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const supaUser = session?.user;
-      if (supaUser) {
-        const role = supaUser.email === ADMIN_EMAIL ? 'admin' : 'client';
-        setUser({ id: supaUser.id, email: supaUser.email ?? '', role });
-      } else {
+      try {
+        const userData = await api.auth.getMe();
+        if (userData) {
+          setUser(userData as User);
+        } else {
+          setUser(null);
+        }
+      } catch {
         setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    checkAuth();
   }, []);
 
   return { user, loading };

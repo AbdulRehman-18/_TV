@@ -1,30 +1,33 @@
-// Scheduling types
+// ─── Scheduling Types ────────────────────────────────────────────────────────
 export type Priority = 'normal' | 'high' | 'emergency';
 export type RecurrenceType = 'none' | 'daily' | 'weekly';
+export type ContentStatus = 'pending' | 'approved' | 'rejected';
+export type UserRole = 'admin' | 'client';
 
 // Shared scheduling fields for all content types
 export interface ScheduleFields {
   schedule_start_date?: string;
   schedule_end_date?: string;
-  schedule_time_start?: string;  // HH:MM format (e.g., '09:00')
-  schedule_time_end?: string;    // HH:MM format (e.g., '17:00')
+  schedule_time_start?: string;  // HH:MM format
+  schedule_time_end?: string;    // HH:MM format
   recurrence_type?: RecurrenceType;
-  recurrence_days?: number[];    // 0=Sunday, 1=Monday, ..., 6=Saturday
+  recurrence_days?: number[];    // 0=Sunday … 6=Saturday
   priority?: Priority;
+  client_id?: string;
+  status?: ContentStatus;
+  admin_notes?: string;
 }
 
+// ─── Content Models ──────────────────────────────────────────────────────────
 export interface Announcement extends ScheduleFields {
   id: string;
   title: string;
   body: string;
+  image?: string;
   image_url?: string;
   created_at: string;
   is_active: boolean;
-  client_id?: string;
-  status?: 'pending' | 'approved' | 'rejected';
-  admin_notes?: string;
 }
-
 
 export interface Event extends ScheduleFields {
   id: string;
@@ -33,34 +36,45 @@ export interface Event extends ScheduleFields {
   location?: string;
   start_date: string;
   end_date?: string;
+  image?: string;
   image_url?: string;
   created_at: string;
   is_active: boolean;
-  client_id?: string;
-  status?: 'pending' | 'approved' | 'rejected';
-  admin_notes?: string;
 }
-
 
 export interface Media extends ScheduleFields {
   id: string;
   title?: string;
   description?: string;
+  file?: string;
   file_url: string;
   file_type: 'image' | 'video';
   file_name: string;
   file_size?: number;
   created_at: string;
   is_active: boolean;
-  client_id?: string;
-  status?: 'pending' | 'approved' | 'rejected';
-  admin_notes?: string;
-  schedule_start_date?: string;
-  schedule_end_date?: string;
-  is_fallback?: boolean;  // Mark as fallback content when no scheduled content is available
+  is_fallback?: boolean;
 }
 
+// ─── Users ───────────────────────────────────────────────────────────────────
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  role: UserRole;
+  organization?: string;
+  phone?: string;
+  is_approved: boolean;
+  is_active: boolean;
+  date_joined: string;
+}
 
+export interface AuthState {
+  user: User | null;
+  loading: boolean;
+}
+
+// ─── Client ──────────────────────────────────────────────────────────────────
 export interface Client {
   id: string;
   name: string;
@@ -71,13 +85,11 @@ export interface Client {
   updated_at: string;
 }
 
-export interface User {
-  id: string;
-  email: string;
-  role?: 'admin' | 'client';
-}
-
-export interface AuthState {
-  user: User | null;
-  loading: boolean;
+// ─── Schedule Response ───────────────────────────────────────────────────────
+export interface ActiveScheduleResponse {
+  announcements: Announcement[];
+  events: Event[];
+  media: Media[];
+  fallback_media: Media[];
+  timestamp: string;
 }

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
-import { Announcement } from '@/types';
+import { Announcement, RecurrenceType, Priority } from '@/types';
 import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface AnnouncementFormProps {
@@ -20,6 +20,16 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
   const [body, setBody] = useState(announcement?.body || '');
   const [imageUrl, setImageUrl] = useState(announcement?.image_url || '');
   const [loading, setLoading] = useState(false);
+
+  // Scheduling state
+  const [scheduleStartDate, setScheduleStartDate] = useState(announcement?.schedule_start_date || '');
+  const [scheduleEndDate, setScheduleEndDate] = useState(announcement?.schedule_end_date || '');
+  const [scheduleTimeStart, setScheduleTimeStart] = useState(announcement?.schedule_time_start || '');
+  const [scheduleTimeEnd, setScheduleTimeEnd] = useState(announcement?.schedule_time_end || '');
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(announcement?.recurrence_type || 'none');
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>(announcement?.recurrence_days || []);
+  const [priority, setPriority] = useState<Priority>(announcement?.priority || 'normal');
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -37,7 +47,7 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
         schedule_time_start: scheduleTimeStart || null,
         schedule_time_end: scheduleTimeEnd || null,
         recurrence_type: recurrenceType,
-        recurrence_days: recurrenceDays.length > 0 ? recurrenceDays : null,
+        recurrence_days: recurrenceDays,
         priority,
       };
 
