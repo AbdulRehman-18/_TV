@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,12 +22,7 @@ export function Announcements() {
 
   const loadAnnouncements = async () => {
     try {
-      const { data, error } = await supabase
-        .from('announcements')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await api.get('/announcements/');
 
       setAnnouncements(data || []);
     } catch (error) {
@@ -80,16 +75,11 @@ export function Announcements() {
 
   const handleApprove = async (announcement: Announcement) => {
     try {
-      const { error } = await supabase
-        .from('announcements')
-        .update({
-          status: 'approved',
-          admin_notes: reviewNotes,
-          is_active: true,
-        })
-        .eq('id', announcement.id);
-
-      if (error) throw error;
+      await api.patch(`/announcements/${announcement.id}/`, {
+        status: 'approved',
+        admin_notes: reviewNotes,
+        is_active: true,
+      });
 
       setAnnouncements(prev =>
         prev.map(a =>
@@ -108,15 +98,10 @@ export function Announcements() {
 
   const handleReject = async (announcement: Announcement) => {
     try {
-      const { error } = await supabase
-        .from('announcements')
-        .update({
-          status: 'rejected',
-          admin_notes: reviewNotes,
-        })
-        .eq('id', announcement.id);
-
-      if (error) throw error;
+      await api.patch(`/announcements/${announcement.id}/`, {
+        status: 'rejected',
+        admin_notes: reviewNotes,
+      });
 
       setAnnouncements(prev =>
         prev.map(a =>

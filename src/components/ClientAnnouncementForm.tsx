@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase, ANNOUNCEMENTS_BUCKET } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -78,46 +78,24 @@ export function ClientAnnouncementForm({ clientId, onAnnouncementSubmit }: Clien
                 return;
             }
 
-            let imageUrl: string | null = null;
+            const formData = new FormData();
+            formData.append('client_id', clientId);
+            formData.append('title', title);
+            formData.append('body', body);
+            
+            formData.append('status', 'pending');
+            formData.append('is_active', 'false');
+            
+            if (scheduleStartDate) formData.append('schedule_start_date', scheduleStartDate);
+            if (scheduleEndDate) formData.append('schedule_end_date', scheduleEndDate);
+            if (scheduleTimeStart) formData.append('schedule_time_start', scheduleTimeStart);
+            if (scheduleTimeEnd) formData.append('schedule_time_end', scheduleTimeEnd);
 
-            // Upload image if provided
             if (imageFile) {
-                const fileExt = imageFile.name.split('.').pop();
-                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-                const filePath = `client-uploads/${clientId}/${fileName}`;
-
-                const { error: uploadError } = await supabase.storage
-                    .from(ANNOUNCEMENTS_BUCKET)
-                    .upload(filePath, imageFile);
-
-                if (uploadError) throw uploadError;
-
-                const { data: urlData } = supabase.storage
-                    .from(ANNOUNCEMENTS_BUCKET)
-                    .getPublicUrl(filePath);
-
-                imageUrl = urlData.publicUrl;
+                formData.append('image', imageFile);
             }
 
-            // Create announcement record with 'pending' status
-            const { data, error: insertError } = await supabase
-                .from('announcements')
-                .insert({
-                    title,
-                    body,
-                    image_url: imageUrl,
-                    client_id: clientId,
-                    status: 'pending',
-                    is_active: false,
-                    schedule_start_date: scheduleStartDate || null,
-                    schedule_end_date: scheduleEndDate || null,
-                    schedule_time_start: scheduleTimeStart || null,
-                    schedule_time_end: scheduleTimeEnd || null,
-                })
-                .select()
-                .single();
-
-            if (insertError) throw insertError;
+            const data = await api.upload('/announcements/', formData);
 
             onAnnouncementSubmit(data as Announcement);
 

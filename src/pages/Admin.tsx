@@ -1,5 +1,5 @@
 import { Routes, Route, useLocation } from 'react-router-dom';
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Sidebar } from '@/components/admin/Sidebar';
 import { BottomNav } from '@/components/BottomNav';
 import { Dashboard } from '@/pages/admin/Dashboard';
@@ -13,65 +13,26 @@ import { Gallery } from '@/pages/admin/Gallery';
 import { LiveDisplay } from '@/pages/admin/LiveDisplay';
 import { PanelLeftClose, PanelLeftOpen, RotateCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
 
 export function Admin() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [reloading, setReloading] = useState(false);
-  const [controlReady, setControlReady] = useState(false);
-  const controlChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
   const location = useLocation();
   const isLiveDisplayRoute = location.pathname === '/admin/live-display';
 
   const toggleSidebar = () => {
     setSidebarCollapsed(!sidebarCollapsed);
   };
-
-  // Set up (or ensure) a realtime control channel
-  useEffect(() => {
-    const ch = supabase.channel('display-control');
-    controlChannelRef.current = ch;
-    ch.subscribe((status: string) => {
-      if (status === 'SUBSCRIBED') {
-        setControlReady(true);
-        console.debug('[Admin] control channel subscribed');
-      }
-    });
-    return () => {
-      try { ch.unsubscribe(); } catch { /* ignore */ }
-      controlChannelRef.current = null;
-      setControlReady(false);
-    };
-  }, []);
-
   const broadcastReload = async (hard = false) => {
     setReloading(true);
-    const send = async () => {
-      try {
-        await controlChannelRef.current?.send({
-          type: 'broadcast',
-          event: 'reload',
-          payload: { hard, reason: 'admin-button' },
-        });
-      } catch (err) {
-        console.error('Failed to broadcast reload:', err);
-      } finally {
-        setReloading(false);
-      }
-    };
-
-    if (controlReady) {
-      await send();
-    } else {
-      // Wait for subscription then send
-      const ch = controlChannelRef.current ?? supabase.channel('display-control');
-      controlChannelRef.current = ch;
-      ch.subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          setControlReady(true);
-          await send();
-        }
-      });
+    try {
+      const bc = new BroadcastChannel('tv-updates');
+      bc.postMessage({ channel: 'reload', payload: { hard, reason: 'admin-button' } });
+      bc.close();
+    } catch (err) {
+      console.error('Failed to broadcast reload:', err);
+    } finally {
+      setTimeout(() => setReloading(false), 500); // UI feedback
     }
   };
 

@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Download, Upload, RotateCcw, Trash2, CheckCircle2, X, LogOut } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 
 export function Settings() {
   const navigate = useNavigate();
@@ -31,7 +31,7 @@ export function Settings() {
   const handleLogout = async () => {
     if (window.confirm('Are you sure you want to logout?')) {
       try {
-        await supabase.auth.signOut();
+        api.auth.logout();
       } catch (error) {
         console.error('Logout error:', error);
       }

@@ -70,16 +70,11 @@ export function Events() {
 
   const handleApprove = async (event: Event) => {
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({
-          status: 'approved',
-          admin_notes: reviewNotes,
-          is_active: true,
-        })
-        .eq('id', event.id);
-
-      if (error) throw error;
+      await api.patch(`/events/${event.id}/`, {
+        status: 'approved',
+        admin_notes: reviewNotes,
+        is_active: true,
+      });
 
       setEvents(prev =>
         prev.map(e =>
@@ -98,15 +93,10 @@ export function Events() {
 
   const handleReject = async (event: Event) => {
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({
-          status: 'rejected',
-          admin_notes: reviewNotes,
-        })
-        .eq('id', event.id);
-
-      if (error) throw error;
+      await api.patch(`/events/${event.id}/`, {
+        status: 'rejected',
+        admin_notes: reviewNotes,
+      });
 
       setEvents(prev =>
         prev.map(e =>

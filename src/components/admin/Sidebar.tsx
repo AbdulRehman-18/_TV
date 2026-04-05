@@ -10,7 +10,7 @@ import {
   LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 
 const navigationItems = [
   { name: 'Home', href: '/admin', icon: Home, exact: true },
@@ -32,8 +32,8 @@ export function Sidebar({ collapsed }: SidebarProps) {
 
   const handleLogout = async () => {
     try {
-      // Attempt to sign out from Supabase
-      await supabase.auth.signOut();
+      // Attempt to sign out
+      await api.auth.logout();
     } catch (error) {
       // Log error but continue with navigation
       console.error('Logout error:', error);

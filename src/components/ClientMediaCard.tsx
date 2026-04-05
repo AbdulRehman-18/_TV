@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase, MEDIA_BUCKET } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog';
@@ -18,16 +18,7 @@ export function ClientMediaCard({ media, onDelete }: ClientMediaCardProps) {
   const handleDelete = async () => {
     setIsDeleting(true);
     try {
-      // Delete from storage
-      const filePath = media.file_url.split('/media/').pop();
-      if (filePath) {
-        await supabase.storage.from(MEDIA_BUCKET).remove([filePath]);
-      }
-
-      // Delete from database
-      const { error } = await supabase.from('media').delete().eq('id', media.id);
-
-      if (error) throw error;
+      await api.delete(`/media/${media.id}/`);
 
       onDelete(media.id);
     } catch (error) {

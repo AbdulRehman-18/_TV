@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase, EVENTS_BUCKET } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -86,49 +86,25 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
                 return;
             }
 
-            let imageUrl: string | null = null;
+            const formData = new FormData();
+            formData.append('client_id', clientId);
+            formData.append('title', title);
+            formData.append('description', description);
+            if (location) formData.append('location', location);
+            formData.append('start_date', startDate);
+            if (endDate) formData.append('end_date', endDate);
+            
+            formData.append('status', 'pending');
+            formData.append('is_active', 'false');
+            
+            if (scheduleTimeStart) formData.append('schedule_time_start', scheduleTimeStart);
+            if (scheduleTimeEnd) formData.append('schedule_time_end', scheduleTimeEnd);
 
-            // Upload image if provided
             if (imageFile) {
-                const fileExt = imageFile.name.split('.').pop();
-                const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-                const filePath = `client-uploads/${clientId}/${fileName}`;
-
-                const { error: uploadError } = await supabase.storage
-                    .from(EVENTS_BUCKET)
-                    .upload(filePath, imageFile);
-
-                if (uploadError) throw uploadError;
-
-                const { data: urlData } = supabase.storage
-                    .from(EVENTS_BUCKET)
-                    .getPublicUrl(filePath);
-
-                imageUrl = urlData.publicUrl;
+                formData.append('image', imageFile);
             }
 
-            // Create event record with 'pending' status
-            // Note: Events table uses start_date/end_date for event timing, not schedule_start_date/schedule_end_date
-            // Events table only has schedule_time_start/schedule_time_end for daily time slots
-            const { data, error: insertError } = await supabase
-                .from('events')
-                .insert({
-                    title,
-                    description,
-                    location: location || null,
-                    start_date: startDate,
-                    end_date: endDate || null,
-                    image_url: imageUrl,
-                    client_id: clientId,
-                    status: 'pending',
-                    is_active: false,
-                    schedule_time_start: scheduleTimeStart || null,
-                    schedule_time_end: scheduleTimeEnd || null,
-                })
-                .select()
-                .single();
-
-            if (insertError) throw insertError;
+            const data = await api.upload('/events/', formData);
 
             onEventSubmit(data as Event);
 

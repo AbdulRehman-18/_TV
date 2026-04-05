@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Clock, MapPin, Play, Power, RefreshCw, Volume2, VolumeX, ArrowLeft, Home, ChevronDown } from 'lucide-react';
@@ -107,88 +107,37 @@ export function LiveDisplay() {
     loadEvents();
     loadMedia();
 
-    // Set up real-time subscriptions for announcements
-    const announcementsSubscription = supabase
-      .channel('announcements')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'announcements',
-        },
-        () => {
-          loadAnnouncements();
-        }
-      )
-      .subscribe();
+    // Fallback: poll every 20 seconds
+    const interval = setInterval(() => {
+      reloadAllRef.current?.('poll');
+    }, 20000);
 
-    // Set up real-time subscriptions for events
-    const eventsSubscription = supabase
-      .channel('events')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'events',
-        },
-        () => {
-          loadEvents();
-        }
-      )
-      .subscribe();
-
-    // Set up real-time subscriptions for media
-    const mediaSubscription = supabase
-      .channel('media')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'media',
-        },
-        () => {
-          loadMedia();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      announcementsSubscription.unsubscribe();
-      eventsSubscription.unsubscribe();
-      mediaSubscription.unsubscribe();
-    };
+    return () => clearInterval(interval);
   }, []);
 
-  // Listen for remote reload requests from the Admin via Supabase Realtime Broadcast
+  // Listen for remote reload requests via BroadcastChannel
   useEffect(() => {
-    const controlChannel = supabase
-      .channel('display-control')
-      .on('broadcast', { event: 'reload' }, (payload) => {
-        type ControlPayload = { hard?: boolean; reason?: string };
-        const raw = (payload && typeof payload === 'object' && 'payload' in payload)
-          ? (payload as { payload?: unknown }).payload
-          : undefined;
-        const msg: ControlPayload | undefined = (raw && typeof raw === 'object')
-          ? (raw as ControlPayload)
-          : undefined;
-        const hard = msg?.hard;
-        const reason = msg?.reason;
+    let bc: BroadcastChannel | null = null;
+    try {
+      bc = new BroadcastChannel('tv-updates');
+      bc.onmessage = (ev) => {
+        const msg = ev.data;
+        if (!msg || msg.channel !== 'reload') return;
+        const hard = msg.payload?.hard;
+        const reason = msg.payload?.reason;
         if (hard) {
           window.location.reload();
         } else {
-          reloadAllRef.current?.(reason || 'remote-broadcast');
+          reloadAllRef.current?.(reason || 'local-broadcast');
         }
-      })
-      .subscribe((status) => {
-        console.debug('[LiveDisplay] control channel status:', status);
-      });
+      };
+    } catch {
+      // ignore
+    }
 
     return () => {
       try {
-        controlChannel.unsubscribe();
+        bc?.close();
       } catch {
         // ignore
       }
@@ -198,13 +147,7 @@ export function LiveDisplay() {
 
   const loadAnnouncements = async () => {
     try {
-      const { data, error } = await supabase
-        .from('announcements')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await api.get('/announcements/');
 
       setAnnouncements(data || []);
     } catch (error) {
@@ -216,13 +159,7 @@ export function LiveDisplay() {
 
   const loadEvents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .eq('is_active', true)
-        .order('start_date', { ascending: true });
-
-      if (error) throw error;
+      const data = await api.get('/events/');
 
       setEvents(data || []);
     } catch (error) {
@@ -232,13 +169,7 @@ export function LiveDisplay() {
 
   const loadMedia = async () => {
     try {
-      const { data, error } = await supabase
-        .from('media')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await api.get('/media/');
 
       setMedia(data || []);
     } catch (error) {
@@ -327,13 +258,9 @@ export function LiveDisplay() {
 
   const handleUpdateTV = async () => {
     try {
-      await supabase
-        .channel('display-control')
-        .send({
-          type: 'broadcast',
-          event: 'reload',
-          payload: { hard: false, reason: 'admin-update' }
-        });
+      const bc = new BroadcastChannel('tv-updates');
+      bc.postMessage({ channel: 'reload', payload: { hard: false, reason: 'admin-update' } });
+      bc.close();
     } catch (error) {
       console.error('Error updating TV:', error);
     }
@@ -341,13 +268,9 @@ export function LiveDisplay() {
 
   const handleRestartTV = async () => {
     try {
-      await supabase
-        .channel('display-control')
-        .send({
-          type: 'broadcast',
-          event: 'reload',
-          payload: { hard: true, reason: 'admin-restart' }
-        });
+      const bc = new BroadcastChannel('tv-updates');
+      bc.postMessage({ channel: 'reload', payload: { hard: true, reason: 'admin-restart' } });
+      bc.close();
     } catch (error) {
       console.error('Error restarting TV:', error);
     }
