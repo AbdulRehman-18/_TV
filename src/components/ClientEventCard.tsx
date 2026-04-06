@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar, Trash2, Clock, CheckCircle, XCircle, AlertCircle, MapPin } from 'lucide-react';
@@ -18,12 +18,7 @@ export function ClientEventCard({ event, onDelete }: ClientEventCardProps) {
 
         setIsDeleting(true);
         try {
-            const { error } = await supabase
-                .from('events')
-                .delete()
-                .eq('id', event.id);
-
-            if (error) throw error;
+            await api.delete(`/events/${event.id}/`);
             onDelete(event.id);
         } catch (err) {
             console.error('Error deleting event:', err);

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Upload, X } from 'lucide-react';
-import { Event } from '@/types';
+import { Event, RecurrenceType, Priority } from '@/types';
 import { ScheduleForm } from '@/components/ScheduleForm';
 
 interface EventFormProps {
@@ -32,6 +32,15 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
   const [imageUrl, setImageUrl] = useState(event?.image_url || '');
   const [loading, setLoading] = useState(false);
 
+  // Scheduling state
+  const [scheduleTimeStart, setScheduleTimeStart] = useState(event?.schedule_time_start || '');
+  const [scheduleTimeEnd, setScheduleTimeEnd] = useState(event?.schedule_time_end || '');
+  const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(event?.recurrence_type || 'none');
+  const [recurrenceDays, setRecurrenceDays] = useState<number[]>(event?.recurrence_days || []);
+  const [priority, setPriority] = useState<Priority>(event?.priority || 'normal');
+  const [duration, setDuration] = useState<number>(event?.duration || 12);
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -48,8 +57,9 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
         schedule_time_start: scheduleTimeStart || null,
         schedule_time_end: scheduleTimeEnd || null,
         recurrence_type: recurrenceType,
-        recurrence_days: recurrenceDays.length > 0 ? recurrenceDays : null,
+        recurrence_days: recurrenceDays,
         priority,
+        duration,
       };
 
       let result;
@@ -213,6 +223,8 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
             onRecurrenceDaysChange={setRecurrenceDays}
             priority={priority}
             onPriorityChange={setPriority}
+            duration={duration}
+            onDurationChange={setDuration}
             showFallbackOption={false}
           />
           <p className="text-xs text-gray-500 -mt-4">

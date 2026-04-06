@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase, MEDIA_BUCKET } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,6 +26,7 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
   const [scheduleEndDate, setScheduleEndDate] = useState('');
   const [scheduleTimeStart, setScheduleTimeStart] = useState('');
   const [scheduleTimeEnd, setScheduleTimeEnd] = useState('');
+  const [duration, setDuration] = useState(12);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -73,48 +74,30 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
         return;
       }
 
-      // Title is now optional, so no validation needed
+      const formData = new FormData();
+      formData.append('client_id', clientId);
+      if (title) formData.append('title', title);
+      else formData.append('title', file.name); // Default title if not provided
+      
+      if (description) formData.append('description', description);
+      
+      formData.append('is_active', 'false');
+      formData.append('status', 'pending');
+      
+      if (file) {
+        formData.append('file', file);
+        formData.append('file_type', file.type.startsWith('video/') ? 'video' : 'image');
+        formData.append('file_name', file.name);
+        formData.append('file_size', file.size.toString());
+      }
+      
+      if (scheduleStartDate) formData.append('schedule_start_date', scheduleStartDate);
+      if (scheduleEndDate) formData.append('schedule_end_date', scheduleEndDate);
+      if (scheduleTimeStart) formData.append('schedule_time_start', scheduleTimeStart);
+      if (scheduleTimeEnd) formData.append('schedule_time_end', scheduleTimeEnd);
+      formData.append('duration', duration.toString());
 
-      // Upload file to storage
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `client-uploads/${clientId}/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(MEDIA_BUCKET)
-        .upload(filePath, file);
-
-      if (uploadError) throw uploadError;
-
-      // Get the public URL
-      const { data: urlData } = supabase.storage
-        .from(MEDIA_BUCKET)
-        .getPublicUrl(filePath);
-
-      const fileUrl = urlData.publicUrl;
-
-      // Create media record with 'pending' status
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('media')
-        .insert({
-          title,
-          description: description || null,
-          file_url: fileUrl,
-          file_type: file.type.startsWith('image/') ? 'image' : 'video',
-          file_name: file.name,
-          file_size: file.size,
-          client_id: clientId,
-          status: 'pending',
-          is_active: false,
-          schedule_start_date: scheduleStartDate || null,
-          schedule_end_date: scheduleEndDate || null,
-          schedule_time_start: scheduleTimeStart || null,
-          schedule_time_end: scheduleTimeEnd || null,
-        })
-        .select()
-        .single();
-
-      if (mediaError) throw mediaError;
+      const mediaData = await api.upload('/media/', formData);
 
       onMediaUpload(mediaData as Media);
 
@@ -128,6 +111,7 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
       setScheduleEndDate('');
       setScheduleTimeStart('');
       setScheduleTimeEnd('');
+      setDuration(12);
     } catch (err) {
       console.error('Error uploading media:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload media');
@@ -181,6 +165,8 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
             scheduleTimeEnd={scheduleTimeEnd}
             onTimeStartChange={setScheduleTimeStart}
             onTimeEndChange={setScheduleTimeEnd}
+            duration={duration}
+            onDurationChange={setDuration}
           />
 
           <div className="space-y-2">

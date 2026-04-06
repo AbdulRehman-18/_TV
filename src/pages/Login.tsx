@@ -10,7 +10,7 @@ import loginImage from './assets/images/login.jpg';
 
 export function Login() {
   const { user, loading } = useAuth();
-  const [username, setUsername] = useState('admin');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);

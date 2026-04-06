@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -50,42 +50,19 @@ export function Clients() {
 
   const loadClients = async () => {
     try {
-      setLoading(true);
-      const adminEmail = import.meta.env.VITE_ADMIN_EMAIL;
 
-      // Fetch all clients
-      const { data: clientsData, error: clientsError } = await supabase
-        .from('clients')
-        .select('*')
-        .order('created_at', { ascending: false });
 
-      if (clientsError) throw clientsError;
-
-      const filteredClients = (clientsData || []).filter(c => c.email !== adminEmail);
+      const clientsData: any[] = await api.get('/admin/clients/');
+      const filteredClients = clientsData;
 
       // Fetch all media
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('media')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (mediaError) throw mediaError;
+      const mediaData: any[] = await api.get('/media/');
 
       // Fetch all announcements
-      const { data: announcementsData, error: announcementsError } = await supabase
-        .from('announcements')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (announcementsError) throw announcementsError;
+      const announcementsData: any[] = await api.get('/announcements/');
 
       // Fetch all events
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (eventsError) throw eventsError;
+      const eventsData: any[] = await api.get('/events/');
 
       // Filter to only client uploads
       const clientMedia = (mediaData || []).filter(m => m.client_id !== null);
@@ -126,16 +103,11 @@ export function Clients() {
     try {
       const table = content.content_type === 'media' ? 'media' : content.content_type === 'announcement' ? 'announcements' : 'events';
 
-      const { error } = await supabase
-        .from(table)
-        .update({
-          status: 'approved',
-          admin_notes: reviewNotes,
-          is_active: true,
-        })
-        .eq('id', content.id);
-
-      if (error) throw error;
+      await api.patch(`/${table}/${content.id}/`, {
+        status: 'approved',
+        admin_notes: reviewNotes,
+        is_active: true,
+      });
 
       setReviewNotes('');
       setSelectedContent(null);
@@ -150,15 +122,10 @@ export function Clients() {
     try {
       const table = content.content_type === 'media' ? 'media' : content.content_type === 'announcement' ? 'announcements' : 'events';
 
-      const { error } = await supabase
-        .from(table)
-        .update({
-          status: 'rejected',
-          admin_notes: reviewNotes,
-        })
-        .eq('id', content.id);
-
-      if (error) throw error;
+      await api.patch(`/${table}/${content.id}/`, {
+        status: 'rejected',
+        admin_notes: reviewNotes,
+      });
 
       setReviewNotes('');
       setSelectedContent(null);

@@ -1,12 +1,13 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { api } from '@/lib/api';
 import { Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
-import { Calendar, Clock, MapPin, Volume2, VolumeX } from 'lucide-react';
+import { Calendar, Clock, MapPin } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
-import type { ConnectionStatus } from '@/hooks/useRealtimeSubscription';
 import { ConnectionIndicator } from '@/components/display/ConnectionIndicator';
+
+type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected';
 import { useScheduler } from '@/hooks/useScheduler';
 
 
@@ -25,7 +26,7 @@ export function Display() {
   });
 
   // Connection status for realtime subscriptions
-  const [connectionStatus] = useState<ConnectionStatus>('disconnected');
+  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connected');
 
   const toggleAudio = () => {
     const newState = !audioEnabled;
@@ -94,7 +95,16 @@ export function Display() {
         if (!msg || !msg.channel) return;
 
         console.debug('[Display] Received bc message:', msg);
-        if (msg.channel === 'announcements') {
+        if (msg.channel === 'reload') {
+          const hard = msg.payload?.hard;
+          const reason = msg.payload?.reason;
+          console.debug(`[Display] Reload triggered: hard=${hard}, reason=${reason}`);
+          if (hard) {
+            window.location.reload();
+          } else {
+            reloadAllRef.current?.(reason || 'admin-remote-reload');
+          }
+        } else if (msg.channel === 'announcements') {
           console.debug('[Display] Reloading announcements via bc');
           loadAnnouncements();
         } else if (msg.channel === 'events') {
@@ -103,6 +113,12 @@ export function Display() {
         } else if (msg.channel === 'media') {
           console.debug('[Display] Reloading media via bc');
           loadMedia();
+        } else if (msg.channel === 'set-index') {
+          const newIndex = msg.payload?.index;
+          if (typeof newIndex === 'number' && newIndex !== currentIndex) {
+            console.debug('[Display] Syncing index from bc:', newIndex);
+            setCurrentIndex(newIndex);
+          }
         }
       };
     } catch {
@@ -151,6 +167,20 @@ export function Display() {
   // Sync currentIndex to localStorage for LiveDisplay preview
   useEffect(() => {
     localStorage.setItem('display-current-index', currentIndex.toString());
+    // Trigger storage event so admin monitor can stay in sync
+    window.dispatchEvent(new StorageEvent('storage', {
+      key: 'display-current-index',
+      newValue: currentIndex.toString(),
+    }));
+
+    // Also broadcast via BroadcastChannel for real-time cross-tab sync
+    try {
+      const bc = new BroadcastChannel('tv-updates');
+      bc.postMessage({ channel: 'set-index', payload: { index: currentIndex, source: 'display' } });
+      bc.close();
+    } catch {
+      // ignore
+    }
   }, [currentIndex]);
 
 
@@ -185,27 +215,34 @@ export function Display() {
 
 
   // Use scheduler to get content to display (handles emergency, scheduled, and fallback)
-  const { items: scheduledContent } = getContentToDisplay(
-    announcements,
-    events,
-    media
-  );
+  const scheduledContent = useMemo(() => {
+    const { items } = getContentToDisplay(
+      announcements,
+      events,
+      media
+    );
+    return items;
+  }, [announcements, events, media, getContentToDisplay]);
 
   // Apply settings filters (user can toggle announcement/event/media display)
-  const filteredContent = scheduledContent.filter(item => {
-    if ('body' in item) return settings.showAnnouncementsOnDisplay; // Announcement
-    if ('location' in item) return settings.showEventsOnDisplay; // Event
-    if ('file_url' in item) return settings.showMediaOnDisplay; // Media
-    return true;
-  });
+  const filteredContent = useMemo(() => {
+    return scheduledContent.filter(item => {
+      if ('body' in item) return settings.showAnnouncementsOnDisplay; // Announcement
+      if ('location' in item) return settings.showEventsOnDisplay; // Event
+      if ('file_url' in item) return settings.showMediaOnDisplay; // Media
+      return true;
+    });
+  }, [scheduledContent, settings]);
 
   // Combine into slideshow items with type tags
   type SlideItem = (Announcement & { type: 'announcement' }) | (Event & { type: 'event' }) | (Media & { type: 'media' });
-  const allItems: SlideItem[] = filteredContent.map(item => {
-    if ('body' in item) return { ...item as Announcement, type: 'announcement' as const };
-    if ('location' in item) return { ...item as Event, type: 'event' as const };
-    return { ...item as Media, type: 'media' as const };
-  });
+  const allItems: SlideItem[] = useMemo(() => {
+    return filteredContent.map(item => {
+      if ('body' in item) return { ...item as Announcement, type: 'announcement' as const };
+      if ('location' in item) return { ...item as Event, type: 'event' as const };
+      return { ...item as Media, type: 'media' as const };
+    });
+  }, [filteredContent]);
 
 
   // Use ref to avoid stale closure in video onEnded callback
@@ -218,19 +255,18 @@ export function Display() {
   useEffect(() => {
     if (allItems.length === 0) return;
 
-    // Determine if current slide is a video
-    const currentItem = allItems[currentIndex];
-
-    // If current slide is a video, do not auto-advance
+    // Determine auto-advance duration
+    // 1. If video, do not auto-advance (advances onEnded)
     if (currentItem && currentItem.type === 'media' && currentItem.file_type === 'video') {
-      // Do nothing: video will advance onEnded
       return;
     }
 
-    // Otherwise, auto-advance based on settings
+    // 2. Use item duration or global slideshow interval
+    const duration = (currentItem?.duration || settings.slideshowInterval) * 1000;
+
     const timer = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % totalItemsRef.current);
-    }, settings.slideshowInterval * 1000);
+    }, duration);
     return () => clearInterval(timer);
   }, [allItems, currentIndex, settings.slideshowInterval]);
 
@@ -505,20 +541,6 @@ export function Display() {
           )}
         </motion.div>
       </AnimatePresence>
-
-      {/* Audio toggle button - works with TV remote (OK/Enter key) or click */}
-      <button
-        onClick={toggleAudio}
-        className={`fixed bottom-8 right-8 z-50 p-4 rounded-full glass transition-all duration-300 hover:scale-105 active:scale-95 group focus:outline-none focus:ring-2 focus:ring-white/50 ${audioEnabled ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/20 text-white/50 hover:bg-black/40'
-          }`}
-        aria-label={audioEnabled ? 'Mute' : 'Unmute'}
-      >
-        {audioEnabled ? (
-          <Volume2 className="w-6 h-6" />
-        ) : (
-          <VolumeX className="w-6 h-6" />
-        )}
-      </button>
 
       {/* Connection status indicator */}
       <ConnectionIndicator status={connectionStatus} position="top-left" autoHideDelay={3000} />
