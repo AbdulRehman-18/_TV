@@ -38,6 +38,7 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(event?.recurrence_type || 'none');
   const [recurrenceDays, setRecurrenceDays] = useState<number[]>(event?.recurrence_days || []);
   const [priority, setPriority] = useState<Priority>(event?.priority || 'normal');
+  const [duration, setDuration] = useState<number>(event?.duration || 12);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,6 +59,7 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
         recurrence_type: recurrenceType,
         recurrence_days: recurrenceDays,
         priority,
+        duration,
       };
 
       let result;
@@ -221,6 +223,8 @@ export function EventForm({ event, onSubmit, onCancel }: EventFormProps) {
             onRecurrenceDaysChange={setRecurrenceDays}
             priority={priority}
             onPriorityChange={setPriority}
+            duration={duration}
+            onDurationChange={setDuration}
             showFallbackOption={false}
           />
           <p className="text-xs text-gray-500 -mt-4">

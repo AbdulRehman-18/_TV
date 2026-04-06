@@ -13,6 +13,7 @@ export interface ScheduleFields {
   recurrence_type?: RecurrenceType;
   recurrence_days?: number[];    // 0=Sunday … 6=Saturday
   priority?: Priority;
+  duration?: number;
   client_id?: string;
   status?: ContentStatus;
   admin_notes?: string;

@@ -68,7 +68,11 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
 export const api = {
   async get(endpoint: string) {
     const response = await fetchWithAuth(`${API_URL}${endpoint}`);
-    if (!response.ok) throw new Error(response.statusText);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`API GET Error [${endpoint}]:`, errorData);
+      throw new Error(JSON.stringify(errorData) || response.statusText);
+    }
     return response.json();
   },
 
@@ -78,7 +82,11 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error(response.statusText);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`API POST Error [${endpoint}]:`, errorData);
+      throw new Error(JSON.stringify(errorData) || response.statusText);
+    }
     return response.json();
   },
 
@@ -88,7 +96,11 @@ export const api = {
       method: 'POST',
       body: formData,
     });
-    if (!response.ok) throw new Error(response.statusText);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`API UPLOAD Error [${endpoint}]:`, errorData);
+      throw new Error(JSON.stringify(errorData) || response.statusText);
+    }
     return response.json();
   },
 
@@ -108,7 +120,12 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!response.ok) throw new Error(response.statusText);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`API PATCH Error [${endpoint}]:`, errorData);
+      throw new Error(JSON.stringify(errorData) || response.statusText);
+    }
+    return response.json();
     return response.json();
   },
 
@@ -117,7 +134,11 @@ export const api = {
       method: 'PATCH',
       body: formData,
     });
-    if (!response.ok) throw new Error(response.statusText);
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(`API PATCH_UPLOAD Error [${endpoint}]:`, errorData);
+      throw new Error(JSON.stringify(errorData) || response.statusText);
+    }
     return response.json();
   },
 

@@ -26,6 +26,7 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
   const [scheduleEndDate, setScheduleEndDate] = useState('');
   const [scheduleTimeStart, setScheduleTimeStart] = useState('');
   const [scheduleTimeEnd, setScheduleTimeEnd] = useState('');
+  const [duration, setDuration] = useState(12);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
@@ -94,6 +95,7 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
       if (scheduleEndDate) formData.append('schedule_end_date', scheduleEndDate);
       if (scheduleTimeStart) formData.append('schedule_time_start', scheduleTimeStart);
       if (scheduleTimeEnd) formData.append('schedule_time_end', scheduleTimeEnd);
+      formData.append('duration', duration.toString());
 
       const mediaData = await api.upload('/media/', formData);
 
@@ -109,6 +111,7 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
       setScheduleEndDate('');
       setScheduleTimeStart('');
       setScheduleTimeEnd('');
+      setDuration(12);
     } catch (err) {
       console.error('Error uploading media:', err);
       setError(err instanceof Error ? err.message : 'Failed to upload media');
@@ -162,6 +165,8 @@ export function ClientMediaForm({ clientId, onMediaUpload }: ClientMediaFormProp
             scheduleTimeEnd={scheduleTimeEnd}
             onTimeStartChange={setScheduleTimeStart}
             onTimeEndChange={setScheduleTimeEnd}
+            duration={duration}
+            onDurationChange={setDuration}
           />
 
           <div className="space-y-2">

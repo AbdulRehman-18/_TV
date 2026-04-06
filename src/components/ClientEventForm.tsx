@@ -27,6 +27,7 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
 
     const [scheduleTimeStart, setScheduleTimeStart] = useState('');
     const [scheduleTimeEnd, setScheduleTimeEnd] = useState('');
+    const [duration, setDuration] = useState(12);
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const selectedFile = e.target.files?.[0];
@@ -99,6 +100,7 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
             
             if (scheduleTimeStart) formData.append('schedule_time_start', scheduleTimeStart);
             if (scheduleTimeEnd) formData.append('schedule_time_end', scheduleTimeEnd);
+            formData.append('duration', duration.toString());
 
             if (imageFile) {
                 formData.append('image', imageFile);
@@ -118,6 +120,7 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
             setImagePreview(null);
             setScheduleTimeStart('');
             setScheduleTimeEnd('');
+            setDuration(12);
         } catch (err) {
             console.error('Error submitting event:', err);
             setError(err instanceof Error ? err.message : 'Failed to submit event');
@@ -247,6 +250,8 @@ export function ClientEventForm({ clientId, onEventSubmit }: ClientEventFormProp
                         onTimeStartChange={setScheduleTimeStart}
                         onTimeEndChange={setScheduleTimeEnd}
                         hideDateRange={true}
+                        duration={duration}
+                        onDurationChange={setDuration}
                     />
 
                     <div className="bg-gray-50 border border-gray-200 text-gray-800 px-4 py-3 rounded-md text-sm">

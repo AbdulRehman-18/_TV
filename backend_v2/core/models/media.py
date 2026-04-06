@@ -9,7 +9,7 @@ class Media(ScheduleMixin, models.Model):
         ("video", "Video"),
     )
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, null=True, blank=True)
     description = models.TextField(null=True, blank=True)
     file = models.FileField(upload_to="media_files/")
     file_type = models.CharField(max_length=10, choices=MEDIA_TYPES)

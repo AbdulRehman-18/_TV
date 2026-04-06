@@ -52,6 +52,12 @@ class ScheduleMixin(models.Model):
         default='normal',
     )
 
+    # Duration in seconds
+    duration = models.PositiveIntegerField(
+        default=12,
+        help_text="Duration to show this item in seconds (for non-video content)",
+    )
+
     # Client / approval workflow
     client_id = models.CharField(max_length=255, null=True, blank=True)
     status = models.CharField(

@@ -29,6 +29,7 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(announcement?.recurrence_type || 'none');
   const [recurrenceDays, setRecurrenceDays] = useState<number[]>(announcement?.recurrence_days || []);
   const [priority, setPriority] = useState<Priority>(announcement?.priority || 'normal');
+  const [duration, setDuration] = useState<number>(announcement?.duration || 12);
 
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,6 +50,7 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
         recurrence_type: recurrenceType,
         recurrence_days: recurrenceDays,
         priority,
+        duration,
       };
 
       if (announcement) {
@@ -181,6 +183,8 @@ export function AnnouncementForm({ announcement, onSubmit, onCancel }: Announcem
             onRecurrenceDaysChange={setRecurrenceDays}
             priority={priority}
             onPriorityChange={setPriority}
+            duration={duration}
+            onDurationChange={setDuration}
             showFallbackOption={false}
           />
 

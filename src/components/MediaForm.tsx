@@ -31,6 +31,7 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(media?.recurrence_type || 'none');
   const [recurrenceDays, setRecurrenceDays] = useState<number[]>(media?.recurrence_days || []);
   const [priority, setPriority] = useState<Priority>(media?.priority || 'normal');
+  const [duration, setDuration] = useState<number>(media?.duration || 12);
   const [isFallback, setIsFallback] = useState(media?.is_fallback || false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -39,7 +40,11 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
 
     try {
       const formData = new FormData();
-      formData.append('title', title);
+      
+      // Ensure title is present as it is required in the backend
+      const finalTitle = title.trim() || (file ? file.name : (media?.title || 'Untitled Media'));
+      formData.append('title', finalTitle);
+      
       if (description) formData.append('description', description);
       
       formData.append('is_active', 'true');
@@ -56,15 +61,17 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
       if (scheduleEndDate) formData.append('schedule_end_date', scheduleEndDate);
       if (scheduleTimeStart) formData.append('schedule_time_start', scheduleTimeStart);
       if (scheduleTimeEnd) formData.append('schedule_time_end', scheduleTimeEnd);
-      if (recurrenceType && recurrenceType !== 'none') formData.append('recurrence_type', recurrenceType);
       
-      // Handle recurrence days array
-      if (recurrenceDays.length > 0) {
-        recurrenceDays.forEach(day => formData.append('recurrence_days', day.toString()));
+      if (recurrenceType) {
+        formData.append('recurrence_type', recurrenceType);
       }
       
+      // Send recurrence_days as a JSON string to ensure JSONField parses it correctly
+      formData.append('recurrence_days', JSON.stringify(recurrenceDays));
+      
       formData.append('priority', priority);
-      formData.append('is_fallback', isFallback.toString());
+      formData.append('duration', duration.toString());
+      formData.append('is_fallback', String(isFallback));
 
       let resultData;
 
@@ -259,6 +266,8 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
             onRecurrenceDaysChange={setRecurrenceDays}
             priority={priority}
             onPriorityChange={setPriority}
+            duration={duration}
+            onDurationChange={setDuration}
             isFallback={isFallback}
             onFallbackChange={setIsFallback}
             showFallbackOption={true}
