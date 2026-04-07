@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from core.models import User
+from accounts.models import User
 
 
 class Command(BaseCommand):
@@ -7,31 +7,35 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         admins = [
-            {'username': 'admin1', 'password': 'admin1', 'email': 'admin1@tvdisplay.local'},
-            {'username': 'admin2', 'password': 'admin2', 'email': 'admin2@tvdisplay.local'},
+            {
+                'email': 'admin1@tvdisplay.local',
+                'full_name': 'Admin One',
+                'password': 'admin1',
+            },
+            {
+                'email': 'admin2@tvdisplay.local',
+                'full_name': 'Admin Two',
+                'password': 'admin2',
+            },
         ]
 
         for admin_data in admins:
-            username = admin_data['username']
-            if User.objects.filter(username=username).exists():
-                user = User.objects.get(username=username)
+            email = admin_data['email']
+            if User.objects.filter(email=email).exists():
+                user = User.objects.get(email=email)
                 user.set_password(admin_data['password'])
-                user.role = 'admin'
                 user.is_staff = True
                 user.is_superuser = True
-                user.is_approved = True
+                user.is_admin = True
+                user.is_verified = True
                 user.save()
-                self.stdout.write(self.style.SUCCESS(f'Updated existing user "{username}" password and roles.'))
+                self.stdout.write(self.style.SUCCESS(f'Updated existing user "{email}" password and roles.'))
             else:
                 User.objects.create_superuser(
-                    username=username,
-                    email=admin_data['email'],
+                    email=email,
+                    full_name=admin_data['full_name'],
                     password=admin_data['password'],
-                    role='admin',
-                    is_approved=True,
                 )
-                self.stdout.write(self.style.SUCCESS(f'Created admin user "{username}" successfully.'))
+                self.stdout.write(self.style.SUCCESS(f'Created admin user "{email}" successfully.'))
 
-        # Ensure any other users are treated as clients
-        # (Actually the User model default is already 'client')
         self.stdout.write(self.style.SUCCESS('Seeding complete. admin1 and admin2 are ready.'))

@@ -1,13 +1,5 @@
 from django.contrib import admin
-from .models import User, Announcement, Event, Media
-
-
-@admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('username', 'email', 'role', 'is_approved', 'is_active', 'date_joined')
-    list_filter = ('role', 'is_approved', 'is_active')
-    search_fields = ('username', 'email', 'organization')
-    list_editable = ('is_approved',)
+from .models import Announcement, Event, Media
 
 
 class ScheduleFieldsMixin:
