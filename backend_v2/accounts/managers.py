@@ -1,5 +1,5 @@
 from django.contrib.auth.models import BaseUserManager
-
+from django.conf import settings
 
 class CustomUserManager(BaseUserManager):
     """
@@ -22,18 +22,18 @@ class CustomUserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
+    
+
     def create_superuser(self, email, full_name, password=None, **extra_fields):
-        """
-        Create and save a superuser with the given email, full_name, and password.
-        """
+        if email.lower() != settings.ADMIN_EMAIL:
+            raise ValueError("Superuser email must match ADMIN_EMAIL")
+
+        if self.model.objects.filter(is_admin=True).exists():
+            raise ValueError("Only one admin is allowed.")
+
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
         extra_fields.setdefault('is_admin', True)
         extra_fields.setdefault('is_verified', True)
-
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
 
         return self.create_user(email, full_name, password, **extra_fields)

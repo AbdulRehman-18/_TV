@@ -2,7 +2,7 @@ import re
 from rest_framework import serializers
 from django.contrib.auth import authenticate
 from .models import User
-
+from django.conf import settings
 
 class RegisterSerializer(serializers.Serializer):
     """
@@ -158,6 +158,12 @@ class AdminLoginSerializer(serializers.Serializer):
             raise serializers.ValidationError({
                 'email': 'No admin account found with this email.'
             })
+        
+        if user.email != settings.ADMIN_EMAIL:
+            raise serializers.ValidationError({
+            'email': 'Not authorized as admin.'
+            })
+
 
         if not user.is_admin:
             raise serializers.ValidationError({
@@ -178,6 +184,7 @@ class AdminLoginSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
+        
 
 class ForgotPasswordSerializer(serializers.Serializer):
     """Serializer for forgot password - accepts email."""

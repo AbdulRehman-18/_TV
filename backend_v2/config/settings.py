@@ -7,6 +7,8 @@ load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+ADMIN_EMAIL = os.getenv("ADMIN_EMAIL")
+
 # ─── Core Settings ────────────────────────────────────────────────────────────
 SECRET_KEY = os.environ.get('SECRET_KEY', 'django-insecure-tv-display-change-me')
 DEBUG = os.environ.get('DEBUG', 'True').lower() in ('true', '1', 'yes')

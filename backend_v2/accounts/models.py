@@ -1,7 +1,7 @@
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
 from django.db import models
 from .managers import CustomUserManager
-
+from django.conf import settings
 
 class User(AbstractBaseUser, PermissionsMixin):
     """
@@ -55,3 +55,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def get_short_name(self):
         return self.full_name.split(' ')[0] if self.full_name else self.email
+
+
+
+    def save(self, *args, **kwargs):
+        # Prevent multiple admins
+        if self.is_admin:
+            if User.objects.filter(is_admin=True).exclude(pk=self.pk).exists():
+                raise ValueError("Only one admin allowed.")
+
+            # Ensure correct admin email
+            if self.email != settings.ADMIN_EMAIL:
+                raise ValueError("Invalid admin email.")
+
+        super().save(*args, **kwargs)
