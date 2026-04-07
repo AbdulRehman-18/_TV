@@ -28,3 +28,6 @@ class MediaSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.file.url)
             return obj.file.url
         return None
+
+class MediaStatsSerializer(serializers.Serializer):
+    total_media=serializers.IntegerField()

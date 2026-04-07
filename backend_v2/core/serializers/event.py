@@ -28,3 +28,6 @@ class EventSerializer(serializers.ModelSerializer):
                 return request.build_absolute_uri(obj.image.url)
             return obj.image.url
         return None
+    
+class EventStatsSerializer(serializers.Serializer):
+    total_events=serializers.IntegerField()

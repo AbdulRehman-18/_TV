@@ -1,8 +1,10 @@
+from h11 import Response
 from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from ..models import Announcement
-from ..serializers import AnnouncementSerializer
+from ..serializers import AnnouncementSerializer,AnnouncementStatsSerializer
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
 
 class AnnouncementViewSet(viewsets.ModelViewSet):
@@ -18,3 +20,16 @@ class AnnouncementViewSet(viewsets.ModelViewSet):
         return Announcement.objects.filter(
             is_active=True, status='approved'
         ).order_by('-created_at')
+    
+class AnnouncementStatsViewSet(ReadOnlyModelViewSet):
+    # queryset = Announcement.objects.all()
+    serializer_class = AnnouncementStatsSerializer
+
+    def list(self, request, *args, **kwargs):
+        count = Announcement.objects.filter(
+            is_active=True,
+            status='approved'
+        ).count()
+
+        serializer = self.get_serializer({'total_announcements': count})
+        return Response(serializer.data)

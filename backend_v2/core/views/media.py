@@ -2,7 +2,8 @@ from rest_framework import viewsets
 from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from ..models import Media
-from ..serializers import MediaSerializer
+from ..serializers import MediaSerializer,MediaStatsSerializer
+from rest_framework.viewsets import ReadOnlyModelViewSet
 
 
 class MediaViewSet(viewsets.ModelViewSet):
@@ -18,3 +19,16 @@ class MediaViewSet(viewsets.ModelViewSet):
         return Media.objects.filter(
             is_active=True, status='approved'
         ).order_by('-created_at')
+
+class MediaStatsViewSet(ReadOnlyModelViewSet):
+    # queryset = Announcement.objects.all()
+    serializer_class = MediaStatsSerializer
+
+    def list(self, request, *args, **kwargs):
+        count = Media.objects.filter(
+            is_active=True,
+            status='approved'
+        ).count()
+
+        serializer = self.get_serializer({'total_media': count})
+        return Response(serializer.data)
