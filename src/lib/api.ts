@@ -1,4 +1,60 @@
-const API_URL = 'http://10.19.215.92:8000/api';
+const API_URL = 'http://localhost:8000/api';
+
+type ApiEnvelope<T> = {
+  success: boolean;
+  message?: string;
+  data?: T;
+  errors?: Record<string, unknown>;
+};
+
+function formatApiErrors(errors: Record<string, unknown> | undefined): string {
+  if (!errors) return '';
+  const parts: string[] = [];
+  for (const [key, value] of Object.entries(errors)) {
+    if (Array.isArray(value)) {
+      for (const item of value) {
+        if (typeof item === 'string') parts.push(item);
+      }
+      continue;
+    }
+    if (typeof value === 'string') {
+      parts.push(value);
+      continue;
+    }
+    if (value && typeof value === 'object') {
+      // Flatten common DRF shapes like {field: ["msg"]}
+      for (const nested of Object.values(value as Record<string, unknown>)) {
+        if (Array.isArray(nested)) {
+          for (const item of nested) {
+            if (typeof item === 'string') parts.push(item);
+          }
+        } else if (typeof nested === 'string') {
+          parts.push(nested);
+        }
+      }
+    }
+    if (parts.length >= 6) break;
+  }
+  return parts.join(' ');
+}
+
+async function readJsonSafe<T>(response: Response): Promise<T | null> {
+  try {
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+function normalizeUser(user: any) {
+  if (!user || typeof user !== 'object') return null;
+  const isAdmin = Boolean((user as any).is_admin);
+  return {
+    ...user,
+    role: isAdmin ? 'admin' : 'client',
+    username: (user as any).full_name || (user as any).email,
+  };
+}
 
 // ─── Token Management ────────────────────────────────────────────────────────
 function getTokens() {
@@ -34,9 +90,14 @@ async function refreshAccessToken(): Promise<string | null> {
       clearTokens();
       return null;
     }
-    const data = await response.json();
-    setTokens(data.access, data.refresh || refresh);
-    return data.access;
+    const envelope = await readJsonSafe<ApiEnvelope<{ tokens: { access: string; refresh: string } }>>(response);
+    const tokens = envelope?.data?.tokens;
+    if (!tokens?.access) {
+      clearTokens();
+      return null;
+    }
+    setTokens(tokens.access, tokens.refresh || refresh);
+    return tokens.access;
   } catch {
     clearTokens();
     return null;
@@ -152,29 +213,31 @@ export const api = {
 
   // ─── Auth ────────────────────────────────────────────────────────────────
   auth: {
-    async login(credentials: { username: string; password: string }) {
+    async login(credentials: { email: string; password: string }) {
       const response = await fetch(`${API_URL}/auth/login/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
       });
       if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.non_field_errors?.[0] || error.detail || 'Login failed');
+        const error = await readJsonSafe<ApiEnvelope<unknown>>(response);
+        const details = formatApiErrors((error?.errors as Record<string, unknown>) || undefined);
+        throw new Error(details || error?.message || 'Login failed');
       }
-      const data = await response.json();
-      setTokens(data.tokens.access, data.tokens.refresh);
-      return data;
+      const envelope = await readJsonSafe<ApiEnvelope<{ tokens: { access: string; refresh: string } }>>(response);
+      const tokens = envelope?.data?.tokens;
+      if (!tokens?.access || !tokens?.refresh) {
+        throw new Error('Login failed: missing tokens in response');
+      }
+      setTokens(tokens.access, tokens.refresh);
+      return envelope;
     },
 
     async register(userData: {
-      username: string;
+      full_name: string;
       email: string;
       password: string;
-      password_confirm: string;
-      role: 'admin' | 'client';
-      organization?: string;
-      phone?: string;
+      confirm_password: string;
     }) {
       const response = await fetch(`${API_URL}/auth/register/`, {
         method: 'POST',
@@ -182,18 +245,19 @@ export const api = {
         body: JSON.stringify(userData),
       });
       if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(JSON.stringify(error));
+        const error = await readJsonSafe<ApiEnvelope<unknown>>(response);
+        const details = formatApiErrors((error?.errors as Record<string, unknown>) || undefined);
+        throw new Error(details || error?.message || 'Registration failed');
       }
-      const data = await response.json();
-      setTokens(data.tokens.access, data.tokens.refresh);
-      return data;
+      const envelope = await readJsonSafe<ApiEnvelope<{ email: string; full_name: string }>>(response);
+      return envelope;
     },
 
     async getMe() {
       const response = await fetchWithAuth(`${API_URL}/auth/me/`);
       if (!response.ok) return null;
-      return response.json();
+      const envelope = await readJsonSafe<ApiEnvelope<unknown>>(response);
+      return normalizeUser(envelope?.data) ?? null;
     },
 
     logout() {

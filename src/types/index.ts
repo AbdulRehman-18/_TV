@@ -60,14 +60,19 @@ export interface Media extends ScheduleFields {
 // ─── Users ───────────────────────────────────────────────────────────────────
 export interface User {
   id: string;
-  username: string;
   email: string;
+  full_name: string;
+  is_verified: boolean;
+  is_admin: boolean;
   role: UserRole;
+  date_joined: string;
+
+  // Legacy/optional fields (may not be present depending on backend)
+  username?: string;
   organization?: string;
   phone?: string;
-  is_approved: boolean;
-  is_active: boolean;
-  date_joined: string;
+  is_approved?: boolean;
+  is_active?: boolean;
 }
 
 export interface AuthState {

@@ -20,11 +20,11 @@ export function Login() {
     }
   }, [searchParams]);
 
-  const [username, setUsername] = useState('');
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [organization, setOrganization] = useState('');
+  // const [organization, setOrganization] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
@@ -51,7 +51,7 @@ export function Login() {
 
     try {
       await api.auth.login({
-        username,
+        email,
         password,
       });
       // Force page reload to refresh useAuth state
@@ -78,32 +78,29 @@ export function Login() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       setIsLoading(false);
       return;
     }
 
     try {
       const response = await api.auth.register({
-        username,
+        full_name: fullName,
         email,
         password,
-        password_confirm: confirmPassword,
-        role: 'client',
-        organization,
+        confirm_password: confirmPassword,
       });
 
-      if (response.user) {
+      if (response?.success) {
         setPendingEmail(email);
         setShowEmailConfirmation(true);
         setError('');
 
-        setUsername('');
+        setFullName('');
         setEmail('');
         setPassword('');
         setConfirmPassword('');
-        setOrganization('');
       }
     } catch (error: unknown) {
       if (error instanceof Error) {
@@ -183,33 +180,33 @@ export function Login() {
 
             <div className="space-y-4">
 
-              <div className="space-y-2">
-                <Label htmlFor="username" className="text-xs font-medium text-zinc-400 ml-1">Username</Label>
-                <Input
-                  id="username"
-                  type="text"
-                  value={username}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setUsername(e.target.value)}
-                  placeholder="johndoe"
-                  required
-                  className="h-12 bg-transparent border-zinc-800 text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-0 rounded-xl transition-colors px-4"
-                />
-              </div>
-
               {!isLoginMode && (
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-xs font-medium text-zinc-400 ml-1">Email</Label>
+                  <Label htmlFor="fullName" className="text-xs font-medium text-zinc-400 ml-1">Full Name</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
-                    placeholder="name@example.com"
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
+                    placeholder="John Doe"
                     required
                     className="h-12 bg-transparent border-zinc-800 text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-0 rounded-xl transition-colors px-4"
                   />
                 </div>
               )}
+
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-xs font-medium text-zinc-400 ml-1">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  placeholder="name@gmail.com"
+                  required
+                  className="h-12 bg-transparent border-zinc-800 text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-0 rounded-xl transition-colors px-4"
+                />
+              </div>
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between ml-1">
@@ -264,20 +261,7 @@ export function Login() {
                 </div>
               )}
 
-              {!isLoginMode && (
-                <div className="space-y-2">
-                  <Label htmlFor="organization" className="text-xs font-medium text-zinc-400 ml-1">Organization</Label>
-                  <Input
-                    id="organization"
-                    type="text"
-                    value={organization}
-                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setOrganization(e.target.value)}
-                    placeholder="Company name"
-                    required
-                    className="h-12 bg-transparent border-zinc-800 text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-0 rounded-xl transition-colors px-4"
-                  />
-                </div>
-              )}
+              
             </div>
 
             <Button
