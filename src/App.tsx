@@ -3,6 +3,7 @@ import { ProtectedRoute } from '@/components/ProtectedRoute';
 import { ClientProtectedRoute } from '@/components/ClientProtectedRoute';
 import { Landing } from '@/pages/Landing';
 import { Login } from '@/pages/Login';
+import { VerifyEmail } from '@/pages/VerifyEmail';
 import { Admin } from '@/pages/Admin';
 import { Client } from '@/pages/Client';
 import { Display } from '@/pages/Display';
@@ -14,6 +15,7 @@ function App() {
         <Route path="/" element={<Landing />} />
         <Route path="/landing" element={<Landing />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/display" element={<Display />} />
 
         <Route

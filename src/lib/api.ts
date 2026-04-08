@@ -10,7 +10,7 @@ type ApiEnvelope<T> = {
 function formatApiErrors(errors: Record<string, unknown> | undefined): string {
   if (!errors) return '';
   const parts: string[] = [];
-  for (const [key, value] of Object.entries(errors)) {
+  for (const [, value] of Object.entries(errors)) {
     if (Array.isArray(value)) {
       for (const item of value) {
         if (typeof item === 'string') parts.push(item);
@@ -250,6 +250,24 @@ export const api = {
         throw new Error(details || error?.message || 'Registration failed');
       }
       const envelope = await readJsonSafe<ApiEnvelope<{ email: string; full_name: string }>>(response);
+      return envelope;
+    },
+
+    async verifyEmail(params: { uid: string; token: string }) {
+      const url = new URL(`${API_URL}/auth/verify-email/`);
+      url.searchParams.set('uid', params.uid);
+      url.searchParams.set('token', params.token);
+
+      const response = await fetch(url.toString(), {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+
+      const envelope = await readJsonSafe<ApiEnvelope<unknown>>(response);
+      if (!response.ok) {
+        const details = formatApiErrors((envelope?.errors as Record<string, unknown>) || undefined);
+        throw new Error(details || envelope?.message || 'Email verification failed');
+      }
       return envelope;
     },
 

@@ -13,3 +13,4 @@ static/
 .env
 .idea/
 .vscode/
+env/*
