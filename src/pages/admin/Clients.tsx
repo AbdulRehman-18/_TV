@@ -52,7 +52,7 @@ export function Clients() {
     try {
 
 
-      const clientsData: any[] = await api.get('/admin/clients/');
+      const clientsData: any[] = await api.get('/auth/admin/clients/');
       const filteredClients = clientsData;
 
       // Fetch all media

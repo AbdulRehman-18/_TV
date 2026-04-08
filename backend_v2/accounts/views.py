@@ -6,9 +6,11 @@ from django.template.loader import render_to_string
 
 from rest_framework import status
 from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.permissions import AllowAny, IsAdminUser
 from rest_framework.response import Response
 from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework_simplejwt.views import TokenRefreshView
+from rest_framework_simplejwt.serializers import TokenRefreshSerializer
 
 from .models import User
 from .serializers import (
@@ -374,3 +376,112 @@ def reset_password_view(request):
         'message': 'Password reset failed.',
         'errors': serializer.errors,
     }, status=status.HTTP_400_BAD_REQUEST)
+
+
+# ═════════════════════════════════════════════════════
+#  TOKEN REFRESH VIEW
+# ═════════════════════════════════════════════════════
+
+
+class CustomTokenRefreshView(TokenRefreshView):
+    """
+    POST /api/auth/token/refresh/
+    Custom token refresh view that returns tokens in the same format as login.
+    """
+    def post(self, request, *args, **kwargs):
+        serializer = TokenRefreshSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        refresh = serializer.validated_data['refresh']
+        refresh_token = RefreshToken(refresh)
+
+        return Response({
+            'success': True,
+            'message': 'Token refreshed successfully!',
+            'data': {
+                'tokens': {
+                    'access': str(refresh_token.access_token),
+                    'refresh': str(refresh_token),
+                }
+            }
+        }, status=status.HTTP_200_OK)
+
+
+# ═════════════════════════════════════════════════════
+#  CURRENT USER ENDPOINTS
+# ═════════════════════════════════════════════════════
+
+
+@api_view(['GET', 'PATCH'])
+@permission_classes([AllowAny])
+def current_user_view(request):
+    """
+    GET /api/auth/me/ - Get current authenticated user details
+    PATCH /api/auth/me/ - Update current authenticated user details
+    """
+    if not request.user or not request.user.is_authenticated:
+        if request.method == 'GET':
+            return Response({
+                'success': True,
+                'data': None,
+            }, status=status.HTTP_200_OK)
+        else:
+            return Response({
+                'success': False,
+                'message': 'Authentication required.',
+            }, status=status.HTTP_401_UNAUTHORIZED)
+
+    if request.method == 'GET':
+        return Response({
+            'success': True,
+            'data': UserSerializer(request.user).data,
+        }, status=status.HTTP_200_OK)
+
+    elif request.method == 'PATCH':
+        # Only allow updating certain fields
+        allowed_fields = ['full_name']
+        update_data = {}
+
+        for field in allowed_fields:
+            if field in request.data:
+                update_data[field] = request.data[field]
+
+        if not update_data:
+            return Response({
+                'success': False,
+                'message': 'No valid fields to update.',
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Update the user
+        for field, value in update_data.items():
+            setattr(request.user, field, value)
+
+        request.user.save()
+
+        return Response({
+            'success': True,
+            'message': 'Profile updated successfully!',
+            'data': UserSerializer(request.user).data,
+        }, status=status.HTTP_200_OK)
+
+
+# ═════════════════════════════════════════════════════
+#  ADMIN ENDPOINTS
+# ═════════════════════════════════════════════════════
+
+
+@api_view(['GET'])
+@permission_classes([IsAdminUser])
+def admin_clients_view(request):
+    """
+    GET /api/auth/admin/clients/
+    Get all non-admin users (clients) for admin dashboard.
+    Only accessible by admin users.
+    """
+    # Get all non-admin users, ordered by most recent
+    clients = User.objects.filter(is_admin=False).order_by('-date_joined')
+
+    return Response({
+        'success': True,
+        'data': UserSerializer(clients, many=True).data,
+    }, status=status.HTTP_200_OK)
