@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
 import type { CSSProperties } from 'react';
 import { api } from '@/lib/api';
-import { Announcement, Event, Media } from '@/types';
+import type { ActiveScheduleResponse, Announcement, Event, Media } from '@/types';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Calendar, Clock, MapPin } from 'lucide-react';
 import { useSettings } from '@/hooks/useSettings';
@@ -26,7 +26,7 @@ export function Display() {
   });
 
   // Connection status for realtime subscriptions
-  const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connected');
+  const [connectionStatus] = useState<ConnectionStatus>('connected');
 
   const toggleAudio = () => {
     const newState = !audioEnabled;
@@ -65,7 +65,7 @@ export function Display() {
       lastReloadRef.current = now;
       try {
         console.debug('[Display] reloadAll triggered', reason || '');
-        await Promise.all([loadAnnouncements(), loadEvents(), loadMedia()]);
+        await loadActiveSchedule();
       } catch {
         // errors are logged inside loaders
       }
@@ -74,9 +74,7 @@ export function Display() {
 
   // Initial data load
   useEffect(() => {
-    loadAnnouncements();
-    loadEvents();
-    loadMedia();
+    loadActiveSchedule();
 
     // Real-time via Supabase removed. 
     // Using polling fallback logic already present in the component.
@@ -106,13 +104,13 @@ export function Display() {
           }
         } else if (msg.channel === 'announcements') {
           console.debug('[Display] Reloading announcements via bc');
-          loadAnnouncements();
+          loadActiveSchedule();
         } else if (msg.channel === 'events') {
           console.debug('[Display] Reloading events via bc');
-          loadEvents();
+          loadActiveSchedule();
         } else if (msg.channel === 'media') {
           console.debug('[Display] Reloading media via bc');
-          loadMedia();
+          loadActiveSchedule();
         } else if (msg.channel === 'set-index') {
           const newIndex = msg.payload?.index;
           if (typeof newIndex === 'number' && newIndex !== currentIndex) {
@@ -184,35 +182,18 @@ export function Display() {
   }, [currentIndex]);
 
 
-  const loadAnnouncements = async () => {
+  const loadActiveSchedule = async () => {
     try {
-      const data = await api.get('/announcements/');
-      setAnnouncements(data || []);
+      const data = await api.get('/schedule/active/') as ActiveScheduleResponse;
+      setAnnouncements(data.announcements || []);
+      setEvents(data.events || []);
+      setMedia([...(data.media || []), ...(data.fallback_media || [])]);
     } catch (error) {
-      console.error('Error loading announcements:', error);
+      console.error('Error loading active schedule:', error);
     } finally {
       setLoading(false);
     }
   };
-
-  const loadEvents = async () => {
-    try {
-      const data = await api.get('/events/');
-      setEvents(data || []);
-    } catch (error) {
-      console.error('Error loading events:', error);
-    }
-  };
-
-  const loadMedia = async () => {
-    try {
-      const data = await api.get('/media/');
-      setMedia(data || []);
-    } catch (error) {
-      console.error('Error loading media:', error);
-    }
-  };
-
 
   // Use scheduler to get content to display (handles emergency, scheduled, and fallback)
   const scheduledContent = useMemo(() => {
