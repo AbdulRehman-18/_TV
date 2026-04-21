@@ -1,24 +1,18 @@
 from rest_framework import viewsets
-from rest_framework.permissions import IsAuthenticatedOrReadOnly
 from django_filters.rest_framework import DjangoFilterBackend
 from ..models import Event
 from ..serializers import EventSerializer,EventStatsSerializer
 from rest_framework.viewsets import ReadOnlyModelViewSet
+from .content_workflow import ContentWorkflowMixin, ContentWorkflowPermission
 
 
-class EventViewSet(viewsets.ModelViewSet):
+class EventViewSet(ContentWorkflowMixin, viewsets.ModelViewSet):
     queryset = Event.objects.all()
     serializer_class = EventSerializer
-    permission_classes = [IsAuthenticatedOrReadOnly]
+    permission_classes = [ContentWorkflowPermission]
     filter_backends = [DjangoFilterBackend]
     filterset_fields = ['is_active', 'priority', 'status', 'recurrence_type']
-
-    def get_queryset(self):
-        if self.request.user.is_authenticated:
-            return Event.objects.all().order_by('start_date')
-        return Event.objects.filter(
-            is_active=True, status='approved'
-        ).order_by('start_date')
+    ordering = 'start_date'
 
 
 class EventStatsViewSet(ReadOnlyModelViewSet):
