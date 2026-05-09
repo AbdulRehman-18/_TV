@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:8000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
 type ApiEnvelope<T> = {
   success: boolean;
@@ -280,6 +280,33 @@ export const api = {
 
     logout() {
       clearTokens();
+    },
+
+    async forgotPassword(email: string) {
+      const response = await fetch(`${API_URL}/auth/forgot-password/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      const envelope = await readJsonSafe<ApiEnvelope<unknown>>(response);
+      if (!response.ok) {
+        throw new Error(envelope?.message || 'Failed to send reset email');
+      }
+      return envelope;
+    },
+
+    async resetPassword(data: { uid: string; token: string; password: string; confirm_password: string }) {
+      const response = await fetch(`${API_URL}/auth/reset-password/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const envelope = await readJsonSafe<ApiEnvelope<unknown>>(response);
+      if (!response.ok) {
+        const details = formatApiErrors((envelope?.errors as Record<string, unknown>) || undefined);
+        throw new Error(details || envelope?.message || 'Password reset failed');
+      }
+      return envelope;
     },
 
     isLoggedIn(): boolean {

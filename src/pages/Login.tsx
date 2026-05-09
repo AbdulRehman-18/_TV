@@ -212,9 +212,9 @@ export function Login() {
                 <div className="flex items-center justify-between ml-1">
                   <Label htmlFor="password" className="text-xs font-medium text-zinc-400">Password</Label>
                   {isLoginMode && (
-                    <button type="button" className="text-xs text-zinc-500 hover:text-white transition-colors">
+                    <Link to="/forgot-password" className="text-xs text-zinc-500 hover:text-white transition-colors">
                       Forgot password?
-                    </button>
+                    </Link>
                   )}
                 </div>
                 <div className="relative">
