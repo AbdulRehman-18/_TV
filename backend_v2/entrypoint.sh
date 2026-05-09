@@ -19,4 +19,4 @@ echo "[entrypoint] Ensuring admin user exists..."
 python manage.py create_admin || true
 
 echo "[entrypoint] Launching: $*"
-exec sh -c "$*"
+exec "$@"
