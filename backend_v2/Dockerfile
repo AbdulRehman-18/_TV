@@ -21,8 +21,11 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy project source
 COPY . .
 
+RUN chmod +x /app/entrypoint.sh
+
 # Expose Django dev server port
 EXPOSE 8000
 
-# Run migrations then start development server
-CMD ["sh", "-c", "python manage.py migrate && python manage.py create_admin && python manage.py runserver 0.0.0.0:8000"]
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
+
+CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "2", "--timeout", "120"]

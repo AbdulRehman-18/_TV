@@ -37,29 +37,29 @@ Docker Compose manages the lifecycle of your entire backend application.
 
 2. **Start all services in the background**:
    ```bash
-   docker-compose up -d --build
+   docker compose up -d --build
    ```
    > *Note: `-d` means "detached" (runs in the background), and `--build` forces Docker to compile any recent code changes.*
 
 3. **Check the status of your services**:
    ```bash
-   docker-compose ps
+   docker compose ps
    ```
    *You should see `tv_db`, `tv_redis`, `tv_backend`, `tv_celery`, and `tv_celery_beat` as "**Up**" or "**Healthy**".*
 
 4. **Stop all services**:
    ```bash
-   docker-compose down
+   docker compose down
    ```
 
 ### Reading the Logs
 If the backend crashes or you want to see request traffic:
 ```bash
 # View logs for the Django backend server
-docker-compose logs -f backend
+docker compose logs -f backend
 
 # View logs for the Celery background worker
-docker-compose logs -f celery
+docker compose logs -f celery
 ```
 *(Press `Ctrl+C` to exit the live log view).*
 
@@ -75,7 +75,7 @@ You can jump straight into the PostgreSQL command line inside the running contai
 
 1. **Connect to the database via Docker**:
    ```bash
-   docker-compose exec db psql -U tvuser -d tvdb
+   docker compose exec db psql -U tvuser -d tvdb
    ```
 2. **List all tables**:
    Once inside the `psql` prompt, type:
@@ -101,16 +101,16 @@ Usually, it's safer to interact with the database using Django's built-in tools.
 
 - **Create a superuser (Admin)**:
   ```bash
-  docker-compose exec backend python manage.py createsuperuser
+   docker compose exec backend python manage.py createsuperuser
   ```
 - **Apply Database Migrations** *(do this if you ever change `models.py`)*:
   ```bash
-  docker-compose exec backend python manage.py makemigrations
-  docker-compose exec backend python manage.py migrate
+   docker compose exec backend python manage.py makemigrations
+   docker compose exec backend python manage.py migrate
   ```
 - **Open the Django interactive shell** *(great for writing Python to test data)*:
   ```bash
-  docker-compose exec backend python manage.py shell
+   docker compose exec backend python manage.py shell
   ```
 
 ---
@@ -125,7 +125,7 @@ Usually, it's safer to interact with the database using Django's built-in tools.
 
 1. **Open the Redis CLI inside the container**:
    ```bash
-   docker-compose exec redis redis-cli
+   docker compose exec redis redis-cli
    ```
 2. **Test if Redis is responding**:
    ```bash

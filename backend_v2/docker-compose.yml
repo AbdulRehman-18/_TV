@@ -41,11 +41,24 @@ services:
     build: .
     container_name: tv_backend
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
-      - DB_HOST=db
-      - REDIS_URL=redis://redis:6379/0
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-tv-display-change-me}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+
+      DB_NAME: ${DB_NAME:-tvdb}
+      DB_USER: ${DB_USER:-tvuser}
+      DB_PASSWORD: ${DB_PASSWORD:-tvpassword}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@tvdisplay.local}
+      DJANGO_SUPERUSER_FULL_NAME: ${DJANGO_SUPERUSER_FULL_NAME:-Admin User}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin123}
+
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@tvdisplay.local}
     volumes:
       - .:/app
       - media_data:/app/media
@@ -64,11 +77,17 @@ services:
     container_name: tv_celery
     restart: unless-stopped
     command: celery -A config worker --loglevel=info
-    env_file:
-      - .env
     environment:
-      - DB_HOST=db
-      - REDIS_URL=redis://redis:6379/0
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-tv-display-change-me}
+
+      DB_NAME: ${DB_NAME:-tvdb}
+      DB_USER: ${DB_USER:-tvuser}
+      DB_PASSWORD: ${DB_PASSWORD:-tvpassword}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     volumes:
       - .:/app
       - media_data:/app/media
@@ -84,11 +103,17 @@ services:
     container_name: tv_celery_beat
     restart: unless-stopped
     command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    env_file:
-      - .env
     environment:
-      - DB_HOST=db
-      - REDIS_URL=redis://redis:6379/0
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-tv-display-change-me}
+
+      DB_NAME: ${DB_NAME:-tvdb}
+      DB_USER: ${DB_USER:-tvuser}
+      DB_PASSWORD: ${DB_PASSWORD:-tvpassword}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
     volumes:
       - .:/app
     depends_on:
