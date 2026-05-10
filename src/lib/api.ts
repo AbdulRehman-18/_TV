@@ -324,7 +324,7 @@ export const api = {
     },
 
     isLoggedIn(): boolean {
-      return !!getTokens().access;
+      return !!getTokens().refresh;
     },
   },
 
