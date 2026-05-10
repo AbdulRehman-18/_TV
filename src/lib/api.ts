@@ -46,30 +46,44 @@ async function readJsonSafe<T>(response: Response): Promise<T | null> {
   }
 }
 
-function normalizeUser(user: any) {
+type RawUser = {
+  id: string | number;
+  email: string;
+  full_name?: string;
+  is_admin?: boolean;
+  is_verified?: boolean;
+  date_joined?: string;
+};
+
+function normalizeUser(user: RawUser | null | undefined) {
   if (!user || typeof user !== 'object') return null;
-  const isAdmin = Boolean((user as any).is_admin);
+  const isAdmin = Boolean(user.is_admin);
   return {
     ...user,
     role: isAdmin ? 'admin' : 'client',
-    username: (user as any).full_name || (user as any).email,
+    username: user.full_name || user.email,
   };
 }
 
 // ─── Token Management ────────────────────────────────────────────────────────
+// Access token kept in memory only (not localStorage) to reduce XSS exposure.
+// Refresh token stays in localStorage so sessions survive page reloads.
+let _accessToken: string | null = null;
+
 function getTokens() {
-  const access = localStorage.getItem('access_token');
-  const refresh = localStorage.getItem('refresh_token');
-  return { access, refresh };
+  return {
+    access: _accessToken,
+    refresh: localStorage.getItem('refresh_token'),
+  };
 }
 
 function setTokens(access: string, refresh: string) {
-  localStorage.setItem('access_token', access);
+  _accessToken = access;
   localStorage.setItem('refresh_token', refresh);
 }
 
 function clearTokens() {
-  localStorage.removeItem('access_token');
+  _accessToken = null;
   localStorage.removeItem('refresh_token');
 }
 

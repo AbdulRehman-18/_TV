@@ -1,5 +1,8 @@
+import logging
 import threading
 from django.conf import settings
+
+logger = logging.getLogger(__name__)
 from django_ratelimit.decorators import ratelimit
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -173,7 +176,7 @@ def register_view(request):
             try:
                 send_verification_email(user, request)
             except Exception as e:
-                print(f"[EMAIL ERROR] Failed to send verification email: {e}")
+                logger.exception("Failed to send verification email: %s", e)
 
         threading.Thread(target=send_verification, daemon=True).start()
 
@@ -311,19 +314,21 @@ def forgot_password_view(request):
 
     if serializer.is_valid():
         email = serializer.validated_data['email']
-        user = User.objects.get(email=email)
 
         def send_email():
             try:
+                user = User.objects.get(email=email)
                 send_password_reset_email(user)
+            except User.DoesNotExist:
+                pass
             except Exception as e:
-                print(f"[EMAIL ERROR] Failed to send password reset email: {e}")
+                logger.exception("Failed to send password reset email: %s", e)
 
         threading.Thread(target=send_email, daemon=True).start()
 
         return Response({
             'success': True,
-            'message': 'Password reset link has been sent to your email.',
+            'message': 'If an account exists with this email, a reset link has been sent.',
         }, status=status.HTTP_200_OK)
 
     return Response({

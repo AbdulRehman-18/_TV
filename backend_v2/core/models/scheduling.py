@@ -1,4 +1,5 @@
 from django.db import models
+from django.conf import settings
 
 
 class ScheduleMixin(models.Model):
@@ -59,7 +60,13 @@ class ScheduleMixin(models.Model):
     )
 
     # Client / approval workflow
-    client_id = models.CharField(max_length=255, null=True, blank=True)
+    client = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='%(class)s_items',
+    )
     status = models.CharField(
         max_length=10,
         choices=STATUS_CHOICES,

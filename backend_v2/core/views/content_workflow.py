@@ -36,7 +36,7 @@ class ContentWorkflowPermission(permissions.BasePermission):
         if is_admin_user(request.user):
             return True
 
-        is_owner = obj.client_id == str(request.user.id)
+        is_owner = obj.client_id == request.user.id
         if view.action == 'destroy':
             return is_owner and obj.status == 'pending'
         if view.action in ('update', 'partial_update'):
@@ -56,7 +56,7 @@ class ContentWorkflowMixin:
             return queryset
 
         if user and user.is_authenticated:
-            return queryset.filter(client_id=str(user.id))
+            return queryset.filter(client_id=user.id)
 
         return queryset.filter(is_active=True, status='approved')
 
@@ -66,7 +66,7 @@ class ContentWorkflowMixin:
             return
 
         serializer.save(
-            client_id=str(self.request.user.id),
+            client=self.request.user,
             status='pending',
             is_active=False,
             admin_notes='',
@@ -78,7 +78,7 @@ class ContentWorkflowMixin:
             return
 
         serializer.save(
-            client_id=str(self.request.user.id),
+            client=self.request.user,
             status='pending',
             is_active=False,
         )

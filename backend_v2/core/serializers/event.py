@@ -5,7 +5,7 @@ SCHEDULE_FIELDS = [
     'schedule_start_date', 'schedule_end_date',
     'schedule_time_start', 'schedule_time_end',
     'recurrence_type', 'recurrence_days',
-    'priority', 'duration', 'client_id', 'status', 'admin_notes',
+    'priority', 'duration', 'client', 'status', 'admin_notes',
 ]
 
 
