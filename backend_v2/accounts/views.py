@@ -1,3 +1,4 @@
+import threading
 from django.conf import settings
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
@@ -166,12 +167,13 @@ def register_view(request):
     if serializer.is_valid():
         user = serializer.save()
 
-        # Send verification email
-        try:
-            send_verification_email(user, request)
-        except Exception as e:
-            # Log the error but don't fail registration
-            print(f"[EMAIL ERROR] Failed to send verification email: {e}")
+        def send_verification():
+            try:
+                send_verification_email(user, request)
+            except Exception as e:
+                print(f"[EMAIL ERROR] Failed to send verification email: {e}")
+
+        threading.Thread(target=send_verification, daemon=True).start()
 
         return Response({
             'success': True,
@@ -307,14 +309,13 @@ def forgot_password_view(request):
         email = serializer.validated_data['email']
         user = User.objects.get(email=email)
 
-        try:
-            send_password_reset_email(user)
-        except Exception as e:
-            print(f"[EMAIL ERROR] Failed to send password reset email: {e}")
-            return Response({
-                'success': False,
-                'message': 'Failed to send password reset email. Please try again later.',
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        def send_email():
+            try:
+                send_password_reset_email(user)
+            except Exception as e:
+                print(f"[EMAIL ERROR] Failed to send password reset email: {e}")
+
+        threading.Thread(target=send_email, daemon=True).start()
 
         return Response({
             'success': True,
