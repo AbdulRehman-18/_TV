@@ -432,16 +432,10 @@ def current_user_view(request):
     PATCH /api/auth/me/ - Update current authenticated user details
     """
     if not request.user or not request.user.is_authenticated:
-        if request.method == 'GET':
-            return Response({
-                'success': True,
-                'data': None,
-            }, status=status.HTTP_200_OK)
-        else:
-            return Response({
-                'success': False,
-                'message': 'Authentication required.',
-            }, status=status.HTTP_401_UNAUTHORIZED)
+        return Response({
+            'success': False,
+            'message': 'Authentication required.',
+        }, status=status.HTTP_401_UNAUTHORIZED)
 
     if request.method == 'GET':
         return Response({

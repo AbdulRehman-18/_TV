@@ -46,6 +46,24 @@ async function readJsonSafe<T>(response: Response): Promise<T | null> {
   }
 }
 
+function normalizeGetResponse(payload: unknown) {
+  if (Array.isArray(payload)) return payload;
+
+  if (payload && typeof payload === 'object') {
+    const objectPayload = payload as Record<string, unknown>;
+
+    if (Array.isArray(objectPayload.results)) {
+      return objectPayload.results;
+    }
+
+    if ('data' in objectPayload) {
+      return objectPayload.data;
+    }
+  }
+
+  return payload;
+}
+
 type RawUser = {
   id: string | number;
   email: string;
@@ -120,9 +138,15 @@ async function refreshAccessToken(): Promise<string | null> {
 
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers);
-  const { access } = getTokens();
-  if (access) {
-    headers.set('Authorization', `Bearer ${access}`);
+  const { access, refresh } = getTokens();
+  let token = access;
+
+  if (!token && refresh) {
+    token = await refreshAccessToken();
+  }
+
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
   let response = await fetch(url, { ...options, headers });
@@ -148,7 +172,8 @@ export const api = {
       console.error(`API GET Error [${endpoint}]:`, errorData);
       throw new Error(JSON.stringify(errorData) || response.statusText);
     }
-    return response.json();
+    const payload = await response.json();
+    return normalizeGetResponse(payload);
   },
 
   async post(endpoint: string, data: Record<string, unknown>) {
@@ -238,7 +263,7 @@ export const api = {
         const details = formatApiErrors((error?.errors as Record<string, unknown>) || undefined);
         throw new Error(details || error?.message || 'Login failed');
       }
-      const envelope = await readJsonSafe<ApiEnvelope<{ tokens: { access: string; refresh: string } }>>(response);
+      const envelope = await readJsonSafe<ApiEnvelope<{ tokens: { access: string; refresh: string }; user: RawUser }>>(response);
       const tokens = envelope?.data?.tokens;
       if (!tokens?.access || !tokens?.refresh) {
         throw new Error('Login failed: missing tokens in response');
@@ -288,7 +313,7 @@ export const api = {
     async getMe() {
       const response = await fetchWithAuth(`${API_URL}/auth/me/`);
       if (!response.ok) return null;
-      const envelope = await readJsonSafe<ApiEnvelope<unknown>>(response);
+      const envelope = await readJsonSafe<ApiEnvelope<RawUser | null>>(response);
       return normalizeUser(envelope?.data) ?? null;
     },
 

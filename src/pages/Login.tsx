@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Mail, Eye, EyeOff, ArrowRight, Loader2, ArrowLeft } from 'lucide-react'
 
 export function Login() {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLoginMode, setIsLoginMode] = useState(true);
 
@@ -49,12 +50,11 @@ export function Login() {
     setError('');
 
     try {
-      await api.auth.login({
+      const response = await api.auth.login({
         email,
         password,
       });
-      // Force page reload to refresh useAuth state
-      window.location.reload();
+      navigate(response?.data?.user?.is_admin ? '/admin' : '/client', { replace: true });
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error.message || 'Invalid credentials');
