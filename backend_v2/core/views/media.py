@@ -1,7 +1,8 @@
 from rest_framework import viewsets
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from ..models import Media
-from ..serializers import MediaSerializer,MediaStatsSerializer
+from ..serializers import MediaSerializer, MediaStatsSerializer
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from .content_workflow import ContentWorkflowMixin, ContentWorkflowPermission
 
@@ -14,7 +15,7 @@ class MediaViewSet(ContentWorkflowMixin, viewsets.ModelViewSet):
     filterset_fields = ['is_active', 'priority', 'status', 'recurrence_type', 'file_type', 'is_fallback']
 
 class MediaStatsViewSet(ReadOnlyModelViewSet):
-    # queryset = Announcement.objects.all()
+    queryset = Media.objects.none()
     serializer_class = MediaStatsSerializer
 
     def list(self, request, *args, **kwargs):

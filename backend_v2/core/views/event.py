@@ -1,7 +1,8 @@
 from rest_framework import viewsets
+from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from ..models import Event
-from ..serializers import EventSerializer,EventStatsSerializer
+from ..serializers import EventSerializer, EventStatsSerializer
 from rest_framework.viewsets import ReadOnlyModelViewSet
 from .content_workflow import ContentWorkflowMixin, ContentWorkflowPermission
 
@@ -16,7 +17,7 @@ class EventViewSet(ContentWorkflowMixin, viewsets.ModelViewSet):
 
 
 class EventStatsViewSet(ReadOnlyModelViewSet):
-    # queryset = Announcement.objects.all()
+    queryset = Event.objects.none()
     serializer_class = EventStatsSerializer
 
     def list(self, request, *args, **kwargs):

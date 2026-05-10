@@ -1,5 +1,6 @@
 import threading
 from django.conf import settings
+from django_ratelimit.decorators import ratelimit
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import EmailMultiAlternatives
@@ -157,6 +158,7 @@ def send_password_reset_email(user):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ratelimit(key='ip', rate='5/h', method='POST', block=True)
 def register_view(request):
     """
     POST /api/register/
@@ -238,6 +240,7 @@ def verify_email_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ratelimit(key='ip', rate='10/15m', method='POST', block=True)
 def login_view(request):
     """
     POST /api/login/
@@ -298,6 +301,7 @@ def admin_login_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ratelimit(key='ip', rate='5/h', method='POST', block=True)
 def forgot_password_view(request):
     """
     POST /api/forgot-password/

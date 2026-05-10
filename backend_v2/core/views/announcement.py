@@ -15,7 +15,7 @@ class AnnouncementViewSet(ContentWorkflowMixin, viewsets.ModelViewSet):
     filterset_fields = ['is_active', 'priority', 'status', 'recurrence_type']
     
 class AnnouncementStatsViewSet(ReadOnlyModelViewSet):
-    # queryset = Announcement.objects.all()
+    queryset = Announcement.objects.none()
     serializer_class = AnnouncementStatsSerializer
 
     def list(self, request, *args, **kwargs):
