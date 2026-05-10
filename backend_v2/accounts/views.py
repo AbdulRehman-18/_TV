@@ -255,6 +255,7 @@ def login_view(request):
     if serializer.is_valid():
         user = serializer.validated_data['user']
         tokens = get_tokens_for_user(user)
+        logger.info("LOGIN_SUCCESS user=%s ip=%s", user.email, request.META.get('REMOTE_ADDR'))
 
         return Response({
             'success': True,
@@ -375,6 +376,7 @@ def reset_password_view(request):
     if serializer.is_valid():
         user.set_password(serializer.validated_data['password'])
         user.save()
+        logger.info("PASSWORD_RESET_SUCCESS user=%s ip=%s", user.email, request.META.get('REMOTE_ADDR'))
 
         return Response({
             'success': True,

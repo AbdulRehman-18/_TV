@@ -30,15 +30,9 @@ interface SidebarProps {
 export function Sidebar({ collapsed }: SidebarProps) {
   const navigate = useNavigate();
 
-  const handleLogout = async () => {
-    try {
-      // Attempt to sign out
-      await api.auth.logout();
-    } catch (error) {
-      // Log error but continue with navigation
-      console.error('Logout error:', error);
-    }
-    // Always navigate to login
+  const handleLogout = () => {
+    if (!window.confirm('Are you sure you want to logout?')) return;
+    api.auth.logout();
     navigate('/login', { replace: true });
   };
 

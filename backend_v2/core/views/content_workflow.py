@@ -36,7 +36,7 @@ class ContentWorkflowPermission(permissions.BasePermission):
         if is_admin_user(request.user):
             return True
 
-        is_owner = obj.client_id == request.user.id
+        is_owner = obj.client == request.user
         if view.action == 'destroy':
             return is_owner and obj.status == 'pending'
         if view.action in ('update', 'partial_update'):
@@ -56,7 +56,7 @@ class ContentWorkflowMixin:
             return queryset
 
         if user and user.is_authenticated:
-            return queryset.filter(client_id=user.id)
+            return queryset.filter(client=user)
 
         return queryset.filter(is_active=True, status='approved')
 

@@ -209,7 +209,33 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', EMAIL_HOST_USER or 'no
 # ═══════════════════════════════════════════════
 
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:5173')
-# FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:8000/api')
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[{asctime}] {levelname} {name} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+    'loggers': {
+        'accounts': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'core': {'handlers': ['console'], 'level': 'INFO', 'propagate': False},
+        'django.security': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+        'django_ratelimit': {'handlers': ['console'], 'level': 'WARNING', 'propagate': False},
+    },
+}
 
 
 # ═══════════════════════════════════════════════

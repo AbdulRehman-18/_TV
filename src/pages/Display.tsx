@@ -10,6 +10,9 @@ import { ConnectionIndicator } from '@/components/display/ConnectionIndicator';
 type ConnectionStatus = 'connected' | 'reconnecting' | 'disconnected';
 import { useScheduler } from '@/hooks/useScheduler';
 
+const RELOAD_THROTTLE_MS = 1500;
+const POLL_INTERVAL_MS = 20000;
+
 
 export function Display() {
   const { settings } = useSettings();
@@ -59,7 +62,7 @@ export function Display() {
   if (!reloadAllRef.current) {
     reloadAllRef.current = async (reason?: string) => {
       const now = Date.now();
-      if (now - lastReloadRef.current < 1500) {
+      if (now - lastReloadRef.current < RELOAD_THROTTLE_MS) {
         return; // throttle
       }
       lastReloadRef.current = now;
@@ -120,7 +123,7 @@ export function Display() {
         }
       };
     } catch {
-      // BroadcastChannel not available; ignore
+      console.warn('[Display] BroadcastChannel not available in this browser');
     }
 
     return () => {
@@ -135,7 +138,7 @@ export function Display() {
   // Network resilience: poll periodically and refetch on focus/visibility/online
   useEffect(() => {
     // Polling every 20s as a watchdog for cross-device updates
-    const interval = setInterval(() => reloadAllRef.current?.('poll'), 20000);
+    const interval = setInterval(() => reloadAllRef.current?.('poll'), POLL_INTERVAL_MS);
 
     const onFocus = () => reloadAllRef.current?.('window-focus');
     const onVisible = () => {

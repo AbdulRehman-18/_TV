@@ -24,7 +24,6 @@ export function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  // const [organization, setOrganization] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
@@ -153,6 +152,7 @@ export function Login() {
                 We sent a verification link to <br />
                 <span className="font-medium text-zinc-200">{pendingEmail}</span>
               </p>
+              <p className="text-xs text-zinc-600">The link expires in 24 hours.</p>
             </div>
 
             <Button
