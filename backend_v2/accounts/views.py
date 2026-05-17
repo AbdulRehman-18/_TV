@@ -1,3 +1,4 @@
+import html
 import logging
 import threading
 from django.conf import settings
@@ -51,6 +52,7 @@ def send_verification_email(user, request):
 
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
     verification_link = f"{frontend_url}/verify-email?uid={uid}&token={token}"
+    safe_name = html.escape(user.full_name)
 
     subject = 'Verify Your Email Address — Signage System'
     message = (
@@ -69,7 +71,7 @@ def send_verification_email(user, request):
             <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 16px;">Email Verification</p>
         </div>
         <div style="padding: 40px 30px;">
-            <h2 style="color: #1a1a2e; margin: 0 0 16px; font-size: 22px;">Hi {user.full_name}! 👋</h2>
+            <h2 style="color: #1a1a2e; margin: 0 0 16px; font-size: 22px;">Hi {safe_name}! 👋</h2>
             <p style="color: #4a4a68; font-size: 15px; line-height: 1.7; margin: 0 0 24px;">
                 Thank you for registering. Please verify your email address by clicking the button below:
             </p>
@@ -106,6 +108,7 @@ def send_password_reset_email(user):
 
     frontend_url = getattr(settings, 'FRONTEND_URL', 'http://localhost:5173')
     reset_link = f"{frontend_url}/reset-password?uid={uid}&token={token}"
+    safe_name = html.escape(user.full_name)
 
     subject = 'Reset Your Password — Signage System'
     message = (
@@ -124,7 +127,7 @@ def send_password_reset_email(user):
             <p style="color: rgba(255,255,255,0.9); margin: 8px 0 0; font-size: 16px;">Password Reset</p>
         </div>
         <div style="padding: 40px 30px;">
-            <h2 style="color: #1a1a2e; margin: 0 0 16px; font-size: 22px;">Hi {user.full_name}! 🔐</h2>
+            <h2 style="color: #1a1a2e; margin: 0 0 16px; font-size: 22px;">Hi {safe_name}! 🔐</h2>
             <p style="color: #4a4a68; font-size: 15px; line-height: 1.7; margin: 0 0 24px;">
                 We received a request to reset your password. Click the button below to set a new password:
             </p>
@@ -241,6 +244,20 @@ def verify_email_view(request):
     }, status=status.HTTP_400_BAD_REQUEST)
 
 
+def _set_refresh_cookie(response, refresh_token):
+    """Attach the refresh token as an httpOnly cookie."""
+    secure = not getattr(settings, 'DEBUG', False)
+    response.set_cookie(
+        key='refresh_token',
+        value=refresh_token,
+        httponly=True,
+        secure=secure,
+        samesite='Lax',
+        max_age=7 * 24 * 60 * 60,  # 7 days, matches SIMPLE_JWT REFRESH_TOKEN_LIFETIME
+        path='/api/auth/token/refresh/',
+    )
+
+
 @api_view(['POST'])
 @permission_classes([AllowAny])
 @ratelimit(key='ip', rate='10/15m', method='POST', block=True)
@@ -257,14 +274,16 @@ def login_view(request):
         tokens = get_tokens_for_user(user)
         logger.info("LOGIN_SUCCESS user=%s ip=%s", user.email, request.META.get('REMOTE_ADDR'))
 
-        return Response({
+        response = Response({
             'success': True,
             'message': 'Login successful!',
             'data': {
-                'tokens': tokens,
+                'tokens': {'access': tokens['access']},
                 'user': UserSerializer(user).data,
             }
         }, status=status.HTTP_200_OK)
+        _set_refresh_cookie(response, tokens['refresh'])
+        return response
 
     return Response({
         'success': False,
@@ -275,6 +294,7 @@ def login_view(request):
 
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@ratelimit(key='ip', rate='10/15m', method='POST', block=True)
 def admin_login_view(request):
     """
     POST /api/admin-login/
@@ -287,14 +307,16 @@ def admin_login_view(request):
         user = serializer.validated_data['user']
         tokens = get_tokens_for_user(user)
 
-        return Response({
+        response = Response({
             'success': True,
             'message': 'Admin login successful!',
             'data': {
-                'tokens': tokens,
+                'tokens': {'access': tokens['access']},
                 'user': UserSerializer(user).data,
             }
         }, status=status.HTTP_200_OK)
+        _set_refresh_cookie(response, tokens['refresh'])
+        return response
 
     return Response({
         'success': False,
@@ -398,25 +420,34 @@ def reset_password_view(request):
 class CustomTokenRefreshView(TokenRefreshView):
     """
     POST /api/auth/token/refresh/
-    Custom token refresh view that returns tokens in the same format as login.
+    Reads the refresh token from the httpOnly cookie (preferred) or request body.
+    Returns a new access token; rotates the refresh cookie.
     """
     def post(self, request, *args, **kwargs):
-        serializer = TokenRefreshSerializer(data=request.data)
+        refresh_value = request.COOKIES.get('refresh_token') or request.data.get('refresh')
+        if not refresh_value:
+            return Response(
+                {'success': False, 'message': 'Refresh token missing.'},
+                status=status.HTTP_401_UNAUTHORIZED,
+            )
+
+        serializer = TokenRefreshSerializer(data={'refresh': refresh_value})
         serializer.is_valid(raise_exception=True)
 
-        refresh = serializer.validated_data['refresh']
-        refresh_token = RefreshToken(refresh)
+        new_refresh = serializer.validated_data['refresh']
+        refresh_token = RefreshToken(new_refresh)
 
-        return Response({
+        response = Response({
             'success': True,
             'message': 'Token refreshed successfully!',
             'data': {
                 'tokens': {
                     'access': str(refresh_token.access_token),
-                    'refresh': str(refresh_token),
                 }
             }
         }, status=status.HTTP_200_OK)
+        _set_refresh_cookie(response, str(refresh_token))
+        return response
 
 
 # ═════════════════════════════════════════════════════

@@ -9,7 +9,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         email = os.environ.get('DJANGO_SUPERUSER_EMAIL', 'admin@tvdisplay.local')
         full_name = os.environ.get('DJANGO_SUPERUSER_FULL_NAME', 'Admin User')
-        password = os.environ.get('DJANGO_SUPERUSER_PASSWORD', 'admin123')
+        password = os.environ.get('DJANGO_SUPERUSER_PASSWORD')
+        if not password:
+            self.stderr.write(self.style.ERROR(
+                'DJANGO_SUPERUSER_PASSWORD environment variable is not set. '
+                'Admin user will not be created.'
+            ))
+            raise SystemExit(1)
 
         if User.objects.filter(email=email).exists():
             self.stdout.write(self.style.WARNING(f'Admin user "{email}" already exists.'))

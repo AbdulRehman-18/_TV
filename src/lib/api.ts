@@ -84,51 +84,47 @@ function normalizeUser(user: RawUser | null | undefined) {
 }
 
 // ─── Token Management ────────────────────────────────────────────────────────
-// Access token kept in memory only (not localStorage) to reduce XSS exposure.
-// Refresh token stays in localStorage so sessions survive page reloads.
+// Access token is kept in memory only.
+// Refresh token is stored in an httpOnly cookie set by the server — never
+// readable by JavaScript — so it is not managed here at all.
 let _accessToken: string | null = null;
 
-function getTokens() {
-  return {
-    access: _accessToken,
-    refresh: localStorage.getItem('refresh_token'),
-  };
-}
+// Tracks whether the user has an active session so isLoggedIn() works across
+// page reloads without exposing the refresh token to JS.
+const SESSION_FLAG = 'has_session';
 
-function setTokens(access: string, refresh: string) {
+function setTokens(access: string) {
   _accessToken = access;
-  localStorage.setItem('refresh_token', refresh);
+  sessionStorage.setItem(SESSION_FLAG, '1');
 }
 
 function clearTokens() {
   _accessToken = null;
-  localStorage.removeItem('refresh_token');
+  sessionStorage.removeItem(SESSION_FLAG);
 }
 
 
 
 // ─── Token Refresh Logic ─────────────────────────────────────────────────────
 async function refreshAccessToken(): Promise<string | null> {
-  const { refresh } = getTokens();
-  if (!refresh) return null;
-
   try {
+    // The httpOnly refresh cookie is sent automatically by the browser.
     const response = await fetch(`${API_URL}/auth/token/refresh/`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh }),
     });
     if (!response.ok) {
       clearTokens();
       return null;
     }
-    const envelope = await readJsonSafe<ApiEnvelope<{ tokens: { access: string; refresh: string } }>>(response);
+    const envelope = await readJsonSafe<ApiEnvelope<{ tokens: { access: string } }>>(response);
     const tokens = envelope?.data?.tokens;
     if (!tokens?.access) {
       clearTokens();
       return null;
     }
-    setTokens(tokens.access, tokens.refresh || refresh);
+    setTokens(tokens.access);
     return tokens.access;
   } catch {
     clearTokens();
@@ -138,10 +134,9 @@ async function refreshAccessToken(): Promise<string | null> {
 
 async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Response> {
   const headers = new Headers(options.headers);
-  const { access, refresh } = getTokens();
-  let token = access;
+  let token = _accessToken;
 
-  if (!token && refresh) {
+  if (!token) {
     token = await refreshAccessToken();
   }
 
@@ -149,14 +144,14 @@ async function fetchWithAuth(url: string, options: RequestInit = {}): Promise<Re
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  let response = await fetch(url, { ...options, headers });
+  let response = await fetch(url, { ...options, headers, credentials: 'include' });
 
-  // If 401, try refreshing the token
+  // If 401, try refreshing the token once
   if (response.status === 401) {
     const newAccess = await refreshAccessToken();
     if (newAccess) {
       headers.set('Authorization', `Bearer ${newAccess}`);
-      response = await fetch(url, { ...options, headers });
+      response = await fetch(url, { ...options, headers, credentials: 'include' });
     }
   }
 
@@ -226,7 +221,6 @@ export const api = {
       throw new Error(JSON.stringify(errorData) || response.statusText);
     }
     return response.json();
-    return response.json();
   },
 
   async patchUpload(endpoint: string, formData: FormData) {
@@ -255,6 +249,7 @@ export const api = {
     async login(credentials: { email: string; password: string }) {
       const response = await fetch(`${API_URL}/auth/login/`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(credentials),
       });
@@ -263,12 +258,12 @@ export const api = {
         const details = formatApiErrors((error?.errors as Record<string, unknown>) || undefined);
         throw new Error(details || error?.message || 'Login failed');
       }
-      const envelope = await readJsonSafe<ApiEnvelope<{ tokens: { access: string; refresh: string }; user: RawUser }>>(response);
+      const envelope = await readJsonSafe<ApiEnvelope<{ tokens: { access: string }; user: RawUser }>>(response);
       const tokens = envelope?.data?.tokens;
-      if (!tokens?.access || !tokens?.refresh) {
-        throw new Error('Login failed: missing tokens in response');
+      if (!tokens?.access) {
+        throw new Error('Login failed: missing access token in response');
       }
-      setTokens(tokens.access, tokens.refresh);
+      setTokens(tokens.access);
       return envelope;
     },
 
@@ -349,7 +344,7 @@ export const api = {
     },
 
     isLoggedIn(): boolean {
-      return !!getTokens().refresh;
+      return !!(_accessToken || sessionStorage.getItem(SESSION_FLAG));
     },
   },
 
