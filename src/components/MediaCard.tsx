@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -31,12 +31,7 @@ export function MediaCard({
 }: MediaCardProps) {
   const handleToggleActive = async (checked: boolean) => {
     try {
-      const { error } = await supabase
-        .from('media')
-        .update({ is_active: checked })
-        .eq('id', media.id);
-
-      if (error) throw error;
+      await api.patch(`/media/${media.id}/`, { is_active: checked });
 
       onToggleActive(media.id, checked);
 
@@ -56,22 +51,7 @@ export function MediaCard({
 
   const handleDelete = async () => {
     try {
-      // Delete from storage first
-      const { error: storageError } = await supabase.storage
-        .from('media')
-        .remove([media.file_name]);
-
-      if (storageError) {
-        console.error('Error deleting from storage:', storageError);
-      }
-
-      // Delete from database
-      const { error: dbError } = await supabase
-        .from('media')
-        .delete()
-        .eq('id', media.id);
-
-      if (dbError) throw dbError;
+      await api.delete(`/media/${media.id}/`);
 
       onDelete(media.id);
 

@@ -1,0 +1,129 @@
+version: "3.9"
+
+services:
+  # ─── PostgreSQL Database ───────────────────────────────────────────────────
+  db:
+    image: postgres:16-alpine
+    container_name: tv_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${DB_NAME:-tvdb}
+      POSTGRES_USER: ${DB_USER:-tvuser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-tvpassword}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-tvuser} -d ${DB_NAME:-tvdb}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Redis Cache / Message Broker ─────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    container_name: tv_redis
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─── Django Backend ────────────────────────────────────────────────────────
+  backend:
+    build: .
+    container_name: tv_backend
+    restart: unless-stopped
+    environment:
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-tv-display-change-me}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS:-localhost,127.0.0.1}
+
+      DB_NAME: ${DB_NAME:-tvdb}
+      DB_USER: ${DB_USER:-tvuser}
+      DB_PASSWORD: ${DB_PASSWORD:-tvpassword}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+
+      DJANGO_SUPERUSER_EMAIL: ${DJANGO_SUPERUSER_EMAIL:-admin@tvdisplay.local}
+      DJANGO_SUPERUSER_FULL_NAME: ${DJANGO_SUPERUSER_FULL_NAME:-Admin User}
+      DJANGO_SUPERUSER_PASSWORD: ${DJANGO_SUPERUSER_PASSWORD:-admin123}
+
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@tvdisplay.local}
+    volumes:
+      - .:/app
+      - media_data:/app/media
+      - static_data:/app/static
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── Celery Worker (Async Tasks) ───────────────────────────────────────────
+  celery:
+    build: .
+    container_name: tv_celery
+    restart: unless-stopped
+    command: celery -A config worker --loglevel=info
+    environment:
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-tv-display-change-me}
+
+      DB_NAME: ${DB_NAME:-tvdb}
+      DB_USER: ${DB_USER:-tvuser}
+      DB_PASSWORD: ${DB_PASSWORD:-tvpassword}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    volumes:
+      - .:/app
+      - media_data:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # ─── Celery Beat (Periodic Tasks Scheduler) ────────────────────────────────
+  celery-beat:
+    build: .
+    container_name: tv_celery_beat
+    restart: unless-stopped
+    command: celery -A config beat --loglevel=info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    environment:
+      DEBUG: ${DEBUG:-True}
+      SECRET_KEY: ${SECRET_KEY:-django-insecure-tv-display-change-me}
+
+      DB_NAME: ${DB_NAME:-tvdb}
+      DB_USER: ${DB_USER:-tvuser}
+      DB_PASSWORD: ${DB_PASSWORD:-tvpassword}
+      DB_HOST: db
+      DB_PORT: ${DB_PORT:-5432}
+
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379/0}
+    volumes:
+      - .:/app
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+  static_data:

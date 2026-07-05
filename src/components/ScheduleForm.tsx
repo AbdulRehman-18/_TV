@@ -29,6 +29,10 @@ interface ScheduleFormProps {
     priority?: Priority;
     onPriorityChange: (priority: Priority) => void;
 
+    // Duration
+    duration?: number;
+    onDurationChange: (duration: number) => void;
+
     // Fallback (media only)
     isFallback?: boolean;
     onFallbackChange?: (isFallback: boolean) => void;
@@ -60,6 +64,8 @@ export function ScheduleForm({
     onRecurrenceDaysChange,
     priority = 'normal',
     onPriorityChange,
+    duration = 12,
+    onDurationChange,
     isFallback = false,
     onFallbackChange,
     showFallbackOption = false,
@@ -105,6 +111,28 @@ export function ScheduleForm({
                             ⚠️ Emergency priority will override ALL other content on the display
                         </p>
                     )}
+                </div>
+
+                {/* Duration */}
+                <div className="space-y-4">
+                    <Label className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        Display Duration (Seconds)
+                    </Label>
+                    <div className="flex items-center gap-4">
+                        <Input
+                            id="duration"
+                            type="number"
+                            min={1}
+                            max={3600}
+                            value={duration}
+                            onChange={(e) => onDurationChange(parseInt(e.target.value) || 1)}
+                            className="max-w-[120px]"
+                        />
+                        <p className="text-xs text-gray-500">
+                            How long this item stays on screen (ignored for videos)
+                        </p>
+                    </div>
                 </div>
 
                 {/* Date Range */}

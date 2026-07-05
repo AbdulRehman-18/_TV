@@ -1,0 +1,1257 @@
+﻿docker : Traceback (most recent 
+call last):
+At line:1 char:1
++ docker logs tv_backend 2> 
+errors.txt
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~
+    + CategoryInfo          : NotS 
+   pecified: (Traceback (most rec  
+  ent call last)::String) [], Re   
+ moteException
+    + FullyQualifiedErrorId : Nati 
+   veCommandError
+ 
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: 
+relation "auth_user" does not exist
+
+
+The above exception was the direct 
+cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/manage.py", line 19, 
+in <module>
+    main()
+  File "/app/manage.py", line 16, 
+in main
+    
+execute_from_command_line(sys.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 437, in execute
+    self.fetch_command(subcommand).
+run_from_argv(self.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 420, in 
+run_from_argv
+    self.execute(*args, 
+**cmd_options)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 464, in execute
+    output = self.handle(*args, 
+**options)
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 111, in wrapper
+    res = handle_func(*args, 
+**kwargs)
+          
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/commands/migrate.py", line 354, 
+in handle
+    post_migrate_state = 
+executor.migrate(
+                         
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 137, in migrate
+    state = 
+self._migrate_all_forwards(
+            
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 169, in 
+_migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 254, in 
+apply_migration
+    with 
+self.connection.schema_editor(
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 170, in __exit__
+    self.execute(sql, None)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/pos
+tgresql/schema.py", line 45, in 
+execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 205, in execute
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 122, in execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 79, in execute
+    return 
+self._execute_with_wrappers(
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 92, in 
+_execute_with_wrappers
+    return executor(sql, params, 
+many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 100, in _execute
+    with 
+self.db.wrap_database_errors:
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/utils.py", 
+line 94, in __exit__
+    raise dj_exc_value.with_traceba
+ck(traceback) from exc_value
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: 
+relation "auth_user" does not exist
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: 
+relation "auth_user" does not exist
+
+
+The above exception was the direct 
+cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/manage.py", line 19, 
+in <module>
+    main()
+  File "/app/manage.py", line 16, 
+in main
+    
+execute_from_command_line(sys.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 437, in execute
+    self.fetch_command(subcommand).
+run_from_argv(self.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 420, in 
+run_from_argv
+    self.execute(*args, 
+**cmd_options)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 464, in execute
+    output = self.handle(*args, 
+**options)
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 111, in wrapper
+    res = handle_func(*args, 
+**kwargs)
+          
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/commands/migrate.py", line 354, 
+in handle
+    post_migrate_state = 
+executor.migrate(
+                         
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 137, in migrate
+    state = 
+self._migrate_all_forwards(
+            
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 169, in 
+_migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 254, in 
+apply_migration
+    with 
+self.connection.schema_editor(
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 170, in __exit__
+    self.execute(sql, None)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/pos
+tgresql/schema.py", line 45, in 
+execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 205, in execute
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 122, in execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 79, in execute
+    return 
+self._execute_with_wrappers(
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 92, in 
+_execute_with_wrappers
+    return executor(sql, params, 
+many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 100, in _execute
+    with 
+self.db.wrap_database_errors:
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/utils.py", 
+line 94, in __exit__
+    raise dj_exc_value.with_traceba
+ck(traceback) from exc_value
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: 
+relation "auth_user" does not exist
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: 
+relation "auth_user" does not exist
+
+
+The above exception was the direct 
+cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/manage.py", line 19, 
+in <module>
+    main()
+  File "/app/manage.py", line 16, 
+in main
+    
+execute_from_command_line(sys.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 437, in execute
+    self.fetch_command(subcommand).
+run_from_argv(self.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 420, in 
+run_from_argv
+    self.execute(*args, 
+**cmd_options)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 464, in execute
+    output = self.handle(*args, 
+**options)
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 111, in wrapper
+    res = handle_func(*args, 
+**kwargs)
+          
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/commands/migrate.py", line 354, 
+in handle
+    post_migrate_state = 
+executor.migrate(
+                         
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 137, in migrate
+    state = 
+self._migrate_all_forwards(
+            
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 169, in 
+_migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 254, in 
+apply_migration
+    with 
+self.connection.schema_editor(
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 170, in __exit__
+    self.execute(sql, None)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/pos
+tgresql/schema.py", line 45, in 
+execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 205, in execute
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 122, in execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 79, in execute
+    return 
+self._execute_with_wrappers(
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 92, in 
+_execute_with_wrappers
+    return executor(sql, params, 
+many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 100, in _execute
+    with 
+self.db.wrap_database_errors:
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/utils.py", 
+line 94, in __exit__
+    raise dj_exc_value.with_traceba
+ck(traceback) from exc_value
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: 
+relation "auth_user" does not exist
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: 
+relation "auth_user" does not exist
+
+
+The above exception was the direct 
+cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/manage.py", line 19, 
+in <module>
+    main()
+  File "/app/manage.py", line 16, 
+in main
+    
+execute_from_command_line(sys.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 437, in execute
+    self.fetch_command(subcommand).
+run_from_argv(self.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 420, in 
+run_from_argv
+    self.execute(*args, 
+**cmd_options)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 464, in execute
+    output = self.handle(*args, 
+**options)
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 111, in wrapper
+    res = handle_func(*args, 
+**kwargs)
+          
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/commands/migrate.py", line 354, 
+in handle
+    post_migrate_state = 
+executor.migrate(
+                         
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 137, in migrate
+    state = 
+self._migrate_all_forwards(
+            
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 169, in 
+_migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 254, in 
+apply_migration
+    with 
+self.connection.schema_editor(
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 170, in __exit__
+    self.execute(sql, None)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/pos
+tgresql/schema.py", line 45, in 
+execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 205, in execute
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 122, in execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 79, in execute
+    return 
+self._execute_with_wrappers(
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 92, in 
+_execute_with_wrappers
+    return executor(sql, params, 
+many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 100, in _execute
+    with 
+self.db.wrap_database_errors:
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/utils.py", 
+line 94, in __exit__
+    raise dj_exc_value.with_traceba
+ck(traceback) from exc_value
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: 
+relation "auth_user" does not exist
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: 
+relation "auth_user" does not exist
+
+
+The above exception was the direct 
+cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/manage.py", line 19, 
+in <module>
+    main()
+  File "/app/manage.py", line 16, 
+in main
+    
+execute_from_command_line(sys.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 437, in execute
+    self.fetch_command(subcommand).
+run_from_argv(self.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 420, in 
+run_from_argv
+    self.execute(*args, 
+**cmd_options)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 464, in execute
+    output = self.handle(*args, 
+**options)
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 111, in wrapper
+    res = handle_func(*args, 
+**kwargs)
+          
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/commands/migrate.py", line 354, 
+in handle
+    post_migrate_state = 
+executor.migrate(
+                         
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 137, in migrate
+    state = 
+self._migrate_all_forwards(
+            
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 169, in 
+_migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 254, in 
+apply_migration
+    with 
+self.connection.schema_editor(
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 170, in __exit__
+    self.execute(sql, None)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/pos
+tgresql/schema.py", line 45, in 
+execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 205, in execute
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 122, in execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 79, in execute
+    return 
+self._execute_with_wrappers(
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 92, in 
+_execute_with_wrappers
+    return executor(sql, params, 
+many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 100, in _execute
+    with 
+self.db.wrap_database_errors:
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/utils.py", 
+line 94, in __exit__
+    raise dj_exc_value.with_traceba
+ck(traceback) from exc_value
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: 
+relation "auth_user" does not exist
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: 
+relation "auth_user" does not exist
+
+
+The above exception was the direct 
+cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/manage.py", line 19, 
+in <module>
+    main()
+  File "/app/manage.py", line 16, 
+in main
+    
+execute_from_command_line(sys.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 437, in execute
+    self.fetch_command(subcommand).
+run_from_argv(self.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 420, in 
+run_from_argv
+    self.execute(*args, 
+**cmd_options)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 464, in execute
+    output = self.handle(*args, 
+**options)
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 111, in wrapper
+    res = handle_func(*args, 
+**kwargs)
+          
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/commands/migrate.py", line 354, 
+in handle
+    post_migrate_state = 
+executor.migrate(
+                         
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 137, in migrate
+    state = 
+self._migrate_all_forwards(
+            
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 169, in 
+_migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 254, in 
+apply_migration
+    with 
+self.connection.schema_editor(
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 170, in __exit__
+    self.execute(sql, None)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/pos
+tgresql/schema.py", line 45, in 
+execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 205, in execute
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 122, in execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 79, in execute
+    return 
+self._execute_with_wrappers(
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 92, in 
+_execute_with_wrappers
+    return executor(sql, params, 
+many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 100, in _execute
+    with 
+self.db.wrap_database_errors:
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/utils.py", 
+line 94, in __exit__
+    raise dj_exc_value.with_traceba
+ck(traceback) from exc_value
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: 
+relation "auth_user" does not exist
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: 
+relation "auth_user" does not exist
+
+
+The above exception was the direct 
+cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/manage.py", line 19, 
+in <module>
+    main()
+  File "/app/manage.py", line 16, 
+in main
+    
+execute_from_command_line(sys.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 437, in execute
+    self.fetch_command(subcommand).
+run_from_argv(self.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 420, in 
+run_from_argv
+    self.execute(*args, 
+**cmd_options)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 464, in execute
+    output = self.handle(*args, 
+**options)
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 111, in wrapper
+    res = handle_func(*args, 
+**kwargs)
+          
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/commands/migrate.py", line 354, 
+in handle
+    post_migrate_state = 
+executor.migrate(
+                         
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 137, in migrate
+    state = 
+self._migrate_all_forwards(
+            
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 169, in 
+_migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 254, in 
+apply_migration
+    with 
+self.connection.schema_editor(
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 170, in __exit__
+    self.execute(sql, None)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/pos
+tgresql/schema.py", line 45, in 
+execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 205, in execute
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 122, in execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 79, in execute
+    return 
+self._execute_with_wrappers(
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 92, in 
+_execute_with_wrappers
+    return executor(sql, params, 
+many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 100, in _execute
+    with 
+self.db.wrap_database_errors:
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/utils.py", 
+line 94, in __exit__
+    raise dj_exc_value.with_traceba
+ck(traceback) from exc_value
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: 
+relation "auth_user" does not exist
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: 
+relation "auth_user" does not exist
+
+
+The above exception was the direct 
+cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/manage.py", line 19, 
+in <module>
+    main()
+  File "/app/manage.py", line 16, 
+in main
+    
+execute_from_command_line(sys.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 437, in execute
+    self.fetch_command(subcommand).
+run_from_argv(self.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 420, in 
+run_from_argv
+    self.execute(*args, 
+**cmd_options)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 464, in execute
+    output = self.handle(*args, 
+**options)
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 111, in wrapper
+    res = handle_func(*args, 
+**kwargs)
+          
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/commands/migrate.py", line 354, 
+in handle
+    post_migrate_state = 
+executor.migrate(
+                         
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 137, in migrate
+    state = 
+self._migrate_all_forwards(
+            
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 169, in 
+_migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 254, in 
+apply_migration
+    with 
+self.connection.schema_editor(
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 170, in __exit__
+    self.execute(sql, None)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/pos
+tgresql/schema.py", line 45, in 
+execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 205, in execute
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 122, in execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 79, in execute
+    return 
+self._execute_with_wrappers(
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 92, in 
+_execute_with_wrappers
+    return executor(sql, params, 
+many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 100, in _execute
+    with 
+self.db.wrap_database_errors:
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/utils.py", 
+line 94, in __exit__
+    raise dj_exc_value.with_traceba
+ck(traceback) from exc_value
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: 
+relation "auth_user" does not exist
+
+Traceback (most recent call last):
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+psycopg2.errors.UndefinedTable: 
+relation "auth_user" does not exist
+
+
+The above exception was the direct 
+cause of the following exception:
+
+Traceback (most recent call last):
+  File "/app/manage.py", line 19, 
+in <module>
+    main()
+  File "/app/manage.py", line 16, 
+in main
+    
+execute_from_command_line(sys.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 443, in 
+execute_from_command_line
+    utility.execute()
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/__init__.py", line 437, in execute
+    self.fetch_command(subcommand).
+run_from_argv(self.argv)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 420, in 
+run_from_argv
+    self.execute(*args, 
+**cmd_options)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 464, in execute
+    output = self.handle(*args, 
+**options)
+             
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/base.py", line 111, in wrapper
+    res = handle_func(*args, 
+**kwargs)
+          
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/core/management
+/commands/migrate.py", line 354, 
+in handle
+    post_migrate_state = 
+executor.migrate(
+                         
+^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 137, in migrate
+    state = 
+self._migrate_all_forwards(
+            
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 169, in 
+_migrate_all_forwards
+    state = self.apply_migration(
+            ^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/migrations/e
+xecutor.py", line 254, in 
+apply_migration
+    with 
+self.connection.schema_editor(
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 170, in __exit__
+    self.execute(sql, None)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/pos
+tgresql/schema.py", line 45, in 
+execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/bas
+e/schema.py", line 205, in execute
+    cursor.execute(sql, params)
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 122, in execute
+    return super().execute(sql, 
+params)
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 79, in execute
+    return 
+self._execute_with_wrappers(
+           
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 92, in 
+_execute_with_wrappers
+    return executor(sql, params, 
+many, context)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 100, in _execute
+    with 
+self.db.wrap_database_errors:
+         
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/utils.py", 
+line 94, in __exit__
+    raise dj_exc_value.with_traceba
+ck(traceback) from exc_value
+  File "/usr/local/lib/python3.12/s
+ite-packages/django/db/backends/uti
+ls.py", line 103, in _execute
+    return self.cursor.execute(sql)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+django.db.utils.ProgrammingError: 
+relation "auth_user" does not exist
+
+Watching for file changes with 
+StatReloader

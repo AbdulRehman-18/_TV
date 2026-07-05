@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -35,12 +35,7 @@ export function Media() {
 
   const loadMedia = async () => {
     try {
-      const { data, error } = await supabase
-        .from('media')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
+      const data = await api.get('/media/');
 
       setMedia(data || []);
     } catch (error) {
@@ -92,16 +87,11 @@ export function Media() {
 
   const handleApproveMedia = async (mediaItem: Media) => {
     try {
-      const { error } = await supabase
-        .from('media')
-        .update({
-          status: 'approved',
-          admin_notes: reviewNotes,
-          is_active: true,
-        })
-        .eq('id', mediaItem.id);
-
-      if (error) throw error;
+      await api.patch(`/media/${mediaItem.id}/`, {
+        status: 'approved',
+        admin_notes: reviewNotes,
+        is_active: true,
+      });
 
       setMedia(prev =>
         prev.map(m =>
@@ -120,15 +110,10 @@ export function Media() {
 
   const handleRejectMedia = async (mediaItem: Media) => {
     try {
-      const { error } = await supabase
-        .from('media')
-        .update({
-          status: 'rejected',
-          admin_notes: reviewNotes,
-        })
-        .eq('id', mediaItem.id);
-
-      if (error) throw error;
+      await api.patch(`/media/${mediaItem.id}/`, {
+        status: 'rejected',
+        admin_notes: reviewNotes,
+      });
 
       setMedia(prev =>
         prev.map(m =>

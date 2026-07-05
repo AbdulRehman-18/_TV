@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import {
   Megaphone,
   Calendar,
@@ -23,29 +23,12 @@ export function Dashboard() {
 
   const loadData = async () => {
     try {
-      // Fetch announcements
-      const { data: announcementsData, error: announcementsError } = await supabase
-        .from('announcements')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (announcementsError) throw announcementsError;
-
-      // Fetch events
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (eventsError) throw eventsError;
-
-      // Fetch media
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('media')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (mediaError) throw mediaError;
+      // Fetch all from DRF
+      const [announcementsData, eventsData, mediaData] = await Promise.all([
+        api.get('/announcements/'),
+        api.get('/events/'),
+        api.get('/media/')
+      ]);
 
       setAnnouncements(announcementsData || []);
       setEvents(eventsData || []);
@@ -146,10 +129,10 @@ export function Dashboard() {
               ].map((tab) => (
                 <button
                   key={tab.id}
-                  onClick={() => setActiveTab(tab.id as any)}
+                  onClick={() => setActiveTab(tab.id as 'announcements' | 'events' | 'media')}
                   className={`flex items-center space-x-2 px-4 py-4 text-sm font-medium border-b-2 transition-all duration-200 ${activeTab === tab.id
-                      ? 'border-gray-900 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:text-gray-700'
+                    ? 'border-gray-900 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
                     }`}
                 >
                   <span>{tab.label}</span>
@@ -189,8 +172,8 @@ export function Dashboard() {
                           </div>
                         </div>
                         <div className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${announcement.is_active
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-gray-100 text-gray-600'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-gray-100 text-gray-600'
                           }`}>
                           {announcement.is_active ? 'Active' : 'Draft'}
                         </div>
@@ -227,8 +210,8 @@ export function Dashboard() {
                           </p>
                         </div>
                         <div className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${event.is_active
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-gray-100 text-gray-600'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-gray-100 text-gray-600'
                           }`}>
                           {event.is_active ? 'Active' : 'Past'}
                         </div>
@@ -262,8 +245,8 @@ export function Dashboard() {
                           </p>
                         </div>
                         <div className={`text-[10px] font-medium px-2.5 py-1 rounded-full ${mediaItem.is_active
-                            ? 'bg-emerald-50 text-emerald-700'
-                            : 'bg-gray-100 text-gray-600'
+                          ? 'bg-emerald-50 text-emerald-700'
+                          : 'bg-gray-100 text-gray-600'
                           }`}>
                           {mediaItem.is_active ? 'Active' : 'Inactive'}
                         </div>
@@ -314,7 +297,7 @@ export function Dashboard() {
           {/* Weekly Activity */}
           <div className="bg-gray-900 rounded-xl p-6 border border-gray-800 shadow-sm text-white relative overflow-hidden">
             <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 bg-gray-800 rounded-full opacity-50 blur-2xl"></div>
-            
+
             <div className="relative z-10">
               <div className="flex items-center justify-between mb-2">
                 <h4 className="text-sm font-medium text-gray-300">New This Week</h4>

@@ -1,0 +1,17 @@
+﻿
+C:\Users\moham\Downloads\_TV-1\src\Landing\components\CTA.tsx
+  43:16  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+C:\Users\moham\Downloads\_TV-1\src\components\AnnouncementForm.tsx
+  29:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  31:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\moham\Downloads\_TV-1\src\components\EventForm.tsx
+  38:56  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  40:44  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\moham\Downloads\_TV-1\src\components\ui\button.tsx
+  55:18  warning  Fast refresh only works when a file only exports components. Use a new file to share constants or functions between components  react-refresh/only-export-components
+
+Γ£û 6 problems (4 errors, 2 warnings)
+

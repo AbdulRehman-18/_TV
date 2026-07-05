@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Megaphone, Trash2, Clock, CheckCircle, XCircle, AlertCircle } from 'lucide-react';
@@ -18,12 +18,7 @@ export function ClientAnnouncementCard({ announcement, onDelete }: ClientAnnounc
 
         setIsDeleting(true);
         try {
-            const { error } = await supabase
-                .from('announcements')
-                .delete()
-                .eq('id', announcement.id);
-
-            if (error) throw error;
+            await api.delete(`/announcements/${announcement.id}/`);
             onDelete(announcement.id);
         } catch (err) {
             console.error('Error deleting announcement:', err);

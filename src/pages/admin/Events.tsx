@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -22,13 +22,7 @@ export function Events() {
 
   const loadEvents = async () => {
     try {
-      const { data, error } = await supabase
-        .from('events')
-        .select('*')
-        .order('start_date', { ascending: true });
-
-      if (error) throw error;
-
+      const data = await api.get('/events/');
       setEvents(data || []);
     } catch (error) {
       console.error('Error loading events:', error);
@@ -76,16 +70,11 @@ export function Events() {
 
   const handleApprove = async (event: Event) => {
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({
-          status: 'approved',
-          admin_notes: reviewNotes,
-          is_active: true,
-        })
-        .eq('id', event.id);
-
-      if (error) throw error;
+      await api.patch(`/events/${event.id}/`, {
+        status: 'approved',
+        admin_notes: reviewNotes,
+        is_active: true,
+      });
 
       setEvents(prev =>
         prev.map(e =>
@@ -104,15 +93,10 @@ export function Events() {
 
   const handleReject = async (event: Event) => {
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({
-          status: 'rejected',
-          admin_notes: reviewNotes,
-        })
-        .eq('id', event.id);
-
-      if (error) throw error;
+      await api.patch(`/events/${event.id}/`, {
+        status: 'rejected',
+        admin_notes: reviewNotes,
+      });
 
       setEvents(prev =>
         prev.map(e =>

@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
-import { Button } from '@/components/ui/button';
 import {
   Image,
   Megaphone,
@@ -39,14 +38,12 @@ export function Client() {
     const loadClientProfile = async () => {
       if (!user?.id) return;
       try {
-        const { data, error } = await supabase
-          .from('clients')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-
-        if (error) throw error;
-        setClientProfile(data);
+        const data = await api.auth.getMe();
+        if (data && data.client_profile) {
+            setClientProfile(data.client_profile); // Assuming user returns client profile
+        } else {
+            setClientProfile(data as any); 
+        }
       } catch (error) {
         console.error('Error loading client profile:', error);
       }
@@ -55,13 +52,7 @@ export function Client() {
     const loadMedia = async () => {
       if (!user?.id) return;
       try {
-        const { data, error } = await supabase
-          .from('media')
-          .select('*')
-          .eq('client_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
+        const data = await api.get('/media/');
         setMediaList(data || []);
       } catch (error) {
         console.error('Error loading media:', error);
@@ -71,13 +62,7 @@ export function Client() {
     const loadAnnouncements = async () => {
       if (!user?.id) return;
       try {
-        const { data, error } = await supabase
-          .from('announcements')
-          .select('*')
-          .eq('client_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
+        const data = await api.get('/announcements/');
         setAnnouncementList(data || []);
       } catch (error) {
         console.error('Error loading announcements:', error);
@@ -87,13 +72,7 @@ export function Client() {
     const loadEvents = async () => {
       if (!user?.id) return;
       try {
-        const { data, error } = await supabase
-          .from('events')
-          .select('*')
-          .eq('client_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (error) throw error;
+        const data = await api.get('/events/');
         setEventList(data || []);
       } catch (error) {
         console.error('Error loading events:', error);
@@ -138,7 +117,7 @@ export function Client() {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
+      api.auth.logout();
     } catch (error) {
       console.error('Logout error:', error);
     }

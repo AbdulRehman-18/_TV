@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Wifi, WifiOff, RefreshCw } from 'lucide-react';
 import type { ConnectionStatus } from '@/hooks/useRealtimeSubscription';
@@ -15,29 +15,28 @@ export function ConnectionIndicator({
     position = 'top-left',
 }: ConnectionIndicatorProps) {
     const [isVisible, setIsVisible] = useState(false);
-    const [hideTimeout, setHideTimeout] = useState<NodeJS.Timeout | null>(null);
+    const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Show indicator when status changes, hide after delay if connected
     useEffect(() => {
         setIsVisible(true);
 
         // Clear existing timeout
-        if (hideTimeout) {
-            clearTimeout(hideTimeout);
-            setHideTimeout(null);
+        if (hideTimeoutRef.current) {
+            clearTimeout(hideTimeoutRef.current);
+            hideTimeoutRef.current = null;
         }
 
         // Auto-hide only when connected and autoHideDelay is set
         if (status === 'connected' && autoHideDelay > 0) {
-            const timeout = setTimeout(() => {
+            hideTimeoutRef.current = setTimeout(() => {
                 setIsVisible(false);
             }, autoHideDelay);
-            setHideTimeout(timeout);
         }
 
         return () => {
-            if (hideTimeout) {
-                clearTimeout(hideTimeout);
+            if (hideTimeoutRef.current) {
+                clearTimeout(hideTimeoutRef.current);
             }
         };
     }, [status, autoHideDelay]);

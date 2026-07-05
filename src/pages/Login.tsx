@@ -1,6 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
-import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import React, { useState, useEffect } from 'react';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
+import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -9,6 +9,7 @@ import { Mail, Eye, EyeOff, ArrowRight, Loader2, ArrowLeft } from 'lucide-react'
 
 export function Login() {
   const { user, loading } = useAuth();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [isLoginMode, setIsLoginMode] = useState(true);
 
@@ -20,11 +21,10 @@ export function Login() {
     }
   }, [searchParams]);
 
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [name, setName] = useState('');
-  const [organization, setOrganization] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [showEmailConfirmation, setShowEmailConfirmation] = useState(false);
@@ -50,15 +50,14 @@ export function Login() {
     setError('');
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const response = await api.auth.login({
         email,
         password,
       });
-
-      if (error) throw error;
+      navigate(response?.data?.user?.is_admin ? '/admin' : '/client', { replace: true });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        setError(error.message || 'An error occurred during login');
+        setError(error.message || 'Invalid credentials');
       } else {
         setError('An error occurred during login');
       }
@@ -78,43 +77,30 @@ export function Login() {
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters');
+    if (password.length < 8) {
+      setError('Password must be at least 8 characters');
       setIsLoading(false);
       return;
     }
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signUp({
+      const response = await api.auth.register({
+        full_name: fullName,
         email,
         password,
+        confirm_password: confirmPassword,
       });
 
-      if (authError) throw authError;
+      if (response?.success) {
+        setPendingEmail(email);
+        setShowEmailConfirmation(true);
+        setError('');
 
-      if (!authData.user) {
-        throw new Error('Failed to create user');
+        setFullName('');
+        setEmail('');
+        setPassword('');
+        setConfirmPassword('');
       }
-
-      const { error: profileError } = await supabase.from('clients').insert({
-        id: authData.user.id,
-        name,
-        email,
-        organization,
-        is_approved: false,
-      });
-
-      if (profileError) throw profileError;
-
-      setPendingEmail(email);
-      setShowEmailConfirmation(true);
-      setError('');
-
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setName('');
-      setOrganization('');
     } catch (error: unknown) {
       if (error instanceof Error) {
         setError(error.message || 'An error occurred during sign up');
@@ -128,7 +114,7 @@ export function Login() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-[#0a0a0a] text-zinc-100 selection:bg-white/20 selection:text-white font-sans p-6 relative">
-      
+
       {/* Minimalist Back Button */}
       <div className="absolute top-8 left-8 sm:top-12 sm:left-12">
         <Link
@@ -142,15 +128,15 @@ export function Login() {
 
       {/* Main Form Container */}
       <div className="w-full max-w-[380px] space-y-8">
-        
+
         {/* Header */}
         <div className="space-y-2 text-center">
           <h1 className="text-2xl font-medium tracking-tight text-white">
             {isLoginMode ? 'Welcome back' : 'Create an account'}
           </h1>
           <p className="text-zinc-500 text-sm font-light">
-            {isLoginMode 
-              ? 'Enter your credentials to access your workspace.' 
+            {isLoginMode
+              ? 'Enter your credentials to access your workspace.'
               : 'Enter your details to get started.'}
           </p>
         </div>
@@ -166,6 +152,7 @@ export function Login() {
                 We sent a verification link to <br />
                 <span className="font-medium text-zinc-200">{pendingEmail}</span>
               </p>
+              <p className="text-xs text-zinc-600">The link expires in 24 hours.</p>
             </div>
 
             <Button
@@ -183,7 +170,7 @@ export function Login() {
           </div>
         ) : (
           <form onSubmit={isLoginMode ? handleLogin : handleSignUp} className="space-y-6 animate-in fade-in zoom-in-95 duration-500">
-            
+
             {error && (
               <div className="bg-red-500/5 border border-red-500/10 text-red-400 px-4 py-3 rounded-lg text-sm flex items-start gap-3 font-light">
                 <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-1.5 shrink-0" />
@@ -192,15 +179,16 @@ export function Login() {
             )}
 
             <div className="space-y-4">
+
               {!isLoginMode && (
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-xs font-medium text-zinc-400 ml-1">Name</Label>
+                  <Label htmlFor="fullName" className="text-xs font-medium text-zinc-400 ml-1">Full Name</Label>
                   <Input
-                    id="name"
+                    id="fullName"
                     type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    placeholder="Jane Doe"
+                    value={fullName}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFullName(e.target.value)}
+                    placeholder="John Doe"
                     required
                     className="h-12 bg-transparent border-zinc-800 text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-0 rounded-xl transition-colors px-4"
                   />
@@ -213,8 +201,8 @@ export function Login() {
                   id="email"
                   type="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="name@example.com"
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setEmail(e.target.value)}
+                  placeholder="name@gmail.com"
                   required
                   className="h-12 bg-transparent border-zinc-800 text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-0 rounded-xl transition-colors px-4"
                 />
@@ -224,9 +212,9 @@ export function Login() {
                 <div className="flex items-center justify-between ml-1">
                   <Label htmlFor="password" className="text-xs font-medium text-zinc-400">Password</Label>
                   {isLoginMode && (
-                    <button type="button" className="text-xs text-zinc-500 hover:text-white transition-colors">
+                    <Link to="/forgot-password" className="text-xs text-zinc-500 hover:text-white transition-colors">
                       Forgot password?
-                    </button>
+                    </Link>
                   )}
                 </div>
                 <div className="relative">
@@ -234,7 +222,7 @@ export function Login() {
                     id="password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
                     placeholder="••••••••"
                     required
                     className="h-12 bg-transparent border-zinc-800 text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-0 rounded-xl transition-colors px-4 pr-11"
@@ -257,7 +245,7 @@ export function Login() {
                       id="confirmPassword"
                       type={showConfirmPassword ? 'text' : 'password'}
                       value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
                       placeholder="••••••••"
                       required
                       className="h-12 bg-transparent border-zinc-800 text-white placeholder:text-zinc-600 focus:border-zinc-500 focus:ring-0 rounded-xl transition-colors px-4 pr-11"
@@ -272,6 +260,8 @@ export function Login() {
                   </div>
                 </div>
               )}
+
+              
             </div>
 
             <Button

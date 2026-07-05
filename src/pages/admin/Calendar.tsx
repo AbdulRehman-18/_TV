@@ -1,10 +1,8 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Event, Announcement, Media } from '@/types';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, MapPin, MoreHorizontal, Image, Video, X, ExternalLink } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, Clock, MapPin, MoreHorizontal, Image, Video, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { cn } from '@/lib/utils';
-
 interface CalendarEvent {
   id: string;
   title: string;
@@ -22,61 +20,11 @@ export function CalendarView() {
   useEffect(() => {
     fetchEventsAndAnnouncements();
 
-    // Set up real-time subscriptions for events
-    const eventsSubscription = supabase
-      .channel('calendar-events')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'events',
-        },
-        () => {
-          console.log('Events updated, refreshing calendar...');
-          fetchEventsAndAnnouncements();
-        }
-      )
-      .subscribe();
-
-    // Set up real-time subscriptions for announcements
-    const announcementsSubscription = supabase
-      .channel('calendar-announcements')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'announcements',
-        },
-        () => {
-          console.log('Announcements updated, refreshing calendar...');
-          fetchEventsAndAnnouncements();
-        }
-      )
-      .subscribe();
-
-    // Set up real-time subscriptions for media
-    const mediaSubscription = supabase
-      .channel('calendar-media')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'media',
-        },
-        () => {
-          console.log('Media updated, refreshing calendar...');
-          fetchEventsAndAnnouncements();
-        }
-      )
-      .subscribe();
+    // Fallback polling for updates every 30 seconds since realtime is removed
+    const intervalId = setInterval(fetchEventsAndAnnouncements, 30000);
 
     return () => {
-      eventsSubscription.unsubscribe();
-      announcementsSubscription.unsubscribe();
-      mediaSubscription.unsubscribe();
+      clearInterval(intervalId);
     };
   }, []);
 
@@ -84,32 +32,9 @@ export function CalendarView() {
     try {
       setLoading(true);
 
-      // Fetch events
-      const { data: eventsData, error: eventsError } = await supabase
-        .from('events')
-        .select('*')
-        .eq('is_active', true)
-        .order('start_date', { ascending: true });
-
-      if (eventsError) throw eventsError;
-
-      // Fetch announcements
-      const { data: announcementsData, error: announcementsError } = await supabase
-        .from('announcements')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: true });
-
-      if (announcementsError) throw announcementsError;
-
-      // Fetch media
-      const { data: mediaData, error: mediaError } = await supabase
-        .from('media')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: true });
-
-      if (mediaError) throw mediaError;
+      const eventsData: any[] = await api.get('/events/');
+      const announcementsData: any[] = await api.get('/announcements/');
+      const mediaData: any[] = await api.get('/media/');
 
       // Combine and format events
       const calendarEvents: CalendarEvent[] = [];
@@ -364,7 +289,7 @@ export function CalendarView() {
                 .filter(event => event.date >= new Date())
                 .sort((a, b) => a.date.getTime() - b.date.getTime())
                 .slice(0, 10)
-                .map((event, idx) => (
+.map((event) => (
                   <button
                     key={event.id}
                     onClick={() => setSelectedEvent(event)}

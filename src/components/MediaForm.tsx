@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { supabase, MEDIA_BUCKET } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,107 +31,62 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
   const [recurrenceType, setRecurrenceType] = useState<RecurrenceType>(media?.recurrence_type || 'none');
   const [recurrenceDays, setRecurrenceDays] = useState<number[]>(media?.recurrence_days || []);
   const [priority, setPriority] = useState<Priority>(media?.priority || 'normal');
+  const [duration, setDuration] = useState<number>(media?.duration || 12);
   const [isFallback, setIsFallback] = useState(media?.is_fallback || false);
-
-  const handleFileUpload = async (file: File): Promise<{ url: string; fileName: string; fileSize: number }> => {
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from(MEDIA_BUCKET)
-        .upload(fileName, file);
-
-      if (uploadError) {
-        console.error('Upload error:', uploadError);
-        throw uploadError;
-      }
-
-      const { data } = supabase.storage
-        .from(MEDIA_BUCKET)
-        .getPublicUrl(fileName);
-
-      return {
-        url: data.publicUrl,
-        fileName,
-        fileSize: file.size
-      };
-    } catch (error) {
-      console.error('Error uploading file:', error);
-      throw error;
-    }
-  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      let fileData = {
-        file_url: media?.file_url || '',
-        file_name: media?.file_name || '',
-        file_size: media?.file_size || 0,
-        file_type: fileType || 'image'
-      };
-
-      // Upload new file if provided
+      const formData = new FormData();
+      
+      // Ensure title is present as it is required in the backend
+      const finalTitle = title.trim() || (file ? file.name : (media?.title || 'Untitled Media'));
+      formData.append('title', finalTitle);
+      
+      if (description) formData.append('description', description);
+      
+      formData.append('is_active', 'true');
+      formData.append('status', 'approved');
+      
       if (file) {
-        const uploadResult = await handleFileUpload(file);
-        fileData = {
-          file_url: uploadResult.url,
-          file_name: uploadResult.fileName,
-          file_size: uploadResult.fileSize,
-          file_type: file!.type.startsWith('video/') ? 'video' : 'image'
-        };
+        formData.append('file', file);
+        formData.append('file_type', file.type.startsWith('video/') ? 'video' : 'image');
+        formData.append('file_name', file.name);
+        formData.append('file_size', file.size.toString());
       }
 
-      const mediaData = {
-        title,
-        description: description || null,
-        ...fileData,
-        is_active: true,
-        client_id: null, // Admin uploads don't have a client
-        status: 'approved', // Admin uploads are pre-approved
-        // Scheduling fields
-        schedule_start_date: scheduleStartDate || null,
-        schedule_end_date: scheduleEndDate || null,
-        schedule_time_start: scheduleTimeStart || null,
-        schedule_time_end: scheduleTimeEnd || null,
-        recurrence_type: recurrenceType,
-        recurrence_days: recurrenceDays.length > 0 ? recurrenceDays : null,
-        priority,
-        is_fallback: isFallback,
-      };
+      if (scheduleStartDate) formData.append('schedule_start_date', scheduleStartDate);
+      if (scheduleEndDate) formData.append('schedule_end_date', scheduleEndDate);
+      if (scheduleTimeStart) formData.append('schedule_time_start', scheduleTimeStart);
+      if (scheduleTimeEnd) formData.append('schedule_time_end', scheduleTimeEnd);
+      
+      if (recurrenceType) {
+        formData.append('recurrence_type', recurrenceType);
+      }
+      
+      // Send recurrence_days as a JSON string to ensure JSONField parses it correctly
+      formData.append('recurrence_days', JSON.stringify(recurrenceDays));
+      
+      formData.append('priority', priority);
+      formData.append('duration', duration.toString());
+      formData.append('is_fallback', String(isFallback));
 
-      let result;
+      let resultData;
 
       if (media) {
-        // Update existing media
-        result = await supabase
-          .from('media')
-          .update(mediaData)
-          .eq('id', media.id)
-          .select()
-          .single();
+        resultData = await api.patchUpload(`/media/${media.id}/`, formData);
       } else {
-        // Create new media
-        result = await supabase
-          .from('media')
-          .insert(mediaData)
-          .select()
-          .single();
+        resultData = await api.upload('/media/', formData);
       }
 
-      if (result.error) {
-        throw result.error;
-      }
-
-      onSubmit(result.data);
+      onSubmit(resultData);
 
       // Notify other tabs/windows (same origin) that media changed.
       try {
         const bc = new BroadcastChannel('tv-updates');
-        const msg = { channel: 'media', action: media ? 'update' : 'create', payload: result.data };
+        const msg = { channel: 'media', action: media ? 'update' : 'create', payload: resultData };
         console.debug('[MediaForm] broadcasting', msg);
         bc.postMessage(msg);
         bc.close();
@@ -311,6 +266,8 @@ export function MediaForm({ media, onSubmit, onCancel }: MediaFormProps) {
             onRecurrenceDaysChange={setRecurrenceDays}
             priority={priority}
             onPriorityChange={setPriority}
+            duration={duration}
+            onDurationChange={setDuration}
             isFallback={isFallback}
             onFallbackChange={setIsFallback}
             showFallbackOption={true}

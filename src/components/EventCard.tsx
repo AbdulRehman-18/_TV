@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
@@ -31,20 +31,13 @@ export function EventCard({
 }: EventCardProps) {
   const handleToggleActive = async (checked: boolean) => {
     try {
-      const { error } = await supabase
-        .from('events')
-        .update({ is_active: checked })
-        .eq('id', event.id);
-
-      if (error) throw error;
+      await api.patch(`/events/${event.id}/`, { is_active: checked });
 
       onToggleActive(event.id, checked);
 
       try {
         const bc = new BroadcastChannel('tv-updates');
-        const msg = { channel: 'events', action: 'update', payload: { id: event.id, is_active: checked } };
-        console.debug('[EventCard] broadcasting', msg);
-        bc.postMessage(msg);
+        bc.postMessage({ channel: 'events', action: 'update', payload: { id: event.id, is_active: checked } });
         bc.close();
       } catch {
         // ignore
@@ -56,20 +49,13 @@ export function EventCard({
 
   const handleDelete = async () => {
     try {
-      const { error } = await supabase
-        .from('events')
-        .delete()
-        .eq('id', event.id);
-
-      if (error) throw error;
-
+      await api.delete(`/events/${event.id}/`);
+      
       onDelete(event.id);
 
       try {
         const bc = new BroadcastChannel('tv-updates');
-        const msg = { channel: 'events', action: 'delete', payload: { id: event.id } };
-        console.debug('[EventCard] broadcasting', msg);
-        bc.postMessage(msg);
+        bc.postMessage({ channel: 'events', action: 'delete', payload: { id: event.id } });
         bc.close();
       } catch {
         // ignore

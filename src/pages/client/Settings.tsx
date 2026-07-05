@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { api } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -37,18 +37,11 @@ export function Settings({ clientProfile, onUpdate }: SettingsProps) {
     setMessage(null);
 
     try {
-      const { data, error } = await supabase
-        .from('clients')
-        .update({
-          name: profile.name,
-          email: profile.email,
-          organization: profile.organization,
-        })
-        .eq('id', user.id)
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await api.patch('/auth/me/', {
+        name: profile.name,
+        email: profile.email,
+        organization: profile.organization,
+      });
 
       setProfile(data);
       onUpdate?.(data);
@@ -67,7 +60,7 @@ export function Settings({ clientProfile, onUpdate }: SettingsProps) {
   const handleLogout = async () => {
     if (window.confirm('Are you sure you want to logout?')) {
       try {
-        await supabase.auth.signOut();
+        api.auth.logout();
       } catch (error) {
         console.error('Logout error:', error);
       }

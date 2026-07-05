@@ -18,6 +18,10 @@ interface ClientScheduleFormProps {
 
     // Hide date range section (for events which use start_date/end_date instead)
     hideDateRange?: boolean;
+
+    // Duration
+    duration?: number;
+    onDurationChange: (duration: number) => void;
 }
 
 export function ClientScheduleForm({
@@ -30,6 +34,8 @@ export function ClientScheduleForm({
     onTimeStartChange,
     onTimeEndChange,
     hideDateRange = false,
+    duration = 12,
+    onDurationChange,
 }: ClientScheduleFormProps) {
     return (
         <Card className="border-gray-200">
@@ -103,6 +109,28 @@ export function ClientScheduleForm({
                     <p className="text-xs text-gray-500">
                         Content will only display during these hours each day
                     </p>
+                </div>
+
+                {/* Duration */}
+                <div className="space-y-4">
+                    <Label className="flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-gray-500" />
+                        Display Duration (Seconds)
+                    </Label>
+                    <div className="flex items-center gap-4">
+                        <Input
+                            id="duration"
+                            type="number"
+                            min={1}
+                            max={3600}
+                            value={duration}
+                            onChange={(e) => onDurationChange(parseInt(e.target.value) || 1)}
+                            className="max-w-[120px]"
+                        />
+                        <p className="text-xs text-gray-500">
+                            How long this item stays on screen (ignored for videos)
+                        </p>
+                    </div>
                 </div>
 
                 {/* Summary */}
